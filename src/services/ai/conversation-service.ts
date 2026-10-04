@@ -3,6 +3,7 @@ import { getRepository } from '@/db/repository';
 import { getPersona } from '@/content/personas.server';
 import { findTask, getStep } from '@/content/registry';
 import { BITE_PROTEIN_DRINK } from '@/content/company';
+import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import { evaluateGuardrails, hasViolations } from '@/services/scenario/guardrails';
 import {
@@ -171,7 +172,7 @@ export async function sendStudentMessage(
     stepKey,
   });
   if (conversation.status === 'ended') {
-    throw new Error('This conversation has already ended.');
+    throw new ScenarioRuleError('This conversation has already ended.');
   }
 
   const history = await repo.listMessages(conversation.id);
@@ -371,10 +372,12 @@ export function assertPersonaAllowedInStep(
 ): void {
   const persona = requirePersona(session, personaKey);
   if (!persona.stepKeys.includes(stepKey)) {
-    throw new Error(`Persona ${personaKey} is not available in step ${stepKey}`);
+    throw new ScenarioRuleError(
+      `Persona ${personaKey} is not available in step ${stepKey}`,
+    );
   }
   const scenario = getScenarioForSession(session);
   if (!getStep(scenario, stepKey)) {
-    throw new Error(`Unknown step ${stepKey}`);
+    throw new ScenarioRuleError(`Unknown step ${stepKey}`);
   }
 }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
 import { findTask } from '@/content/registry';
+import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import type { AnswerValue, ProjectSession } from '@/types/runtime';
 import type { TaskField } from '@/types/scenario';
@@ -90,12 +91,12 @@ export async function saveTaskAnswer(input: {
 
   const scenario = getScenarioForSession(session);
   const found = findTask(scenario, taskKey);
-  if (!found) throw new Error(`Unknown task: ${taskKey}`);
+  if (!found) throw new ScenarioRuleError(`Unknown task: ${taskKey}`);
   const { step, task } = found;
 
   const stateBefore = await loadEngineState(session.id);
   if (!isUnlocked(step.unlockRule, scenario, stateBefore)) {
-    throw new Error(`Step “${step.title}” is not available yet.`);
+    throw new ScenarioRuleError(`Step “${step.title}” is not available yet.`);
   }
 
   const previous = stateBefore.answersByTaskKey[taskKey] ?? null;

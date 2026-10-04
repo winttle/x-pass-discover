@@ -2,6 +2,7 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 import { ZodError, type ZodType } from 'zod';
 import { UnauthenticatedError, requireUser } from '@/lib/auth/session';
+import { ScenarioRuleError } from '@/lib/errors';
 import { SessionAccessError } from '@/services/scenario/session-service';
 import type { User } from '@/types/runtime';
 
@@ -33,6 +34,11 @@ export async function withUser<T>(
     }
     if (error instanceof ZodError) {
       return jsonError(`Invalid request: ${error.issues[0]?.message ?? 'bad input'}`, 400);
+    }
+    if (error instanceof ScenarioRuleError) {
+      // The engine said no on purpose — one line, no stack trace.
+      console.warn('[api] rejected:', error.message);
+      return jsonError(error.message, 400);
     }
     const message = error instanceof Error ? error.message : 'Unexpected error';
     console.error('[api]', message, error);

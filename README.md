@@ -257,16 +257,36 @@ See `.env.example`. **All of them are optional.**
 
 ## 6. Running locally
 
+Requires **Node 20+**. Nothing else.
+
 ```bash
-npm install
+git clone -b claude/intelligent-planck-39vf7c \
+  https://github.com/winttle/x-pass-discover.git
+cd x-pass-discover
+npm install          # ~25s
 npm run dev          # http://localhost:3000
 ```
 
-That is the whole setup. No database, no API key.
+That is the whole setup. No database, no API key, no `.env`.
 
-Then: sign in (email + display name, no password) → pre-survey → choose
-departments → **Start bootcamp** on Sales → work through the ten steps. Walk
-into the 2D office from the workspace sidebar.
+> The first `npm run dev` fetches the Inter and JetBrains Mono webfonts, so it
+> needs network access once. After that it works offline.
+
+Then: sign in (email + display name, **no password** — it is a development
+identity, see §8) → pre-survey → choose departments → **Start bootcamp** on
+Sales → work through the ten steps. Walk into the 2D office from the workspace
+sidebar, or go straight to `/office`.
+
+Things worth trying, because they are where the design decisions show:
+
+| Where | What to look for |
+|---|---|
+| **AI Buyer Meeting** | Ask "tell me about QuickMart" → you get nothing. Ask "how many facings would a new protein drink get?" → the buyer gives you the number and the discovery meter ticks up. |
+| **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
+| **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
+| **The 2D office** | WASD/arrows, walk into the Data Room or up to an NPC, press `E`. |
+| **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
+| **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |
 
 ### With Neon
 

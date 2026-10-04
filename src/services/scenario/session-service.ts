@@ -8,6 +8,7 @@ import {
 } from '@/content/registry';
 import { listPublicPersonas } from '@/content/personas.server';
 import { env, runtimeModeSummary } from '@/lib/env';
+import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import type { ProjectSession, StepStatus, TaskAnswer } from '@/types/runtime';
 import type { ScenarioVersionDefinition } from '@/types/scenario';
@@ -327,9 +328,11 @@ export async function startSession(
   const repo = getRepository();
   const department = getDepartment(departmentSlug);
 
-  if (!department) throw new Error(`Unknown department: ${departmentSlug}`);
+  if (!department) {
+    throw new ScenarioRuleError(`Unknown department: ${departmentSlug}`);
+  }
   if (department.status !== 'playable' || !department.scenarioKey) {
-    throw new Error(`${department.name} is not playable yet.`);
+    throw new ScenarioRuleError(`${department.name} is not playable yet.`);
   }
 
   const existing = await repo.findActiveSession(userId, departmentSlug);
