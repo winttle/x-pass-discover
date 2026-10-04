@@ -1,0 +1,121 @@
+import { redirect } from 'next/navigation';
+import { Badge, Card, CardHeader, EmptyState } from '@/components/ui';
+import { getRepository } from '@/db/repository';
+import { getCurrentUser } from '@/lib/auth/session';
+import Link from 'next/link';
+
+/**
+ * Behavior event inspector.
+ *
+ * Exists so event ORDER can be verified during testing. Deliberately shows raw
+ * rows and no aggregate scores — these events are contextual evidence, and
+ * turning counts into points is exactly what the product rules forbid.
+ */
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session?: string }>;
+}) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+
+  const { session: sessionId } = await searchParams;
+  const repo = getRepository();
+  const sessions = await repo.listSessionsForUser(user.id);
+  const selected = sessions.find((s) => s.id === sessionId) ?? sessions[0] ?? null;
+  const events = selected
+    ? await repo.listEvents({ sessionId: selected.id, limit: 500 })
+    : [];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader
+          title="Behavior events"
+          subtitle="Raw, ordered event log for the selected session"
+        />
+        <div className="flex flex-wrap gap-2 px-5 py-3">
+          {sessions.length === 0 ? (
+            <p className="text-xs text-ink-500">No sessions yet.</p>
+          ) : (
+            sessions.map((session) => (
+              <Link
+                key={session.id}
+                href={`/admin/events?session=${session.id}`}
+                className={`rounded-lg border px-3 py-1.5 text-[11px] transition-colors ${
+                  selected?.id === session.id
+                    ? 'border-brand-500 bg-brand-500/15 text-white'
+                    : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+                }`}
+              >
+                {session.departmentSlug} · {session.id.slice(0, 8)}
+              </Link>
+            ))
+          )}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title={`${events.length} events`}
+          subtitle={selected ? `Session ${selected.id}` : 'No session selected'}
+          right={<Badge tone="muted">oldest first</Badge>}
+        />
+        {events.length === 0 ? (
+          <div className="p-5">
+            <EmptyState>
+              Nothing logged yet. Start a bootcamp, open a resource, or talk to an NPC.
+            </EmptyState>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[11px]">
+              <thead>
+                <tr>
+                  {['#', 'Time', 'Event', 'Step', 'Task', 'Metadata'].map((h) => (
+                    <th
+                      key={h}
+                      className="border-b border-ink-700 px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-ink-400"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event, index) => (
+                  <tr key={event.id}>
+                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-600">
+                      {index + 1}
+                    </td>
+                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-500">
+                      {new Date(event.occurredAt).toLocaleTimeString()}
+                    </td>
+                    <td className="border-b border-ink-800 px-3 py-1.5">
+                      <span className="font-mono text-brand-400">{event.eventType}</span>
+                    </td>
+                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-400">
+                      {event.stepKey ?? '—'}
+                    </td>
+                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-400">
+                      {event.taskKey ?? '—'}
+                    </td>
+                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-500">
+                      {Object.keys(event.metadata).length > 0
+                        ? JSON.stringify(event.metadata)
+                        : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="border-t border-ink-800 px-5 py-3 text-[11px] text-ink-500">
+          These are evidence, not points. Counts and durations here must never be converted
+          directly into a SKILL FIT score.
+        </p>
+      </Card>
+    </div>
+  );
+}

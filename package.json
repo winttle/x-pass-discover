@@ -1,0 +1,45 @@
+{
+  "name": "x-pass-discover",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx --conditions=react-server src/db/seed/run.ts",
+    "db:verify": "tsx --conditions=react-server scripts/verify-postgres.ts",
+    "verify:disclosure": "tsx --conditions=react-server scripts/verify-disclosure.ts",
+    "verify": "npm run typecheck && npm run lint && npm run verify:disclosure && npm run db:verify"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "drizzle-orm": "^0.38.3",
+    "next": "^15.5.27",
+    "openai": "^4.80.1",
+    "phaser": "^3.87.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "dotenv": "^18.0.5",
+    "drizzle-kit": "^0.30.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.27",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

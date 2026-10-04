@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink-950: #080b14;
+  --color-ink-900: #0d1220;
+  --color-ink-850: #121a2b;
+  --color-ink-800: #18223a;
+  --color-ink-700: #243150;
+  --color-ink-600: #36456b;
+  --color-ink-400: #7c8bb0;
+  --color-ink-300: #a6b2d0;
+  --color-ink-200: #cfd7ea;
+  --color-brand-500: #3b82f6;
+  --color-brand-400: #60a5fa;
+  --color-accent-400: #34d399;
+  --color-warn-400: #fbbf24;
+  --color-danger-400: #f87171;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1100px 600px at 12% -10%, #1b2847 0%, transparent 55%),
+    radial-gradient(900px 500px at 92% 0%, #16243f 0%, transparent 50%),
+    var(--color-ink-950);
+  color: var(--color-ink-200);
+  min-height: 100dvh;
+}
+
+/* Rendered markdown inside resource panels. */
+.prose-xp h2 { @apply mt-6 mb-2 text-base font-semibold text-white; }
+.prose-xp h3 { @apply mt-5 mb-2 text-sm font-semibold text-ink-200; }
+.prose-xp p { @apply my-2 text-sm leading-relaxed text-ink-300; }
+.prose-xp ul { @apply my-2 list-disc space-y-1 pl-5 text-sm text-ink-300; }
+.prose-xp ol { @apply my-2 list-decimal space-y-1 pl-5 text-sm text-ink-300; }
+.prose-xp strong { @apply font-semibold text-white; }
+.prose-xp blockquote { @apply my-3 border-l-2 border-brand-500/60 pl-3 text-sm italic text-ink-300; }
+.prose-xp code { @apply rounded bg-ink-900 px-1 py-0.5 font-mono text-[12px] text-accent-400; }
+.prose-xp pre { @apply my-3 overflow-x-auto rounded-lg bg-ink-950 p-3 font-mono text-[12px] text-ink-300; }
+.prose-xp pre code { @apply bg-transparent p-0 text-ink-300; }
+.prose-xp table { @apply my-3 w-full border-collapse text-sm; }
+.prose-xp th { @apply border-b border-ink-700 px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-400; }
+.prose-xp td { @apply border-b border-ink-800 px-2 py-1.5 align-top text-ink-300; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #24314f; border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #33446b; background-clip: content-box; }
+
+/* Phaser canvas should fill its container without layout surprises. */
+canvas { display: block; }
