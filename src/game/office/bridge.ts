@@ -10,7 +10,18 @@ import type { OfficeNpc, OfficeRoom } from './map';
 
 export type OfficeEvent =
   | { type: 'ready' }
-  | { type: 'prompt'; text: string | null }
+  /**
+   * `text` is the full sentence (used for assistive tech); `action` and
+   * `target` let the HUD render a keycap without repeating "Press E".
+   */
+  | {
+      type: 'prompt';
+      text: string | null;
+      action: string | null;
+      target: string | null;
+    }
+  /** Tile coordinates, emitted only when the player crosses a tile boundary. */
+  | { type: 'player_moved'; x: number; y: number }
   | { type: 'zone_changed'; room: OfficeRoom | null }
   | { type: 'interact_npc'; npc: OfficeNpc }
   | { type: 'interact_zone'; room: OfficeRoom };

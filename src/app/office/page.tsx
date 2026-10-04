@@ -44,6 +44,7 @@ export default async function OfficePage({
       subtitle={view ? view.department.projectTitle : 'Visitor mode'}
       backHref={view ? `/workspace/${view.session.id}` : '/departments'}
       backLabel={view ? 'Workspace' : 'Departments'}
+      wide
       right={
         <RuntimeBadges
           persistenceLabel={runtime.persistenceLabel}

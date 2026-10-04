@@ -30,7 +30,9 @@ This build is the **common platform plus the Sales vertical slice**:
   rules, configurable task forms, answer revisions, submissions snapshots,
   AI conversations with server-side hidden-information control, and behavior
   event logging.
-- A 2D BITE office in Phaser, wired to React through an explicit event bridge.
+- A 2D BITE office in Phaser — floors, walls with faked height, procedural
+  furniture and characters, all generated from a map definition with no art
+  assets — wired to React through an explicit event bridge.
 
 **Sales vertical slice** — all ten steps, playable:
 
@@ -61,9 +63,26 @@ React   = work / data layer            tasks, resources, forms, AI, progress, st
 ```
 
 Phaser holds **no business state**. The scene reports what the player did —
-`zone_changed`, `interact_npc`, `interact_zone` — through `OfficeBridge`, and
-React decides what that interaction means. Walking into the Data Room emits an
-event; React opens the resource panel and logs `resource_opened`.
+`zone_changed`, `player_moved`, `interact_npc`, `interact_zone` — through
+`OfficeBridge`, and React decides what that interaction means. Walking into the
+Data Room emits an event; React opens the resource panel and logs
+`resource_opened`. Even the minimap is React: it is an SVG drawn from the same
+`map.ts` the scene renders, so it stays crisp at any DPI and costs the game loop
+nothing.
+
+Two things in the scene are worth knowing about:
+
+- **The static world is baked into one texture.** A Phaser `Graphics` object
+  re-submits every draw command every frame, and the floor alone is ~1,400 tile
+  fills. Floor, wall shadows, furniture and walls never change and nothing
+  dynamic is drawn between them, so they are rendered once into a single image.
+- **Movement is wall-clock based, not frame based.** Phaser's default delta
+  smoothing clamps the frame delta to the target frame time, and Arcade's
+  default fixed step compounds it — together they make the whole simulation run
+  in slow motion on a machine that cannot hold 60fps, so walking speed would
+  depend on the player's hardware. `smoothStep: false` + `fixedStep: false` fix
+  that. (`scripts/verify-office-map.ts` covers the floor plan; the browser test
+  asserts distance travelled, which is what catches this class of regression.)
 
 ### The scenario engine is content-driven, not Sales-shaped
 
@@ -169,8 +188,9 @@ src/
     repository/           XPassRepository + Drizzle and file implementations
     seed/run.ts           idempotent content seed
   game/office/
-    map.ts                office layout as data (rooms, doors, zones, NPCs)
-    office-scene.ts       Phaser scene
+    map.ts                office layout as data (rooms, doors, furniture, NPCs)
+    theme.ts              the office palette — the whole look lives here
+    office-scene.ts       Phaser scene (procedural rendering, no art assets)
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
   app/                    routes (student, admin, api)
@@ -271,15 +291,20 @@ The header badge switches from *Mock AI* to *OpenAI*.
 ### Verification
 
 ```bash
-npm run verify            # typecheck + lint + disclosure matcher + Postgres path
+npm run verify            # typecheck + lint + office map + disclosure + Postgres
 npm run db:verify         # migration + seed + every Drizzle query on embedded PG
 npm run verify:disclosure # hidden-fact matcher against realistic phrasings
+npm run verify:office     # floor plan: every room, door and NPC still reachable
 ```
 
 `npm run db:verify` boots an embedded PostgreSQL (PGlite), applies the generated
 migration, runs the seed twice (idempotency), and drives `DrizzleRepository`
 through the real scenario services — so the Neon code path is validated without
 a Neon account.
+
+`npm run verify:office` matters because office furniture is solid: moving a desk
+can quietly wall off a room or trap an NPC. It flood-fills the real collision
+grid and fails if any room, door or NPC becomes unreachable.
 
 ---
 
@@ -336,7 +361,9 @@ obviously on-topic question still counts as discovery.
   departments and projects but have no scenario content authored.
 - **Object storage adapter.** `resources.file_url` exists; everything is
   currently inline markdown or table data.
-- **Visual polish / art assets.** The office is generated geometry.
+- **Art assets.** The office is generated geometry — deliberately, so a new room
+  is a data change. Sprite art would replace `office-scene.ts`'s paint methods
+  without touching the map or the bridge.
 
 ---
 
@@ -356,6 +383,10 @@ obviously on-topic question still counts as discovery.
   Vitest/Playwright suite in CI is the natural next step.
 - `next` carries a transitive build-time `postcss` advisory that is only fixed
   in Next 16 (a breaking major). Deferred deliberately.
+- The office renders ~1M pixels per frame. That is nothing for a GPU, but in a
+  software rasteriser (headless CI, for example) frame rate scales inversely
+  with canvas area — measured at a flat ~9.5M px/s. Movement is correct either
+  way now, but a low-end target would want a capped render resolution.
 
 ---
 

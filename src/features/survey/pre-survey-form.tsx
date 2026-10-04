@@ -70,10 +70,11 @@ export function PreSurveyForm({
                       key={score}
                       type="button"
                       onClick={() => setValue(key, score)}
-                      className={`h-9 flex-1 rounded-lg border text-xs font-medium transition-colors ${
+                      aria-pressed={current === score}
+                      className={`h-9 flex-1 rounded-lg border text-xs font-medium transition-all duration-150 active:scale-[0.97] ${
                         current === score
-                          ? 'border-brand-500 bg-brand-500/20 text-white'
-                          : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+                          ? 'border-brand-500 bg-brand-500/20 text-white shadow-sm shadow-brand-600/20'
+                          : 'border-ink-700 text-ink-500 hover:border-ink-500 hover:bg-ink-850 hover:text-ink-200'
                       }`}
                     >
                       {score}
@@ -120,7 +121,7 @@ export function PreSurveyForm({
         ) : null}
 
         <div className="flex gap-3">
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" loading={pending}>
             {pending ? 'Saving…' : 'Save and continue'}
           </Button>
           <Button

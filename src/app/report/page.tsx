@@ -9,10 +9,12 @@ import { getCurrentUser } from '@/lib/auth/session';
 /**
  * Career report.
  *
- * LIKE and SKILL FIT are rendered as two separate columns that are never
- * combined into a single "career fit" number. SKILL FIT reads `NE` (Not Enough
- * Evidence) until the evaluation pipeline exists — an honest absence, not a
- * zero and not a guess.
+ * LIKE and SKILL FIT are two separate columns that are never combined into a
+ * single "career fit" number. LIKE is one measure across departments, so it is
+ * drawn as a single-hue bar — identity is carried by the row label, not by the
+ * colour, and every bar is directly labelled so the value never depends on
+ * reading the colour. SKILL FIT reads `NE` (Not Enough Evidence) until the
+ * evaluation pipeline exists.
  */
 export default async function ReportPage() {
   const user = await getCurrentUser();
@@ -31,14 +33,10 @@ export default async function ReportPage() {
   const rows = DEPARTMENTS.map((department) => {
     const raw = preSurvey?.answers?.[`interest_${department.slug}`];
     const like = typeof raw === 'number' ? Math.round((raw / 5) * 100) : null;
-    return {
-      department,
-      like,
-      completed: completedSlugs.has(department.slug),
-    };
+    return { department, like, completed: completedSlugs.has(department.slug) };
   });
 
-  const anyCompleted = completedSlugs.size > 0;
+  const hasLike = rows.some((row) => row.like !== null);
 
   return (
     <AppShell
@@ -53,64 +51,96 @@ export default async function ReportPage() {
             title="LIKE vs SKILL FIT"
             subtitle="Two different measurements. They are never merged into one score."
           />
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border-b border-ink-700 px-5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">
-                    Department
-                  </th>
-                  <th className="border-b border-ink-700 px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-ink-400">
-                    LIKE
-                    <span className="block font-normal normal-case text-ink-600">
-                      self-reported
+
+          <div className="px-5 py-4">
+            <div className="grid grid-cols-[minmax(110px,1fr)_minmax(140px,2fr)_84px] gap-x-4 pb-2.5 text-[10px] font-medium uppercase tracking-wider text-ink-500">
+              <span>Department</span>
+              <span>
+                LIKE
+                <span className="ml-1.5 font-normal normal-case text-ink-600">
+                  self-reported, before the work
+                </span>
+              </span>
+              <span className="text-right">
+                SKILL FIT
+                <span className="block font-normal normal-case text-ink-600">
+                  from work evidence
+                </span>
+              </span>
+            </div>
+
+            <div className="divide-y divide-ink-800/70">
+              {rows.map(({ department, like, completed }) => (
+                <div
+                  key={department.slug}
+                  className="grid grid-cols-[minmax(110px,1fr)_minmax(140px,2fr)_84px] items-center gap-x-4 py-2.5"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: department.accentColor }}
+                    />
+                    <span className="truncate text-xs text-ink-200">
+                      {department.name}
                     </span>
-                  </th>
-                  <th className="border-b border-ink-700 px-5 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-ink-400">
-                    SKILL FIT
-                    <span className="block font-normal normal-case text-ink-600">
-                      from work evidence
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(({ department, like, completed }) => (
-                  <tr key={department.slug}>
-                    <td className="border-b border-ink-800 px-5 py-3">
-                      <span
-                        className="text-xs font-medium"
-                        style={{ color: department.accentColor }}
-                      >
-                        {department.name}
-                      </span>
-                      {completed ? (
-                        <Badge tone="success" className="ml-2">
-                          Bootcamp done
-                        </Badge>
-                      ) : null}
-                    </td>
-                    <td className="border-b border-ink-800 px-5 py-3 text-right font-mono text-ink-200">
-                      {like ?? '—'}
-                    </td>
-                    <td className="border-b border-ink-800 px-5 py-3 text-right">
-                      <Badge tone="muted" title="Not Enough Evidence">
-                        NE
+                    {completed ? (
+                      <Badge tone="success" className="shrink-0">
+                        done
                       </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    ) : null}
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-ink-850"
+                      role="img"
+                      aria-label={
+                        like === null
+                          ? `${department.name} LIKE not recorded`
+                          : `${department.name} LIKE ${like} out of 100`
+                      }
+                    >
+                      {like !== null ? (
+                        <div
+                          className="h-full rounded-full bg-brand-500"
+                          style={{ width: `${Math.max(like, 2)}%` }}
+                        />
+                      ) : null}
+                    </div>
+                    <span className="w-8 shrink-0 text-right font-mono text-xs text-ink-200">
+                      {like ?? '—'}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <Badge tone="muted" title="Not Enough Evidence">
+                      NE
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {!hasLike ? (
+              <p className="mt-3 rounded-lg border border-ink-800 bg-ink-950/50 px-3 py-2 text-[11px] text-ink-500">
+                No LIKE values yet — complete the{' '}
+                <Link href="/pre-survey" className="text-brand-400 hover:underline">
+                  pre-survey
+                </Link>{' '}
+                to fill this column.
+              </p>
+            ) : null}
           </div>
+
           <div className="border-t border-ink-800 px-5 py-4">
             <p className="text-[11px] leading-relaxed text-ink-400">
               <strong className="text-ink-200">NE = Not Enough Evidence.</strong> SKILL FIT
-              is produced by extracting evidence from your actual work and rating it against
-              behaviourally anchored criteria. That pipeline is not implemented in this
-              build, so nothing is shown rather than something invented. Behavior counts —
-              time spent, questions asked, resources opened — are never converted into a
-              score on their own.
+              is produced by extracting evidence from your actual work and rating it
+              against behaviourally anchored criteria. That pipeline is not implemented in
+              this build, so nothing is shown rather than something invented. Behaviour
+              counts — time spent, questions asked, resources opened — are never converted
+              into a score on their own.
             </p>
           </div>
         </Card>
@@ -119,14 +149,13 @@ export default async function ReportPage() {
           <Card>
             <CardHeader title="How to read this" />
             <div className="space-y-3 px-5 py-4 text-xs leading-relaxed text-ink-300">
-              <p>
-                This report does not say{' '}
-                <span className="text-ink-500 line-through">“You are suited for Strategy.”</span>
+              <p className="rounded-lg border border-ink-800 bg-ink-950/50 px-3 py-2 text-ink-500 line-through">
+                You are suited for Strategy.
               </p>
               <p>
-                It says: based on these work experiences, some directions may be worth
-                exploring more deeply — and shows you what you said you liked beforehand,
-                next to what you actually did.
+                This report does not say that. It says: based on these work experiences,
+                some directions may be worth exploring more deeply — and shows you what you
+                said you liked beforehand, next to what you actually did.
               </p>
               <p className="text-ink-400">
                 Liking a kind of work and being good at it are different questions. Keeping
@@ -139,7 +168,7 @@ export default async function ReportPage() {
             <CardHeader title="Your bootcamps" />
             <div className="px-5 py-4">
               {sessions.length === 0 ? (
-                <EmptyState>
+                <EmptyState icon="🧭">
                   No bootcamps yet.{' '}
                   <Link href="/departments" className="text-brand-400 hover:underline">
                     Choose a department
@@ -152,12 +181,16 @@ export default async function ReportPage() {
                     <li key={session.id} className="flex items-center justify-between gap-3">
                       <Link
                         href={`/workspace/${session.id}`}
-                        className="text-xs text-ink-200 underline-offset-4 hover:text-white hover:underline"
+                        className="text-xs text-ink-200 underline-offset-4 transition-colors hover:text-white hover:underline"
                       >
-                        {session.departmentSlug}
+                        {DEPARTMENTS.find((d) => d.slug === session.departmentSlug)?.name ??
+                          session.departmentSlug}
                       </Link>
-                      <Badge tone={session.status === 'completed' ? 'success' : 'brand'}>
-                        {session.status}
+                      <Badge
+                        tone={session.status === 'completed' ? 'success' : 'brand'}
+                        dot
+                      >
+                        {session.status.replace('_', ' ')}
                       </Badge>
                     </li>
                   ))}
@@ -166,12 +199,10 @@ export default async function ReportPage() {
             </div>
           </Card>
 
-          {!anyCompleted ? (
-            <p className="text-[11px] leading-relaxed text-ink-500">
-              Finish at least one bootcamp for this page to mean anything. The post-survey
-              that completes the LIKE side is not built yet.
-            </p>
-          ) : null}
+          <p className="px-1 text-[11px] leading-relaxed text-ink-600">
+            The post-survey that completes the LIKE side is not built yet, and the
+            evaluator that fills SKILL FIT is the next milestone.
+          </p>
         </div>
       </div>
     </AppShell>

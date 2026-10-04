@@ -8,8 +8,15 @@ import { ResourcePanel } from '@/features/resources/resource-panel';
 import { startStep } from '@/lib/client-api';
 import type { SessionView } from '@/types/session-view';
 import { EventCard } from './event-card';
-import { ProgressBar, StepRail } from './step-rail';
+import { DeadlineCountdown, ProgressRing, StepRail } from './step-rail';
 import { TaskCard } from './task-card';
+
+const STEP_STATUS_TONE = {
+  completed: 'success',
+  in_progress: 'brand',
+  available: 'brand',
+  locked: 'muted',
+} as const;
 
 /**
  * The work/data layer.
@@ -43,11 +50,6 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
     setView(next);
   }, []);
 
-  function selectStep(stepKey: string) {
-    setActiveStepKey(stepKey);
-  }
-
-  const deadline = new Date(view.session.deadlineAt);
   const isComplete = view.session.status === 'completed';
 
   if (!activeStep) {
@@ -55,36 +57,37 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-      {/* Left: step rail */}
-      <aside className="space-y-4">
-        <Card className="p-4">
-          <ProgressBar steps={view.steps} />
-          <div className="mt-4 space-y-1.5 border-t border-ink-800 pt-3 text-[11px]">
-            <div className="flex justify-between gap-2">
-              <span className="text-ink-500">Role</span>
-              <span className="text-right text-ink-300">{view.scenario.studentRole}</span>
+    <div className="grid gap-5 xl:grid-cols-[272px_minmax(0,1fr)_356px]">
+      {/* Left: progress + step timeline */}
+      <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+        <Card accent={view.department.accentColor} className="p-4">
+          <ProgressRing steps={view.steps} />
+
+          <dl className="mt-4 space-y-2 border-t border-ink-800 pt-3 text-[11px]">
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-ink-500">Role</dt>
+              <dd className="truncate text-right text-ink-300" title={view.scenario.studentRole}>
+                {view.scenario.studentRole}
+              </dd>
             </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-ink-500">Deadline</span>
-              <span className="text-right text-ink-300">
-                {deadline.toLocaleString()}
-              </span>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-ink-500">Deadline</dt>
+              <dd>
+                <DeadlineCountdown deadlineAt={view.session.deadlineAt} />
+              </dd>
             </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-ink-500">Scenario</span>
-              <span className="text-right text-ink-300">
-                v{view.scenario.version}
-              </span>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-ink-500">Scenario</dt>
+              <dd className="font-mono text-ink-300">v{view.scenario.version}</dd>
             </div>
-          </div>
+          </dl>
         </Card>
 
         <Card className="p-2">
           <StepRail
             steps={view.steps}
             activeStepKey={activeStep.key}
-            onSelect={selectStep}
+            onSelect={setActiveStepKey}
           />
         </Card>
 
@@ -94,18 +97,18 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
             aiLabel={view.runtime.aiLabel}
             aiModeDowngraded={view.runtime.aiModeDowngraded}
           />
-          <div className="mt-3 flex flex-col gap-1.5 text-[11px]">
+          <div className="mt-3 flex flex-col gap-1.5 border-t border-ink-800 pt-3 text-[11px]">
             <Link
               href={`/office?session=${view.session.id}`}
-              className="text-ink-400 underline-offset-4 hover:text-white hover:underline"
+              className="flex items-center gap-1.5 text-ink-400 transition-colors hover:text-white"
             >
-              → Enter the 2D office
+              <span aria-hidden>🏢</span> Enter the 2D office
             </Link>
             <Link
               href={`/admin/events?session=${view.session.id}`}
-              className="text-ink-400 underline-offset-4 hover:text-white hover:underline"
+              className="flex items-center gap-1.5 text-ink-400 transition-colors hover:text-white"
             >
-              → Inspect behavior events
+              <span aria-hidden>📊</span> Inspect behavior events
             </Link>
           </div>
         </Card>
@@ -114,17 +117,19 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
       {/* Center: active step */}
       <section className="min-w-0 space-y-4">
         {isComplete ? (
-          <Card className="border-accent-400/40 bg-accent-400/5 px-5 py-4">
+          <Card className="animate-pop border-accent-400/40 bg-accent-500/5 px-5 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <Badge tone="success">Bootcamp complete</Badge>
-                <p className="mt-2 text-sm text-ink-200">
+                <Badge tone="success" dot>
+                  Bootcamp complete
+                </Badge>
+                <p className="mt-2 text-sm text-ink-100">
                   You submitted the {view.scenario.finalOutputTitle}.
                 </p>
               </div>
               <Link
                 href="/report"
-                className="rounded-lg border border-accent-400/40 px-3.5 py-2 text-xs text-accent-400 transition-colors hover:bg-accent-400/10"
+                className="rounded-xl border border-accent-400/40 px-3.5 py-2 text-xs font-medium text-accent-400 transition-colors hover:bg-accent-400/10"
               >
                 View career report →
               </Link>
@@ -132,33 +137,28 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
           </Card>
         ) : null}
 
-        <Card>
+        <Card accent={view.department.accentColor}>
           <CardHeader
             title={activeStep.title}
             subtitle={activeStep.summary ?? undefined}
             right={
-              <Badge
-                tone={
-                  activeStep.status === 'completed'
-                    ? 'success'
-                    : activeStep.unlocked
-                      ? 'brand'
-                      : 'muted'
-                }
-              >
+              <Badge tone={STEP_STATUS_TONE[activeStep.status]} dot>
                 {activeStep.status.replace('_', ' ')}
               </Badge>
             }
           />
           {activeStep.instructions ? (
-            <p className="px-5 py-4 text-sm leading-relaxed text-ink-300">
+            <p className="px-5 py-4 text-[13px] leading-relaxed text-ink-300">
               {activeStep.instructions}
             </p>
           ) : null}
         </Card>
 
         {!activeStep.unlocked ? (
-          <Card className="px-5 py-8 text-center">
+          <Card className="px-5 py-10 text-center">
+            <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-ink-850 text-base">
+              🔒
+            </div>
             <p className="text-sm text-ink-400">
               {activeStep.lockedReason ?? 'This step is not available yet.'}
             </p>
@@ -190,7 +190,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
       </section>
 
       {/* Right: resources */}
-      <aside className="space-y-4">
+      <aside className="xl:sticky xl:top-20 xl:self-start">
         <ResourcePanel
           sessionId={view.session.id}
           resources={view.resources}

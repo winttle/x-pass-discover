@@ -33,7 +33,24 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
           mode: Phaser.Scale.RESIZE,
           autoCenter: Phaser.Scale.CENTER_BOTH,
         },
-        physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 } } },
+        fps: {
+          target: 60,
+          // Phaser's delta smoothing clamps the frame delta to the target frame
+          // time, so on a machine that cannot hold 60fps the whole simulation
+          // runs in slow motion — walking speed would depend on the player's
+          // hardware. Use the real elapsed time instead.
+          smoothStep: false,
+        },
+        physics: {
+          default: 'arcade',
+          arcade: {
+            gravity: { x: 0, y: 0 },
+            // Integrate with the real frame delta. With Arcade's default fixed
+            // step, a slow frame rate also slows the avatar down — walking
+            // speed would depend on the player's machine.
+            fixedStep: false,
+          },
+        },
         scene: [new OfficeScene(bridge)],
       });
 
@@ -56,7 +73,7 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
   return (
     <div
       ref={containerRef}
-      className="h-[640px] w-full overflow-hidden rounded-2xl border border-ink-700/70 bg-ink-950"
+      className="h-[clamp(420px,calc(100dvh-230px),760px)] w-full overflow-hidden bg-ink-950"
     />
   );
 }

@@ -15,7 +15,8 @@
     "db:seed": "tsx --conditions=react-server src/db/seed/run.ts",
     "db:verify": "tsx --conditions=react-server scripts/verify-postgres.ts",
     "verify:disclosure": "tsx --conditions=react-server scripts/verify-disclosure.ts",
-    "verify": "npm run typecheck && npm run lint && npm run verify:disclosure && npm run db:verify"
+    "verify": "npm run typecheck && npm run lint && npm run verify:office && npm run verify:disclosure && npm run db:verify",
+    "verify:office": "tsx --conditions=react-server scripts/verify-office-map.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

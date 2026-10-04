@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Card, Field, inputClass } from '@/components/ui';
+import { Logo } from '@/components/app-shell';
 
 /**
  * Development identity, not authentication. There is no password: this exists
@@ -38,14 +39,7 @@ export function LoginForm() {
 
   return (
     <Card className="p-6">
-      <div className="flex items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl bg-brand-500 text-sm font-bold text-white">
-          X
-        </span>
-        <span className="text-base font-semibold tracking-tight text-white">
-          X-PASS <span className="text-ink-400">Discover</span>
-        </span>
-      </div>
+      <Logo />
 
       <h1 className="mt-6 text-lg font-semibold text-white">Sign in to BITE</h1>
       <p className="mt-1 text-xs text-ink-400">
@@ -83,7 +77,7 @@ export function LoginForm() {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={pending} className="w-full">
+        <Button type="submit" loading={pending} className="w-full">
           {pending ? 'Signing in…' : 'Enter BITE'}
         </Button>
       </form>

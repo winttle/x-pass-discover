@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, Card, CardHeader, inputClass } from '@/components/ui';
+import { Badge, Button, Card, CardHeader, inputClass, Spinner } from '@/components/ui';
+import { useToast } from '@/components/toast';
 import { conversationAction } from '@/lib/client-api';
 import type { ConversationView, PublicPersona } from '@/types/ai';
 import type { SessionView } from '@/types/session-view';
@@ -12,7 +13,8 @@ import type { SessionView } from '@/types/session-view';
  * The client never sees hidden facts, disclosure rules or the system prompt.
  * What it receives is the persona's reply plus the LABELS of facts this reply
  * disclosed, so the student can see that asking a good question earned
- * something concrete.
+ * something concrete — the discovery counter is the feedback loop that teaches
+ * the mechanic.
  */
 export function ChatPanel({
   sessionId,
@@ -32,17 +34,24 @@ export function ChatPanel({
   const [conversation, setConversation] = useState<ConversationView | null>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const discoveredRef = useRef(0);
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
     conversationAction(sessionId, { personaKey: persona.key, stepKey, action: 'open' })
       .then((data) => {
-        if (!cancelled) setConversation(data.conversation);
+        if (cancelled) return;
+        discoveredRef.current = data.conversation.discoveredFactCount;
+        setConversation(data.conversation);
       })
       .catch((cause: unknown) =>
-        setError(cause instanceof Error ? cause.message : 'Could not open the conversation'),
+        setError(
+          cause instanceof Error ? cause.message : 'Could not open the conversation',
+        ),
       );
     return () => {
       cancelled = true;
@@ -55,6 +64,20 @@ export function ChatPanel({
       behavior: 'smooth',
     });
   }, [conversation?.messages.length, sending]);
+
+  function applyConversation(next: ConversationView) {
+    const gained = next.discoveredFactCount - discoveredRef.current;
+    if (gained > 0) {
+      const labels = next.messages.at(-1)?.revealedFactLabels ?? [];
+      toast.push({
+        tone: 'success',
+        title: gained === 1 ? 'You uncovered something' : `You uncovered ${gained} things`,
+        description: labels.join(' · ') || undefined,
+      });
+    }
+    discoveredRef.current = next.discoveredFactCount;
+    setConversation(next);
+  }
 
   async function send() {
     const message = draft.trim();
@@ -69,7 +92,7 @@ export function ChatPanel({
         action: 'send',
         message,
       });
-      setConversation(data.conversation);
+      applyConversation(data.conversation);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not send the message');
       setDraft(message);
@@ -79,7 +102,7 @@ export function ChatPanel({
   }
 
   async function end() {
-    setSending(true);
+    setEnding(true);
     setError(null);
     try {
       const data = await conversationAction(sessionId, {
@@ -89,10 +112,11 @@ export function ChatPanel({
       });
       setConversation(data.conversation);
       if (data.view) onSessionUpdate(data.view);
+      toast.push({ tone: 'info', title: 'Conversation ended', description: 'Your transcript is preserved.' });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not end the conversation');
     } finally {
-      setSending(false);
+      setEnding(false);
     }
   }
 
@@ -100,46 +124,51 @@ export function ChatPanel({
   const remaining = Math.max(0, minStudentMessages - sent);
   const ended = conversation?.status === 'ended';
   const canEnd = remaining === 0 && !ended;
+  const found = conversation?.discoveredFactCount ?? 0;
+  const total = conversation?.totalDiscoverableFactCount ?? 0;
 
   return (
-    <Card className="flex h-[620px] flex-col overflow-hidden">
+    <Card className="flex h-[640px] flex-col overflow-hidden">
       <CardHeader
         title={
           <span className="flex items-center gap-2">
-            <span
-              className="grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white"
-              style={{ backgroundColor: persona.avatarColor }}
-            >
-              {persona.name.slice(0, 1)}
-            </span>
+            <Avatar persona={persona} />
             {persona.name}
           </span>
         }
         subtitle={`${persona.role} · ${persona.organization}`}
         right={
           <div className="flex items-center gap-1.5">
-            {ended ? <Badge tone="muted">Ended</Badge> : <Badge tone="success">Live</Badge>}
-            {conversation ? (
-              <Badge
-                tone="brand"
-                title="Specific facts you have uncovered by asking relevant questions"
-              >
-                {conversation.discoveredFactCount}/{conversation.totalDiscoverableFactCount} found
+            {ended ? (
+              <Badge tone="muted" dot>
+                Ended
               </Badge>
-            ) : null}
+            ) : (
+              <Badge tone="success" dot>
+                Live
+              </Badge>
+            )}
           </div>
         }
       />
 
-      <div className="border-b border-ink-800 bg-ink-950/40 px-5 py-2.5">
+      <div className="space-y-2.5 border-b border-ink-800 bg-ink-950/50 px-5 py-3">
         <p className="text-[11px] leading-relaxed text-ink-400">
           {persona.visibleContext}
         </p>
+        {total > 0 ? <DiscoveryMeter found={found} total={total} /> : null}
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+      <div className="relative flex-1 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-ink-900/90 to-transparent"
+        />
+        <div ref={scrollRef} className="h-full space-y-3 overflow-y-auto px-5 py-4">
         {!conversation ? (
-          <p className="text-xs text-ink-500">Connecting…</p>
+          <div className="flex items-center gap-2 text-xs text-ink-500">
+            <Spinner /> Connecting…
+          </div>
         ) : null}
 
         {conversation?.messages.map((message) => {
@@ -147,14 +176,15 @@ export function ChatPanel({
           return (
             <div
               key={message.id}
-              className={`flex ${isStudent ? 'justify-end' : 'justify-start'}`}
+              className={`flex animate-fade-up gap-2.5 ${isStudent ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[85%] ${isStudent ? 'items-end' : ''}`}>
+              {!isStudent ? <Avatar persona={persona} className="mt-0.5" /> : null}
+              <div className={`max-w-[82%] ${isStudent ? 'items-end' : ''}`}>
                 <div
-                  className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={`rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
                     isStudent
-                      ? 'bg-brand-500 text-white'
-                      : 'border border-ink-800 bg-ink-950/60 text-ink-200'
+                      ? 'rounded-br-md bg-brand-600 text-white'
+                      : 'rounded-bl-md border border-ink-800 bg-ink-950/70 text-ink-200'
                   }`}
                 >
                   {message.content}
@@ -162,7 +192,7 @@ export function ChatPanel({
                 {message.revealedFactLabels?.length ? (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {message.revealedFactLabels.map((label) => (
-                      <Badge key={label} tone="success">
+                      <Badge key={label} tone="success" className="animate-pop">
                         ✦ {label}
                       </Badge>
                     ))}
@@ -174,12 +204,23 @@ export function ChatPanel({
         })}
 
         {sending ? (
-          <div className="flex justify-start">
-            <div className="rounded-2xl border border-ink-800 bg-ink-950/60 px-3.5 py-2.5 text-sm text-ink-500">
-              …
+          <div className="flex gap-2.5">
+            <Avatar persona={persona} className="mt-0.5" />
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-ink-800 bg-ink-950/70 px-4 py-3.5">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="size-1.5 rounded-full bg-ink-400"
+                  style={{
+                    animation: 'dot-pulse 1.3s ease-in-out infinite',
+                    animationDelay: `${i * 0.16}s`,
+                  }}
+                />
+              ))}
             </div>
-          </div>
-        ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {error ? (
@@ -188,7 +229,7 @@ export function ChatPanel({
         </p>
       ) : null}
 
-      <div className="border-t border-ink-800 px-5 py-3">
+      <div className="border-t border-ink-800 bg-ink-900/60 px-5 py-3">
         {ended ? (
           <p className="text-xs text-ink-500">
             This conversation has ended. Your transcript is preserved.
@@ -210,18 +251,29 @@ export function ChatPanel({
                   }
                 }}
               />
-              <Button onClick={send} disabled={readOnly || sending || !draft.trim()}>
+              <Button
+                onClick={send}
+                disabled={readOnly || sending || !draft.trim()}
+                className="self-stretch"
+              >
                 Send
               </Button>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] text-ink-500">
-                ⌘/Ctrl + Enter to send.{' '}
+                <kbd className="rounded border border-ink-700 bg-ink-850 px-1 py-px font-mono text-[9px]">
+                  ⌘/Ctrl
+                </kbd>
+                {' + '}
+                <kbd className="rounded border border-ink-700 bg-ink-850 px-1 py-px font-mono text-[9px]">
+                  ↵
+                </kbd>{' '}
+                to send
                 {remaining > 0
-                  ? `${remaining} more question${remaining === 1 ? '' : 's'} before you can end this.`
-                  : 'You can end this whenever you are ready.'}
+                  ? ` · ${remaining} more question${remaining === 1 ? '' : 's'} before you can end this`
+                  : ' · you can end this whenever you are ready'}
               </p>
-              <Button variant="secondary" onClick={end} disabled={!canEnd || sending}>
+              <Button variant="secondary" size="sm" onClick={end} disabled={!canEnd} loading={ending}>
                 End meeting
               </Button>
             </div>
@@ -229,5 +281,49 @@ export function ChatPanel({
         )}
       </div>
     </Card>
+  );
+}
+
+function Avatar({
+  persona,
+  className,
+}: {
+  persona: PublicPersona;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-ink-900 ${className ?? ''}`}
+      style={{ backgroundColor: persona.avatarColor }}
+      aria-hidden
+    >
+      {persona.name.slice(0, 1)}
+    </span>
+  );
+}
+
+/** Shows what the student has earned by asking well — never a score. */
+function DiscoveryMeter({ found, total }: { found: number; total: number }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="font-medium uppercase tracking-wider text-ink-500">
+          Specifics uncovered
+        </span>
+        <span className="font-mono text-ink-300">
+          {found}/{total}
+        </span>
+      </div>
+      <div className="mt-1.5 flex gap-1">
+        {Array.from({ length: total }, (_, index) => (
+          <span
+            key={index}
+            className={`h-1 flex-1 rounded-full transition-colors duration-500 ${
+              index < found ? 'bg-accent-400' : 'bg-ink-800'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

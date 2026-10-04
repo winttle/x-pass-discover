@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, Button, Field } from '@/components/ui';
+import { useToast } from '@/components/toast';
 import { logClientEvent, saveTask } from '@/lib/client-api';
 import { evaluateGuardrails, type GuardrailWarning } from '@/services/scenario/guardrails';
 import type { AnswerValue } from '@/types/runtime';
@@ -42,6 +43,7 @@ export function DynamicForm({
   const [serverWarnings, setServerWarnings] = useState<GuardrailWarning[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef(false);
   const startedRef = useRef(task.status !== 'not_started');
@@ -110,11 +112,24 @@ export function DynamicForm({
     setSubmitting(true);
     setError(null);
     try {
-      await persist(value, 'submitted');
+      const result = await persist(value, 'submitted');
       dirtyRef.current = false;
       setSaveState('saved');
+
+      const violations = result.warnings.filter((w) => w.severity === 'violation');
+      if (violations.length > 0) {
+        toast.push({
+          tone: 'warn',
+          title: 'Submitted, with guardrail warnings',
+          description: `${violations.length} condition${violations.length === 1 ? ' is' : 's are'} outside BITE's guardrails. Your answer was recorded as written.`,
+        });
+      } else {
+        toast.push({ tone: 'success', title: `${task.title} submitted` });
+      }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not submit');
+      const message = cause instanceof Error ? cause.message : 'Could not submit';
+      setError(message);
+      toast.push({ tone: 'danger', title: 'Could not submit', description: message });
     } finally {
       setSubmitting(false);
     }
@@ -198,25 +213,39 @@ export function DynamicForm({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-800 pt-4">
-        <p className="text-[11px] text-ink-500">
-          {saveState === 'saving'
-            ? 'Saving…'
-            : saveState === 'saved'
-              ? `Draft saved · v${task.version}`
-              : saveState === 'error'
-                ? 'Autosave failed'
-                : task.updatedAt
-                  ? `Last saved ${new Date(task.updatedAt).toLocaleTimeString()}`
-                  : 'Not saved yet'}
+        <p className="flex flex-wrap items-center gap-2 text-[11px] text-ink-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={`size-1.5 rounded-full ${
+                saveState === 'saving'
+                  ? 'animate-pulse bg-brand-400'
+                  : saveState === 'error'
+                    ? 'bg-danger-400'
+                    : saveState === 'saved'
+                      ? 'bg-accent-400'
+                      : 'bg-ink-600'
+              }`}
+            />
+            {saveState === 'saving'
+              ? 'Saving…'
+              : saveState === 'saved'
+                ? `Draft saved · v${task.version}`
+                : saveState === 'error'
+                  ? 'Autosave failed'
+                  : task.updatedAt
+                    ? `Last saved ${new Date(task.updatedAt).toLocaleTimeString()}`
+                    : 'Not saved yet'}
+          </span>
           {missing.length > 0 ? (
-            <span className="ml-2 text-warn-400">
-              {missing.length} required field{missing.length === 1 ? '' : 's'} left
+            <span className="text-warn-400">
+              · {missing.length} required field{missing.length === 1 ? '' : 's'} left
             </span>
           ) : null}
         </p>
         <div className="flex items-center gap-2">
           {task.status === 'complete' ? <Badge tone="success">Complete</Badge> : null}
-          <Button onClick={submit} disabled={submitting}>
+          <Button onClick={submit} loading={submitting}>
             {submitting
               ? 'Submitting…'
               : task.submittedAt

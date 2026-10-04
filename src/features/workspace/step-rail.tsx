@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui';
 import type { StepView } from '@/types/session-view';
 
@@ -15,6 +16,11 @@ const STEP_TYPE_LABEL: Record<string, string> = {
   final_submission: 'Handover',
 };
 
+/**
+ * The step list reads as a timeline rather than a menu: the scenario is a
+ * sequence of work, and the connector line makes "where I am" and "what is
+ * still sealed" legible at a glance.
+ */
 export function StepRail({
   steps,
   activeStepKey,
@@ -25,86 +31,165 @@ export function StepRail({
   onSelect: (stepKey: string) => void;
 }) {
   return (
-    <nav className="space-y-1">
+    <nav className="relative py-1" aria-label="Bootcamp steps">
       {steps.map((step, index) => {
         const isActive = step.key === activeStepKey;
         const locked = !step.unlocked;
         const complete = step.status === 'completed';
+        const isLast = index === steps.length - 1;
 
         return (
-          <button
-            key={step.key}
-            type="button"
-            disabled={locked}
-            onClick={() => onSelect(step.key)}
-            title={locked ? (step.lockedReason ?? undefined) : undefined}
-            className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${
-              isActive
-                ? 'border-brand-500/60 bg-brand-500/10'
-                : locked
-                  ? 'cursor-not-allowed border-transparent opacity-45'
-                  : 'border-transparent hover:border-ink-700 hover:bg-ink-850/50'
-            }`}
-          >
-            <span
-              className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md text-[10px] font-semibold ${
-                complete
-                  ? 'bg-accent-400/20 text-accent-400'
+          <div key={step.key} className="relative">
+            {!isLast ? (
+              <span
+                aria-hidden
+                className={`absolute left-[21px] top-8 h-[calc(100%-1rem)] w-px ${
+                  complete ? 'bg-accent-400/45' : 'bg-ink-800'
+                }`}
+              />
+            ) : null}
+
+            <button
+              type="button"
+              disabled={locked}
+              onClick={() => onSelect(step.key)}
+              title={locked ? (step.lockedReason ?? undefined) : undefined}
+              aria-current={isActive ? 'step' : undefined}
+              className={`relative flex w-full items-start gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-150 ${
+                isActive
+                  ? 'bg-brand-500/10 ring-1 ring-brand-500/40'
                   : locked
-                    ? 'bg-ink-850 text-ink-600'
-                    : 'bg-ink-800 text-ink-300'
+                    ? 'cursor-not-allowed opacity-40'
+                    : 'hover:bg-ink-850/70'
               }`}
             >
-              {complete ? '✓' : locked ? '🔒' : index + 1}
-            </span>
-            <span className="min-w-0 flex-1">
               <span
-                className={`block truncate text-xs font-medium ${
-                  isActive ? 'text-white' : 'text-ink-200'
+                className={`z-10 mt-0.5 grid size-[22px] shrink-0 place-items-center rounded-full border text-[10px] font-semibold transition-colors ${
+                  complete
+                    ? 'border-accent-400/50 bg-accent-400/15 text-accent-400'
+                    : isActive
+                      ? 'border-brand-400 bg-brand-500 text-white'
+                      : locked
+                        ? 'border-ink-800 bg-ink-900 text-ink-600'
+                        : 'border-ink-700 bg-ink-850 text-ink-300'
                 }`}
               >
-                {step.title}
+                {complete ? '✓' : locked ? '🔒' : index + 1}
               </span>
-              <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider text-ink-500">
-                  {STEP_TYPE_LABEL[step.stepType] ?? step.stepType}
+
+              <span className="min-w-0 flex-1 pt-0.5">
+                <span
+                  className={`block truncate text-xs font-medium ${
+                    isActive ? 'text-white' : complete ? 'text-ink-400' : 'text-ink-200'
+                  }`}
+                >
+                  {step.title}
                 </span>
-                {step.estimatedMinutes ? (
-                  <span className="text-[10px] text-ink-600">
-                    · {step.estimatedMinutes} min
+                <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-ink-500">
+                    {STEP_TYPE_LABEL[step.stepType] ?? step.stepType}
+                  </span>
+                  {step.estimatedMinutes ? (
+                    <span className="text-[10px] text-ink-600">
+                      · {step.estimatedMinutes} min
+                    </span>
+                  ) : null}
+                </span>
+                {locked && step.lockedReason ? (
+                  <span className="mt-1 block text-[10px] leading-snug text-ink-600">
+                    {step.lockedReason}
                   </span>
                 ) : null}
               </span>
-              {locked && step.lockedReason ? (
-                <span className="mt-1 block text-[10px] leading-snug text-ink-600">
-                  {step.lockedReason}
-                </span>
-              ) : null}
-            </span>
-          </button>
+            </button>
+          </div>
         );
       })}
     </nav>
   );
 }
 
-export function ProgressBar({ steps }: { steps: StepView[] }) {
+export function ProgressRing({ steps }: { steps: StepView[] }) {
   const done = steps.filter((s) => s.status === 'completed').length;
-  const pct = steps.length === 0 ? 0 : Math.round((done / steps.length) * 100);
+  const total = steps.length || 1;
+  const pct = Math.round((done / total) * 100);
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+
   return (
-    <div>
-      <div className="flex items-center justify-between text-[11px] text-ink-400">
-        <span>Bootcamp progress</span>
-        <Badge tone={pct === 100 ? 'success' : 'muted'}>
-          {done}/{steps.length}
-        </Badge>
+    <div className="flex items-center gap-3.5">
+      <div className="relative size-16 shrink-0">
+        <svg viewBox="0 0 64 64" className="size-16 -rotate-90">
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="5"
+            className="text-ink-800"
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - pct / 100)}
+            className={pct === 100 ? 'text-accent-400' : 'text-brand-500'}
+            style={{ transition: 'stroke-dashoffset 600ms cubic-bezier(0.22,1,0.36,1)' }}
+          />
+        </svg>
+        <span className="absolute inset-0 grid place-items-center">
+          <span className="font-mono text-sm font-semibold text-white">{pct}%</span>
+        </span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-850">
-        <div
-          className="h-full rounded-full bg-brand-500 transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-white">Bootcamp progress</p>
+        <p className="mt-0.5 text-[11px] text-ink-400">
+          {done} of {steps.length} steps complete
+        </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Live countdown to the 24-hour deadline. Pure presentation — nothing in the
+ * engine expires a session yet, so this informs rather than enforces.
+ */
+export function DeadlineCountdown({ deadlineAt }: { deadlineAt: string }) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    const tick = () => setRemaining(new Date(deadlineAt).getTime() - Date.now());
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [deadlineAt]);
+
+  if (remaining === null) {
+    return <span className="font-mono text-[11px] text-ink-500">—</span>;
+  }
+
+  if (remaining <= 0) {
+    return (
+      <Badge tone="danger" dot>
+        Deadline passed
+      </Badge>
+    );
+  }
+
+  const hours = Math.floor(remaining / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+  const tone = hours < 3 ? 'warn' : 'muted';
+
+  return (
+    <Badge tone={tone} dot title={new Date(deadlineAt).toLocaleString()}>
+      {hours}h {String(minutes).padStart(2, '0')}m left
+    </Badge>
   );
 }
