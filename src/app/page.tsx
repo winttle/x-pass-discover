@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Logo, RuntimeBadges } from '@/components/app-shell';
+import { Cover } from '@/components/media';
 import { Badge, Card } from '@/components/ui';
+import { MEDIA } from '@/content/media';
 import { DEPARTMENTS } from '@/content/departments';
 import { getCurrentUser } from '@/lib/auth/session';
 import { runtimeModeSummary } from '@/lib/env';
@@ -22,17 +25,19 @@ export default async function LandingPage() {
         <Logo />
         <RuntimeBadges
           persistenceLabel={runtime.persistenceLabel}
+          persistenceIsEphemeral={runtime.persistenceIsEphemeral}
           aiLabel={runtime.aiLabel}
           aiModeDowngraded={runtime.aiModeDowngraded}
         />
       </header>
 
-      <section className="mt-20 max-w-3xl animate-fade-up">
+      <section className="mt-16 grid animate-fade-up items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <div>
         <Badge tone="brand" dot>
           2D Virtual Office × Business Simulation × AI Employees
         </Badge>
 
-        <h1 className="mt-6 text-[2.75rem] font-bold leading-[1.08] tracking-tight text-white sm:text-6xl">
+        <h1 className="mt-6 text-[2.75rem] font-bold leading-[1.08] tracking-tight text-strong sm:text-6xl">
           Step into the company.
           <br />
           Do the work.
@@ -42,8 +47,8 @@ export default async function LandingPage() {
           </span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-300">
-          Join <strong className="font-semibold text-white">BITE</strong>, a casual F&amp;B
+        <p className="mt-6 max-w-2xl text-base leading-relaxed text-body">
+          Join <strong className="font-semibold text-strong">BITE</strong>, a casual F&amp;B
           company. Walk into its office, take on real business work across five
           departments, talk to the people who actually make the decisions, and revise your
           thinking when new information lands.
@@ -58,43 +63,57 @@ export default async function LandingPage() {
           </Link>
           <Link
             href="/office"
-            className="rounded-xl border border-ink-600 px-5 py-2.5 text-sm font-medium text-ink-200 transition-colors hover:border-ink-400 hover:bg-ink-850 hover:text-white"
+            className="rounded-xl border border-line-strong bg-surface px-5 py-2.5 text-sm font-medium text-body shadow-card transition-colors hover:border-subtle hover:bg-sunken hover:text-strong"
           >
             Visit the 2D office
           </Link>
+          </div>
         </div>
+
+        <Cover
+          src={MEDIA.companyHero.src}
+          alt={MEDIA.companyHero.alt}
+          priority
+          className="h-64 rounded-2xl border border-line shadow-raised sm:h-80"
+        />
       </section>
 
       <section className="mt-16 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {FLOW.map(([title, body], index) => (
           <Card key={title} className="p-4">
-            <span className="font-mono text-[11px] text-ink-600">
+            <span className="font-mono text-[11px] text-subtle">
               0{index + 1}
             </span>
-            <p className="mt-2 text-sm font-semibold text-white">{title}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-ink-400">{body}</p>
+            <p className="mt-2 text-sm font-semibold text-strong">{title}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted">{body}</p>
           </Card>
         ))}
       </section>
 
       <section className="mt-16">
         <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
             Same company, different work
           </h2>
-          <span className="text-[11px] text-ink-600">
+          <span className="text-[11px] text-subtle">
             Choose 3 of 5 · ~3 hours each
           </span>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DEPARTMENTS.map((department) => (
-            <Card
-              key={department.slug}
-              accent={department.accentColor}
-              interactive
-              className="p-4"
-            >
+            <Card key={department.slug} interactive className="overflow-hidden">
+              <div className="relative h-24 border-b border-line">
+                <Image
+                  src={department.coverImage}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="(max-width: 768px) 100vw, 360px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-4">
               <div className="flex items-center justify-between gap-2">
                 <span
                   className="text-sm font-semibold"
@@ -110,12 +129,13 @@ export default async function LandingPage() {
                   <Badge tone="muted">Coming soon</Badge>
                 )}
               </div>
-              <p className="mt-2.5 text-xs font-medium text-ink-100">
+              <p className="mt-2.5 text-xs font-medium text-strong">
                 {department.projectTitle}
               </p>
-              <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
                 {department.coreQuestion}
               </p>
+              </div>
             </Card>
           ))}
         </div>
@@ -123,22 +143,22 @@ export default async function LandingPage() {
 
       <section className="mt-16 grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
-          <h3 className="text-sm font-semibold text-white">
+          <h3 className="text-sm font-semibold text-strong">
             LIKE and SKILL FIT are different questions
           </h3>
-          <p className="mt-2.5 text-xs leading-relaxed text-ink-400">
-            Your report shows what you <strong className="text-ink-200">enjoyed</strong>{' '}
-            beside what the <strong className="text-ink-200">work itself showed</strong>.
+          <p className="mt-2.5 text-xs leading-relaxed text-muted">
+            Your report shows what you <strong className="text-strong">enjoyed</strong>{' '}
+            beside what the <strong className="text-strong">work itself showed</strong>.
             They are never collapsed into a single &ldquo;career fit&rdquo; number, and
             time spent or questions asked never become points on their own.
           </p>
-          <div className="mt-4 overflow-hidden rounded-xl border border-ink-800">
+          <div className="mt-4 overflow-hidden rounded-xl border border-line">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-ink-950/60">
-                  <th className="px-3 py-2 text-left font-medium text-ink-500">Department</th>
-                  <th className="px-3 py-2 text-right font-medium text-ink-500">LIKE</th>
-                  <th className="px-3 py-2 text-right font-medium text-ink-500">SKILL FIT</th>
+                <tr className="bg-sunken">
+                  <th className="px-3 py-2 text-left font-medium text-muted">Department</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted">LIKE</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted">SKILL FIT</th>
                 </tr>
               </thead>
               <tbody>
@@ -147,24 +167,24 @@ export default async function LandingPage() {
                   ['Product Management', '78', '89'],
                   ['Strategy', '84', '86'],
                 ].map(([name, like, fit]) => (
-                  <tr key={name} className="border-t border-ink-800/70">
-                    <td className="px-3 py-2 text-ink-300">{name}</td>
-                    <td className="px-3 py-2 text-right font-mono text-ink-200">{like}</td>
-                    <td className="px-3 py-2 text-right font-mono text-ink-200">{fit}</td>
+                  <tr key={name} className="border-t border-line">
+                    <td className="px-3 py-2 text-body">{name}</td>
+                    <td className="px-3 py-2 text-right font-mono text-strong">{like}</td>
+                    <td className="px-3 py-2 text-right font-mono text-strong">{fit}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[10px] text-ink-600">
+          <p className="mt-2 text-[10px] text-subtle">
             Illustrative. Your own report reports <span className="font-mono">NE</span>{' '}
             where there is not enough evidence yet.
           </p>
         </Card>
 
         <Card className="p-5">
-          <h3 className="text-sm font-semibold text-white">What this is not</h3>
-          <ul className="mt-3 space-y-2 text-xs text-ink-400">
+          <h3 className="text-sm font-semibold text-strong">What this is not</h3>
+          <ul className="mt-3 space-y-2 text-xs text-muted">
             {[
               'An AI aptitude test',
               'A personality diagnosis',
@@ -173,14 +193,14 @@ export default async function LandingPage() {
               'A 3D metaverse',
             ].map((item) => (
               <li key={item} className="flex items-center gap-2.5">
-                <span className="text-ink-700" aria-hidden>
+                <span className="text-body" aria-hidden>
                   ✕
                 </span>
                 {item}
               </li>
             ))}
           </ul>
-          <p className="mt-4 border-t border-ink-800 pt-4 text-xs leading-relaxed text-ink-300">
+          <p className="mt-4 border-t border-line pt-4 text-xs leading-relaxed text-body">
             It is a place where you do the job, and what you did becomes the evidence.
           </p>
         </Card>

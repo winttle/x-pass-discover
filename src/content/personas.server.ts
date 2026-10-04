@@ -35,6 +35,7 @@ export function toPublicPersona(persona: PersonaDefinition): PublicPersona {
     organization: persona.organization,
     visibleContext: persona.visibleContext,
     avatarColor: persona.avatarColor,
+    portrait: persona.portrait,
   };
 }
 

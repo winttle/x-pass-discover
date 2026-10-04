@@ -308,6 +308,39 @@ echo 'OPENAI_API_KEY=sk-...' >> .env
 
 The header badge switches from *Mock AI* to *OpenAI*.
 
+### Deploying
+
+The app is a standard Next.js App Router project, so any Node host works;
+Vercel needs no configuration file.
+
+1. Import `winttle/x-pass-discover` in Vercel and pick the branch to deploy
+   (Settings → Git → Production Branch).
+2. Set environment variables:
+
+   | Variable | Needed? | Why |
+   |---|---|---|
+   | `AUTH_SECRET` | **Yes** | Signs the session cookie. `openssl rand -base64 32` |
+   | `DATABASE_URL` | Strongly recommended | Without it the deployment runs in **demo mode** — see below |
+   | `OPENAI_API_KEY` | Optional | Without it the AI employees run in deterministic mock mode |
+   | `X_PASS_ADMIN_EMAILS` | Optional | `/admin` is **closed** in production unless an email is allow-listed |
+   | `NEXT_PUBLIC_APP_URL` | Optional | Your deployment URL |
+
+3. With `DATABASE_URL` set, run the migration and seed once against that
+   database before the first real session:
+
+   ```bash
+   DATABASE_URL='postgres://…' npm run db:migrate
+   DATABASE_URL='postgres://…' npm run db:seed
+   ```
+
+**Demo mode.** A serverless filesystem is read-only and per-instance, so the
+local file store cannot be used in production. A production build with no
+`DATABASE_URL` therefore keeps everything **in memory**: the full Sales
+bootcamp is playable, and every page badges it as
+*“Demo mode — nothing is saved”*. Work is lost whenever an instance recycles.
+That is deliberate — the alternative is crashing on the first save, or
+pretending data was stored.
+
 ### Verification
 
 ```bash

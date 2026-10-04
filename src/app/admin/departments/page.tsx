@@ -15,7 +15,7 @@ export default function AdminDepartmentsPage() {
               {['Slug', 'Name', 'Project', 'Product', 'Scenario', 'Status'].map((h) => (
                 <th
                   key={h}
-                  className="border-b border-ink-700 px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-ink-400"
+                  className="border-b border-line px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-muted"
                 >
                   {h}
                 </th>
@@ -25,28 +25,28 @@ export default function AdminDepartmentsPage() {
           <tbody>
             {DEPARTMENTS.map((department) => (
               <tr key={department.slug}>
-                <td className="border-b border-ink-800 px-4 py-2.5 font-mono text-ink-300">
+                <td className="border-b border-line px-4 py-2.5 font-mono text-body">
                   {department.slug}
                 </td>
-                <td className="border-b border-ink-800 px-4 py-2.5 text-white">
+                <td className="border-b border-line px-4 py-2.5 text-strong">
                   {department.name}
                 </td>
-                <td className="border-b border-ink-800 px-4 py-2.5 text-ink-300">
+                <td className="border-b border-line px-4 py-2.5 text-body">
                   {department.projectTitle}
                 </td>
-                <td className="border-b border-ink-800 px-4 py-2.5">
+                <td className="border-b border-line px-4 py-2.5">
                   {department.productKey ? (
-                    <span className="font-mono text-ink-300">{department.productKey}</span>
+                    <span className="font-mono text-body">{department.productKey}</span>
                   ) : (
                     <Badge tone="warn" title="projects.product_id is NULL for this project">
                       null
                     </Badge>
                   )}
                 </td>
-                <td className="border-b border-ink-800 px-4 py-2.5 font-mono text-ink-300">
+                <td className="border-b border-line px-4 py-2.5 font-mono text-body">
                   {department.scenarioKey ?? '—'}
                 </td>
-                <td className="border-b border-ink-800 px-4 py-2.5">
+                <td className="border-b border-line px-4 py-2.5">
                   <Badge tone={department.status === 'playable' ? 'success' : 'muted'}>
                     {department.status}
                   </Badge>
@@ -56,7 +56,7 @@ export default function AdminDepartmentsPage() {
           </tbody>
         </table>
       </div>
-      <p className="border-t border-ink-800 px-5 py-3 text-[11px] text-ink-500">
+      <p className="border-t border-line px-5 py-3 text-[11px] text-muted">
         A <code className="text-accent-400">null</code> product is correct, not missing
         data: Product Management starts from a customer problem and Strategy has no
         assigned product. <code className="text-accent-400">projects.product_id</code> is

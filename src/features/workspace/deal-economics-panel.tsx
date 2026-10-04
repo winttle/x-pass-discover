@@ -57,39 +57,39 @@ export function DealEconomicsPanel({ value }: { value: AnswerValue }) {
         subtitle="Calculated from your inputs — it does not decide for you"
         right={<Badge tone="muted">live</Badge>}
       />
-      <dl className="divide-y divide-ink-800">
+      <dl className="divide-y divide-line">
         {rows.map(([label, display, formula]) => (
           <div key={label} className="flex items-start justify-between gap-3 px-5 py-2.5">
             <div className="min-w-0">
-              <dt className="text-xs text-ink-300">{label}</dt>
+              <dt className="text-xs text-body">{label}</dt>
               {formula ? (
-                <p className="mt-0.5 text-[10px] text-ink-500">{formula}</p>
+                <p className="mt-0.5 text-[10px] text-muted">{formula}</p>
               ) : null}
             </div>
-            <dd className="shrink-0 font-mono text-sm text-white">{display}</dd>
+            <dd className="shrink-0 font-mono text-sm text-strong">{display}</dd>
           </div>
         ))}
       </dl>
 
       {economics.expectedPilotUnits !== null ? (
-        <div className="border-t border-ink-800 px-5 py-3">
-          <p className="text-[11px] text-ink-400">
+        <div className="border-t border-line px-5 py-3">
+          <p className="text-[11px] text-muted">
             At your target rate across {String(value.store_count ?? '—')} stores for{' '}
             {pilotDays} days:{' '}
-            <span className="font-mono text-ink-200">
+            <span className="font-mono text-strong">
               {economics.expectedPilotUnits.toLocaleString()} units
             </span>
             {economics.expectedBiteContributionYen !== null ? (
               <>
                 {' '}
                 → BITE contribution{' '}
-                <span className="font-mono text-ink-200">
+                <span className="font-mono text-strong">
                   {yen(economics.expectedBiteContributionYen)}
                 </span>
               </>
             ) : null}
           </p>
-          <p className="mt-1 text-[10px] text-ink-500">
+          <p className="mt-1 text-[10px] text-muted">
             A 4-week illustration. Your own pilot length may differ — state it in your
             proposal.
           </p>

@@ -159,7 +159,7 @@ function AcknowledgeTask({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-xs text-ink-400">
+      <p className="text-xs text-muted">
         {done
           ? 'Marked complete. You can still re-read the material at any time.'
           : 'Mark this complete when you have read the material above.'}

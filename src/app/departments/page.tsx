@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { HeroBanner } from '@/components/media';
+import { Badge } from '@/components/ui';
+import { MEDIA } from '@/content/media';
 import { getRepository } from '@/db/repository';
 import { DEPARTMENTS } from '@/content/departments';
 import { getCurrentUser } from '@/lib/auth/session';
@@ -22,6 +25,17 @@ export default async function DepartmentsPage() {
       backHref="/welcome"
       backLabel="Welcome"
     >
+      <HeroBanner
+        src={MEDIA.companyHero.src}
+        alt={MEDIA.companyHero.alt}
+        height="h-40"
+        eyebrow={<Badge tone="brand" dot>1 department = 1 bootcamp</Badge>}
+        title="Same company, different work"
+        description="Every bootcamp happens inside BITE. What changes is the job you do — the people you talk to, the material you read, and the decision you have to defend."
+      />
+
+      <div className="mt-5" />
+
       <DepartmentChooser
         departments={DEPARTMENTS}
         initialSelection={selection?.departmentSlugs ?? []}

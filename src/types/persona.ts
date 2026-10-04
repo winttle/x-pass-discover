@@ -28,6 +28,8 @@ export type PersonaDefinition = {
   role: string;
   organization: string;
   avatarColor: string;
+  /** Portrait shown wherever this persona appears. */
+  portrait: string;
   /** Client-safe framing the student is allowed to see. */
   visibleContext: string;
   /** First message the persona sends. Client-safe. */

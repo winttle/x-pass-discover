@@ -1,4 +1,5 @@
 import type { ResourceDefinition } from '@/types/resource';
+import { MEDIA } from '@/content/media';
 import {
   BITE_PROTEIN_DRINK,
   BITE_SALES_GUARDRAILS,
@@ -19,6 +20,7 @@ const e = BITE_UNIT_ECONOMICS;
 export const SALES_RESOURCES: ResourceDefinition[] = [
   {
     key: 'sales-training-1pager',
+    fileMeta: { format: 'WEB', detail: 'Guide · 5 min read' },
     title: 'Sales Starter: how professionals think',
     description:
       'Role mindset, key concepts and frameworks. Read this before the scenario begins.',
@@ -93,6 +95,7 @@ If a buyer says "Your price is too high," investigate whether the real issue is 
   },
   {
     key: 'bite-company-profile',
+    fileMeta: { format: 'PDF', detail: 'PDF · 4 pages' },
     title: 'BITE company profile',
     description: 'Who BITE is and how the Distribution Sales team operates.',
     resourceType: 'company_profile',
@@ -116,6 +119,8 @@ A buyer's shelf is finite. Adding a new product usually means removing another o
   },
   {
     key: 'bite-protein-drink-sheet',
+    fileMeta: { format: 'PDF', detail: 'PDF · 2 pages' },
+    image: { src: MEDIA.product.src, alt: MEDIA.product.alt },
     title: 'BITE Protein Drink — product sheet',
     description: 'Specification, pricing, strengths and limitations.',
     resourceType: 'product_sheet',
@@ -148,6 +153,7 @@ ${BITE_PROTEIN_DRINK.attributes.limitations.map((s) => `- ${s}`).join('\n')}`,
   },
   {
     key: 'bite-unit-economics',
+    fileMeta: { format: 'XLSX', detail: 'Excel · 1 sheet' },
     title: 'BITE Protein Drink — unit economics',
     description: 'Per-unit cost structure and base contribution.',
     resourceType: 'data_table',
@@ -169,6 +175,7 @@ ${BITE_PROTEIN_DRINK.attributes.limitations.map((s) => `- ${s}`).join('\n')}`,
   },
   {
     key: 'bite-sales-guardrails',
+    fileMeta: { format: 'DOC', detail: 'Internal policy · 1 page' },
     title: 'BITE internal sales guardrails',
     description:
       'Internal BITE policy. The buyer does not know these minimums — do not present them as QuickMart constraints.',
@@ -192,6 +199,8 @@ If you add promotion support, calculate its impact explicitly. It comes out of c
   },
   {
     key: 'quickmart-account-profile',
+    fileMeta: { format: 'PDF', detail: 'PDF · 12 pages' },
+    image: { src: MEDIA.account.src, alt: MEDIA.account.alt },
     title: 'QuickMart — account profile',
     description: 'Chain overview, current issues and category direction.',
     resourceType: 'account_profile',
@@ -228,6 +237,7 @@ If you add promotion support, calculate its impact explicitly. It comes out of c
   },
   {
     key: 'quickmart-category-data',
+    fileMeta: { format: 'XLSX', detail: 'Excel · 3.2 MB' },
     title: 'QuickMart — public category data',
     description:
       'Category-level benchmarks available before the meeting. The buyer knows more specific numbers than these.',
@@ -251,6 +261,7 @@ If you add promotion support, calculate its impact explicitly. It comes out of c
   },
   {
     key: 'competitor-comparison',
+    fileMeta: { format: 'XLSX', detail: 'Excel · 1.1 MB' },
     title: 'Competitor comparison',
     description: 'Protein drinks currently competing for the same shelf.',
     resourceType: 'data_table',
@@ -276,6 +287,7 @@ If you add promotion support, calculate its impact explicitly. It comes out of c
   },
   {
     key: 'pilot-structure-options',
+    fileMeta: { format: 'DOC', detail: 'Memo · 1 page' },
     title: 'Pilot structure options (decision aid)',
     description:
       'Three starting points. None of them is the correct answer — you may design your own.',

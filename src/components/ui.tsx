@@ -19,9 +19,11 @@ export function Card({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-ink-700/60 bg-ink-900/60 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_40px_-24px_rgba(0,0,0,0.9)] backdrop-blur-sm',
+        'relative overflow-hidden rounded-2xl border border-line bg-surface shadow-card',
+        // Never translate a card on hover: it shifts the buttons inside it out
+        // from under the pointer. Depth change only.
         interactive &&
-          'transition-colors duration-200 hover:border-ink-600 hover:bg-ink-900/80',
+          'transition-shadow duration-200 hover:border-line-strong hover:shadow-raised',
         className,
       )}
     >
@@ -49,13 +51,13 @@ export function CardHeader({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-ink-800/80 px-5 py-3.5">
+    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
       <div className="min-w-0">
-        <h2 className="truncate text-sm font-semibold tracking-tight text-white">
+        <h2 className="truncate text-sm font-semibold tracking-tight text-strong">
           {title}
         </h2>
         {subtitle ? (
-          <p className="mt-0.5 text-xs leading-relaxed text-ink-400">{subtitle}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">{subtitle}</p>
         ) : null}
       </div>
       {right ? <div className="shrink-0">{right}</div> : null}
@@ -66,21 +68,21 @@ export function CardHeader({
 type BadgeTone = 'neutral' | 'brand' | 'success' | 'warn' | 'danger' | 'muted';
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-  neutral: 'border-ink-700 bg-ink-800 text-ink-200',
-  brand: 'border-brand-500/35 bg-brand-500/12 text-brand-300',
-  success: 'border-accent-400/35 bg-accent-400/12 text-accent-400',
-  warn: 'border-warn-400/35 bg-warn-400/12 text-warn-400',
-  danger: 'border-danger-400/35 bg-danger-400/12 text-danger-400',
-  muted: 'border-ink-800 bg-ink-900/80 text-ink-400',
+  neutral: 'border-line-strong bg-sunken text-body',
+  brand: 'border-brand-200 bg-brand-50 text-brand-700',
+  success: 'border-accent-100 bg-accent-50 text-accent-700',
+  warn: 'border-warn-100 bg-warn-50 text-warn-700',
+  danger: 'border-danger-100 bg-danger-50 text-danger-700',
+  muted: 'border-line bg-sunken text-muted',
 };
 
 const DOT_TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-ink-300',
-  brand: 'bg-brand-400',
-  success: 'bg-accent-400',
-  warn: 'bg-warn-400',
-  danger: 'bg-danger-400',
-  muted: 'bg-ink-500',
+  neutral: 'bg-muted',
+  brand: 'bg-brand-500',
+  success: 'bg-accent-500',
+  warn: 'bg-warn-500',
+  danger: 'bg-danger-500',
+  muted: 'bg-subtle',
 };
 
 export function Badge({
@@ -112,13 +114,12 @@ type ButtonSize = 'sm' | 'md';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-500 active:bg-brand-600 disabled:bg-ink-700 disabled:text-ink-500 disabled:shadow-none',
+    'bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 active:bg-brand-700 disabled:bg-line-strong disabled:text-subtle disabled:shadow-none',
   secondary:
-    'border border-ink-600 bg-ink-800/80 text-ink-200 hover:border-ink-500 hover:bg-ink-800 hover:text-white disabled:opacity-45',
-  ghost:
-    'text-ink-300 hover:bg-ink-800/80 hover:text-white disabled:opacity-45',
+    'border border-line-strong bg-surface text-body shadow-card hover:border-subtle hover:bg-sunken hover:text-strong disabled:opacity-45',
+  ghost: 'text-muted hover:bg-sunken hover:text-strong disabled:opacity-45',
   danger:
-    'border border-danger-400/40 bg-danger-400/10 text-danger-400 hover:bg-danger-400/20',
+    'border border-danger-100 bg-danger-50 text-danger-700 hover:bg-danger-100',
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -186,7 +187,7 @@ export function Field({
   return (
     <label className="block">
       <div className="mb-1.5 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-ink-200">
+        <span className="text-xs font-medium text-strong">
           {label}
           {required ? <span className="ml-0.5 text-danger-400">*</span> : null}
         </span>
@@ -203,14 +204,14 @@ export function Field({
       </div>
       {children}
       {helpText ? (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-ink-500">{helpText}</p>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted">{helpText}</p>
       ) : null}
     </label>
   );
 }
 
 export const inputClass =
-  'w-full rounded-xl border border-ink-700 bg-ink-950/70 px-3 py-2 text-sm text-ink-100 outline-none transition-all duration-150 placeholder:text-ink-600 hover:border-ink-600 focus:border-brand-500 focus:bg-ink-950 focus:ring-4 focus:ring-brand-500/12';
+  'w-full rounded-xl border border-line bg-sunken px-3 py-2 text-sm text-strong outline-none transition-all duration-150 placeholder:text-subtle hover:border-line-strong focus:border-brand-500 focus:bg-canvas focus:ring-4 focus:ring-brand-500/12';
 
 export function EmptyState({
   children,
@@ -220,13 +221,13 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-ink-700/80 px-4 py-8 text-center">
+    <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center">
       {icon ? (
-        <div className="mx-auto mb-3 grid size-9 place-items-center rounded-full bg-ink-850 text-ink-500">
+        <div className="mx-auto mb-3 grid size-9 place-items-center rounded-full bg-sunken text-subtle">
           {icon}
         </div>
       ) : null}
-      <div className="text-xs leading-relaxed text-ink-400">{children}</div>
+      <div className="text-xs leading-relaxed text-muted">{children}</div>
     </div>
   );
 }
@@ -243,11 +244,11 @@ export function Stat({
 }) {
   return (
     <div>
-      <dt className="text-[10px] font-medium uppercase tracking-wider text-ink-500">
+      <dt className="text-[10px] font-medium uppercase tracking-wider text-muted">
         {label}
       </dt>
-      <dd className="mt-0.5 text-sm font-semibold text-white">{value}</dd>
-      {hint ? <p className="text-[10px] text-ink-500">{hint}</p> : null}
+      <dd className="mt-0.5 text-sm font-semibold text-strong">{value}</dd>
+      {hint ? <p className="text-[10px] text-muted">{hint}</p> : null}
     </div>
   );
 }
@@ -255,7 +256,7 @@ export function Stat({
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn('animate-pulse rounded-lg bg-ink-800/70', className)}
+      className={cn('animate-pulse rounded-lg bg-line', className)}
       aria-hidden
     />
   );

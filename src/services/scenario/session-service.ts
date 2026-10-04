@@ -198,6 +198,7 @@ export function buildSessionView(
       name: department?.name ?? session.departmentSlug,
       accentColor: department?.accentColor ?? '#2563eb',
       projectTitle: department?.projectTitle ?? scenario.title,
+      coverImage: department?.coverImage ?? '/img/cover/bite-office.svg',
     },
     steps,
     resources: listResources(session.scenarioKey),

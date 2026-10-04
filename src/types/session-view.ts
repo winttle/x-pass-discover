@@ -71,6 +71,7 @@ export type SessionView = {
     name: string;
     accentColor: string;
     projectTitle: string;
+    coverImage: string;
   };
   steps: StepView[];
   resources: ResourceDefinition[];
@@ -83,6 +84,7 @@ export type SessionView = {
   runtime: {
     persistence: string;
     persistenceLabel: string;
+    persistenceIsEphemeral: boolean;
     ai: string;
     aiLabel: string;
     aiModeDowngraded: boolean;

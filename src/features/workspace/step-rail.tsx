@@ -44,7 +44,7 @@ export function StepRail({
               <span
                 aria-hidden
                 className={`absolute left-[21px] top-8 h-[calc(100%-1rem)] w-px ${
-                  complete ? 'bg-accent-400/45' : 'bg-ink-800'
+                  complete ? 'bg-accent-400/45' : 'bg-sunken'
                 }`}
               />
             ) : null}
@@ -60,7 +60,7 @@ export function StepRail({
                   ? 'bg-brand-500/10 ring-1 ring-brand-500/40'
                   : locked
                     ? 'cursor-not-allowed opacity-40'
-                    : 'hover:bg-ink-850/70'
+                    : 'hover:bg-sunken'
               }`}
             >
               <span
@@ -70,8 +70,8 @@ export function StepRail({
                     : isActive
                       ? 'border-brand-400 bg-brand-500 text-white'
                       : locked
-                        ? 'border-ink-800 bg-ink-900 text-ink-600'
-                        : 'border-ink-700 bg-ink-850 text-ink-300'
+                        ? 'border-line bg-surface text-subtle'
+                        : 'border-line bg-sunken text-body'
                 }`}
               >
                 {complete ? '✓' : locked ? '🔒' : index + 1}
@@ -80,23 +80,23 @@ export function StepRail({
               <span className="min-w-0 flex-1 pt-0.5">
                 <span
                   className={`block truncate text-xs font-medium ${
-                    isActive ? 'text-white' : complete ? 'text-ink-400' : 'text-ink-200'
+                    isActive ? 'text-strong' : complete ? 'text-muted' : 'text-strong'
                   }`}
                 >
                   {step.title}
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-ink-500">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
                     {STEP_TYPE_LABEL[step.stepType] ?? step.stepType}
                   </span>
                   {step.estimatedMinutes ? (
-                    <span className="text-[10px] text-ink-600">
+                    <span className="text-[10px] text-subtle">
                       · {step.estimatedMinutes} min
                     </span>
                   ) : null}
                 </span>
                 {locked && step.lockedReason ? (
-                  <span className="mt-1 block text-[10px] leading-snug text-ink-600">
+                  <span className="mt-1 block text-[10px] leading-snug text-subtle">
                     {step.lockedReason}
                   </span>
                 ) : null}
@@ -127,7 +127,7 @@ export function ProgressRing({ steps }: { steps: StepView[] }) {
             fill="none"
             stroke="currentColor"
             strokeWidth="5"
-            className="text-ink-800"
+            className="text-line"
           />
           <circle
             cx="32"
@@ -144,12 +144,12 @@ export function ProgressRing({ steps }: { steps: StepView[] }) {
           />
         </svg>
         <span className="absolute inset-0 grid place-items-center">
-          <span className="font-mono text-sm font-semibold text-white">{pct}%</span>
+          <span className="font-mono text-sm font-semibold text-strong">{pct}%</span>
         </span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-white">Bootcamp progress</p>
-        <p className="mt-0.5 text-[11px] text-ink-400">
+        <p className="text-xs font-medium text-strong">Bootcamp progress</p>
+        <p className="mt-0.5 text-[11px] text-muted">
           {done} of {steps.length} steps complete
         </p>
       </div>
@@ -172,7 +172,7 @@ export function DeadlineCountdown({ deadlineAt }: { deadlineAt: string }) {
   }, [deadlineAt]);
 
   if (remaining === null) {
-    return <span className="font-mono text-[11px] text-ink-500">—</span>;
+    return <span className="font-mono text-[11px] text-muted">—</span>;
   }
 
   if (remaining <= 0) {

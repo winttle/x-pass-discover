@@ -210,7 +210,7 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
       <div className="space-y-3">
-        <div className="relative overflow-hidden rounded-2xl border border-ink-700/60 shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
+        <div className="relative overflow-hidden rounded-2xl border border-line shadow-card">
           <OfficeCanvas bridge={bridge} />
 
           {/* Vignette keeps the eye on the avatar rather than the canvas edges. */}
@@ -219,21 +219,21 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
             className="pointer-events-none absolute inset-0 rounded-2xl"
             style={{
               boxShadow:
-                'inset 0 0 90px 10px rgba(3,6,14,0.45), inset 0 0 0 1px rgba(124,139,176,0.08)',
+                'inset 0 0 0 1px rgba(15,23,41,0.06)',
             }}
           />
 
           <div className="pointer-events-none absolute left-4 top-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-brand-500/40 bg-ink-950/95 px-3 py-1 text-[11px] font-medium text-white">
+            <span className="rounded-full border border-brand-500/40 bg-surface/95 px-3 py-1 text-[11px] font-medium text-strong">
               {zoneName}
             </span>
-            <span className="hidden rounded-full border border-ink-700 bg-ink-950/75 px-3 py-1 text-[10px] text-ink-400 sm:inline">
-              <kbd className="font-mono text-ink-200">WASD</kbd> /{' '}
-              <kbd className="font-mono text-ink-200">↑←↓→</kbd> to move
+            <span className="hidden rounded-full border border-line bg-surface/85 px-3 py-1 text-[10px] text-muted sm:inline">
+              <kbd className="font-mono text-strong">WASD</kbd> /{' '}
+              <kbd className="font-mono text-strong">↑←↓→</kbd> to move
             </span>
           </div>
 
-          <div className="pointer-events-none absolute bottom-4 right-4 w-[200px] rounded-xl border border-ink-700/70 bg-ink-950 p-1.5">
+          <div className="pointer-events-none absolute bottom-4 right-4 w-[200px] rounded-xl border border-line bg-canvas p-1.5">
             <Minimap player={playerTile} activeRoomKey={zoneKey} />
           </div>
 
@@ -242,8 +242,8 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
               className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2"
               data-testid="office-prompt"
             >
-              <span className="flex animate-pop items-center gap-2 rounded-full border border-brand-400/50 bg-ink-950/95 px-4 py-2 text-xs font-medium text-white shadow-xl shadow-black/50">
-                <kbd className="rounded border border-ink-600 bg-ink-100 px-1.5 py-0.5 font-mono text-[10px] text-ink-950">
+              <span className="flex animate-pop items-center gap-2 rounded-full border border-brand-400/50 bg-surface/95 px-4 py-2 text-xs font-medium text-strong shadow-float">
+                <kbd className="rounded border border-line-strong bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-strong">
                   E
                 </kbd>
                 <span className="sr-only">{prompt.text}</span>
@@ -256,22 +256,22 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
           ) : null}
 
           {!booted ? (
-            <div className="absolute inset-0 grid place-items-center bg-ink-950/90">
-              <div className="flex items-center gap-2 text-xs text-ink-400">
-                <span className="size-3.5 animate-spin rounded-full border-2 border-ink-600 border-t-brand-400" />
+            <div className="absolute inset-0 grid place-items-center bg-surface/95">
+              <div className="flex items-center gap-2 text-xs text-muted">
+                <span className="size-3.5 animate-spin rounded-full border-2 border-line-strong border-t-brand-400" />
                 Entering the office…
               </div>
             </div>
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-800 bg-ink-900/50 px-4 py-2.5">
-          <p className="text-[11px] leading-relaxed text-ink-400">
-            Walk to <strong className="text-ink-200">My Desk</strong> to open your
-            workspace, the <strong className="text-ink-200">Data Room</strong> to browse
-            files, or <strong className="text-ink-200">Meeting Room A</strong> to meet the
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-sunken px-4 py-2.5">
+          <p className="text-[11px] leading-relaxed text-muted">
+            Walk to <strong className="text-strong">My Desk</strong> to open your
+            workspace, the <strong className="text-strong">Data Room</strong> to browse
+            files, or <strong className="text-strong">Meeting Room A</strong> to meet the
             buyer. Press{' '}
-            <kbd className="rounded border border-ink-700 bg-ink-850 px-1 py-px font-mono text-[10px] text-ink-200">
+            <kbd className="rounded border border-line bg-sunken px-1 py-px font-mono text-[10px] text-strong">
               E
             </kbd>{' '}
             when prompted.
@@ -317,8 +317,8 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
                             : step.key === view.session.currentStepKey
                               ? 'border-brand-400 bg-brand-500 text-white'
                               : step.unlocked
-                                ? 'border-ink-700 bg-ink-850 text-ink-400'
-                                : 'border-ink-800 bg-ink-900 text-ink-600'
+                                ? 'border-line bg-sunken text-muted'
+                                : 'border-line bg-surface text-subtle'
                         }`}
                       >
                         {step.status === 'completed' ? '✓' : index + 1}
@@ -326,10 +326,10 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
                       <span
                         className={
                           step.status === 'completed'
-                            ? 'text-ink-500'
+                            ? 'text-muted'
                             : step.unlocked
-                              ? 'text-ink-200'
-                              : 'text-ink-600'
+                              ? 'text-strong'
+                              : 'text-subtle'
                         }
                       >
                         {step.title}
@@ -398,10 +398,10 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
                   return (
                     <div>
                       <Badge tone="warn">{step.title}</Badge>
-                      <h3 className="mt-3 text-sm font-semibold text-white">
+                      <h3 className="mt-3 text-sm font-semibold text-strong">
                         {step.eventPayload!.headline}
                       </h3>
-                      <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-ink-300">
+                      <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-body">
                         {step.eventPayload!.body}
                       </p>
                       <Link
@@ -424,7 +424,7 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
           <div className="space-y-2">
             <OverlayHeader title={overlay.title} onClose={() => setOverlay({ kind: 'none' })} />
             <Card className="p-5">
-              <p className="text-sm leading-relaxed text-ink-300">{overlay.body}</p>
+              <p className="text-sm leading-relaxed text-body">{overlay.body}</p>
             </Card>
           </div>
         ) : null}
@@ -436,7 +436,7 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
 function OverlayHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-400">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
         {title}
       </h2>
       <Button variant="ghost" onClick={onClose} className="px-2 py-1 text-[11px]">

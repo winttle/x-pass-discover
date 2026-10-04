@@ -126,7 +126,7 @@ export class OfficeScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setDeadzone(120, 90);
-    this.cameras.main.fadeIn(420, 5, 7, 14);
+    this.cameras.main.fadeIn(420, 238, 241, 247);
 
     this.bridge.emit({ type: 'ready' });
   }
@@ -162,23 +162,13 @@ export class OfficeScene extends Phaser.Scene {
     }
 
     for (const room of ROOMS) {
-      // Room colours are tinted toward the corridor so they read as one office.
-      const base = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(PALETTE.corridor),
-        Phaser.Display.Color.ValueToColor(room.color),
-        100,
-        48,
-      );
-      const baseColor = Phaser.Display.Color.GetColor(base.r, base.g, base.b);
-      const altColor = Phaser.Display.Color.GetColor(
-        Math.min(255, base.r + 7),
-        Math.min(255, base.g + 8),
-        Math.min(255, base.b + 12),
-      );
-      tileFloor(room.x, room.y, room.w, room.h, baseColor, altColor);
+      // Rooms carry their own pastel fill; the alternating tile is a touch
+      // deeper so the floor reads as tiled rather than as a flat block.
+      const alt = Phaser.Display.Color.ValueToColor(room.color).darken(2).color;
+      tileFloor(room.x, room.y, room.w, room.h, room.color, alt);
 
-      // A soft accent band along the room's inner edge.
-      g.lineStyle(2, room.color, 0.75);
+      // A saturated band along the room's inner edge marks its boundary.
+      g.lineStyle(2, Phaser.Display.Color.ValueToColor(room.color).darken(30).color, 0.9);
       g.strokeRect(
         room.x * TILE + 1,
         room.y * TILE + 1,
@@ -188,7 +178,7 @@ export class OfficeScene extends Phaser.Scene {
     }
 
     // Subtle tile grid across the whole floor ties the rooms together.
-    g.lineStyle(1, PALETTE.grid, 0.3);
+    g.lineStyle(1, PALETTE.grid, 0.5);
     for (let col = 0; col <= GRID_WIDTH; col += 1) {
       g.lineBetween(col * TILE, 0, col * TILE, WORLD_HEIGHT);
     }
@@ -236,7 +226,7 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   private paintWallShadows(g: Phaser.GameObjects.Graphics, runs: WallRun[]): void {
-    g.fillStyle(PALETTE.wallShadow, 0.5);
+    g.fillStyle(PALETTE.wallShadow, 0.3);
     for (const run of runs) g.fillRect(run.px + 2, run.py + TILE, run.width, 7);
   }
 
@@ -333,6 +323,8 @@ export class OfficeScene extends Phaser.Scene {
       case 'desk': {
         g.fillStyle(PALETTE.deskEdge, 1);
         g.fillRoundedRect(x + inset, y + inset, w - inset * 2, h - inset * 2, 5);
+        g.lineStyle(1, PALETTE.deskEdge, 1);
+        g.strokeRoundedRect(x + inset, y + inset, w - inset * 2, h - inset * 2, 5);
         g.fillStyle(prop.accent ?? PALETTE.deskTop, 1);
         g.fillRoundedRect(x + inset, y + inset, w - inset * 2, h - inset * 2 - 4, 5);
         if (prop.monitor) {
@@ -440,15 +432,16 @@ export class OfficeScene extends Phaser.Scene {
       const x = room.x * TILE + 9;
       const y = room.y * TILE + 7;
 
+      const ink = Phaser.Display.Color.ValueToColor(room.color).darken(62);
       const label = this.add.text(x, y, room.name.toUpperCase(), {
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         fontSize: '10px',
-        color: PALETTE.labelInk,
+        color: Phaser.Display.Color.RGBToString(ink.red, ink.green, ink.blue, 255, '#'),
         fontStyle: 'bold',
       });
       label.setLetterSpacing(1.2);
       label.setDepth(5);
-      label.setAlpha(0.8);
+      label.setAlpha(0.9);
 
       if (room.action.kind !== 'info') {
         const hint = this.add.text(x, y + 14, `▸ ${room.action.label}`, {
@@ -469,9 +462,9 @@ export class OfficeScene extends Phaser.Scene {
       const y = toPixels(npc.y);
       const container = this.add.container(x, y).setDepth(10);
 
-      const shadow = this.add.ellipse(0, 11, 22, 8, PALETTE.shadow, 0.42);
+      const shadow = this.add.ellipse(0, 13, 24, 8, PALETTE.shadow, 0.2);
 
-      const ring = this.add.circle(0, 0, 20, npc.color, 0.16);
+      const ring = this.add.circle(0, 0, 20, npc.color, 0.2);
       this.tweens.add({
         targets: ring,
         scale: { from: 0.8, to: 1.2 },
@@ -497,7 +490,7 @@ export class OfficeScene extends Phaser.Scene {
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         fontSize: '10px',
         color: PALETTE.nameInk,
-        backgroundColor: '#0b1222cc',
+        backgroundColor: '#ffffffe6',
         padding: { x: 5, y: 2 },
       });
       name.setOrigin(0.5, 0);
@@ -524,13 +517,16 @@ export class OfficeScene extends Phaser.Scene {
   ): void {
     g.clear();
 
-    g.fillStyle(Phaser.Display.Color.ValueToColor(color).darken(28).color, 1);
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(-12, -14, 24, 30, 10);
+
+    g.fillStyle(Phaser.Display.Color.ValueToColor(color).darken(22).color, 1);
     g.fillRoundedRect(-10, -4, 20, 18, 7);
 
     g.fillStyle(color, 1);
     g.fillRoundedRect(-10, -12, 20, 20, 8);
 
-    g.fillStyle(0xffffff, 0.14);
+    g.fillStyle(0xffffff, 0.2);
     g.fillRoundedRect(-8, -10, 16, 7, 4);
 
     // Facing nub — small, but it makes the avatar feel steered rather than slid.
@@ -541,8 +537,10 @@ export class OfficeScene extends Phaser.Scene {
       right: [13, 0],
     } as const;
     const [ox, oy] = offsets[facing];
-    g.fillStyle(0xffffff, 0.8);
-    g.fillCircle(ox, oy, 2.6);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(ox, oy, 3.2);
+    g.fillStyle(color, 1);
+    g.fillCircle(ox, oy, 2);
   }
 
   private createPlayer(): void {
@@ -550,9 +548,9 @@ export class OfficeScene extends Phaser.Scene {
       .container(toPixels(SPAWN.x), toPixels(SPAWN.y))
       .setDepth(12);
 
-    const shadow = this.add.ellipse(0, 12, 24, 9, PALETTE.shadow, 0.5);
+    const shadow = this.add.ellipse(0, 14, 26, 9, PALETTE.shadow, 0.24);
 
-    const glow = this.add.circle(0, 0, 22, PALETTE.player, 0.14);
+    const glow = this.add.circle(0, 0, 22, PALETTE.player, 0.16);
     this.tweens.add({
       targets: glow,
       scale: { from: 0.9, to: 1.12 },
@@ -569,7 +567,7 @@ export class OfficeScene extends Phaser.Scene {
       fontFamily: 'ui-sans-serif, system-ui, sans-serif',
       fontSize: '10px',
       color: '#ffffff',
-      backgroundColor: '#1d4ed8cc',
+      backgroundColor: '#2563eb',
       padding: { x: 5, y: 2 },
     });
     label.setOrigin(0.5, 0);
@@ -590,8 +588,8 @@ export class OfficeScene extends Phaser.Scene {
     const key = this.add.text(0, 0, 'E', {
       fontFamily: 'ui-monospace, monospace',
       fontSize: '11px',
-      color: '#0b1222',
-      backgroundColor: '#e8eefc',
+      color: '#ffffff',
+      backgroundColor: '#2563eb',
       padding: { x: 6, y: 3 },
     });
     key.setOrigin(0.5);

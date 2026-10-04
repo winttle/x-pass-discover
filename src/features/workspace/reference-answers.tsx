@@ -39,21 +39,21 @@ export function ReferenceAnswers({
         title="Your earlier work"
         subtitle="Preserved, not overwritten"
       />
-      <div className="divide-y divide-ink-800">
+      <div className="divide-y divide-line">
         {tasks.map(({ step, task }) => (
           <details key={task.key} className="group">
-            <summary className="flex cursor-pointer items-center justify-between gap-2 px-5 py-3 text-xs hover:bg-ink-850/40">
+            <summary className="flex cursor-pointer items-center justify-between gap-2 px-5 py-3 text-xs hover:bg-sunken">
               <span className="min-w-0">
-                <span className="block font-medium text-white">{task.title}</span>
-                <span className="text-[11px] text-ink-500">{step.title}</span>
+                <span className="block font-medium text-strong">{task.title}</span>
+                <span className="text-[11px] text-muted">{step.title}</span>
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 {task.version > 1 ? <Badge tone="warn">v{task.version}</Badge> : null}
-                <span className="text-ink-500 group-open:hidden">+</span>
-                <span className="hidden text-ink-500 group-open:inline">−</span>
+                <span className="text-muted group-open:hidden">+</span>
+                <span className="hidden text-muted group-open:inline">−</span>
               </span>
             </summary>
-            <div className="border-t border-ink-800 bg-ink-950/40 px-5 py-3">
+            <div className="border-t border-line bg-sunken px-5 py-3">
               <AnswerPreview task={task} />
             </div>
           </details>
@@ -71,17 +71,17 @@ function AnswerPreview({ task }: { task: TaskView }) {
     ([, v]) => v !== null && v !== undefined && v !== '',
   );
   if (entries.length === 0) {
-    return <p className="text-[11px] text-ink-500">Nothing recorded yet.</p>;
+    return <p className="text-[11px] text-muted">Nothing recorded yet.</p>;
   }
 
   return (
     <dl className="space-y-2">
       {entries.map(([key, raw]) => (
         <div key={key}>
-          <dt className="text-[10px] font-semibold uppercase tracking-wider text-ink-500">
+          <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">
             {labelByKey.get(key) ?? key}
           </dt>
-          <dd className="mt-0.5 whitespace-pre-wrap text-[11px] leading-relaxed text-ink-300">
+          <dd className="mt-0.5 whitespace-pre-wrap text-[11px] leading-relaxed text-body">
             {formatValue(raw)}
           </dd>
         </div>

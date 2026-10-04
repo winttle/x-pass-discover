@@ -1,49 +1,50 @@
 /**
- * Office palette.
+ * Office palette — light.
  *
- * The office is drawn procedurally — no art assets — so the whole look lives in
- * these values. Room colours stay desaturated so furniture, characters and the
- * interaction prompt remain the brightest things on screen.
+ * The office is drawn procedurally, so the whole look lives in these values.
+ * In a light scene the depth cues invert: walls are the *lighter* solid, their
+ * shadow does the separating, and furniture is a step darker than the floor so
+ * it reads as an object sitting on it.
  */
 export const PALETTE = {
-  void: 0x05070e,
-  wallTop: 0x4a5f85,
-  wallFace: 0x121b30,
-  wallEdge: 0x5c74a3,
-  wallShadow: 0x02040a,
+  void: 0xe3e8f1,
+  wallTop: 0xdae2ed,
+  wallFace: 0xa9b6c9,
+  wallEdge: 0xe9eef6,
+  wallShadow: 0x8694ad,
 
-  corridor: 0x1a2440,
-  corridorAlt: 0x1f2a4a,
-  grid: 0x33436b,
+  corridor: 0xf8fafc,
+  corridorAlt: 0xf1f4f9,
+  grid: 0xdfe5ef,
 
-  doorway: 0x24314f,
-  threshold: 0x3b82f6,
+  doorway: 0xf8fafc,
+  threshold: 0x2563eb,
 
-  propShadow: 0x02040a,
-  deskTop: 0x2f3f63,
-  deskEdge: 0x1d2946,
-  tableTop: 0x35456b,
-  counterTop: 0x3a4a72,
-  shelfBody: 0x26324f,
-  shelfLine: 0x4a5c87,
-  serverBody: 0x1a2338,
-  serverLed: 0x34d399,
-  sofaBody: 0x3a3050,
-  chairBody: 0x28334f,
-  plantPot: 0x6b4630,
-  plantLeaf: 0x2f9e6a,
-  rug: 0x3b82f6,
-  boardBody: 0x1e2a44,
-  boardInk: 0x7c8bb0,
+  propShadow: 0x8e9ab0,
+  deskTop: 0xc9d3e4,
+  deskEdge: 0xa9b6cc,
+  tableTop: 0xd3dceb,
+  counterTop: 0xcdd8e9,
+  shelfBody: 0xc2cde0,
+  shelfLine: 0x93a2bc,
+  serverBody: 0xaebacf,
+  serverLed: 0x059669,
+  sofaBody: 0xc7c6e0,
+  chairBody: 0xb6c2d6,
+  plantPot: 0xc89272,
+  plantLeaf: 0x3fae7c,
+  rug: 0x2563eb,
+  boardBody: 0xe9eef7,
+  boardInk: 0x9aa6bb,
   screenGlow: 0x60a5fa,
-  monitor: 0x101a2e,
-  monitorGlow: 0x60a5fa,
+  monitor: 0x44506a,
+  monitorGlow: 0x7fb0ff,
 
-  player: 0x3b82f6,
+  player: 0x2563eb,
   playerLight: 0x93c5fd,
-  shadow: 0x000000,
+  shadow: 0x5b6680,
 
-  labelInk: '#aebbd8',
-  labelHint: '#7fb0ff',
-  nameInk: '#e6ecf9',
+  labelInk: '#56637a',
+  labelHint: '#2563eb',
+  nameInk: '#0f1729',
 } as const;

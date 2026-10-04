@@ -20,30 +20,30 @@ export default function AdminScenariosPage() {
               </div>
             }
           />
-          <ol className="divide-y divide-ink-800">
+          <ol className="divide-y divide-line">
             {[...scenario.steps]
               .sort((a, b) => a.sortOrder - b.sortOrder)
               .map((step) => (
                 <li key={step.key} className="px-5 py-3.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[11px] text-ink-500">
+                    <span className="font-mono text-[11px] text-muted">
                       {step.sortOrder}
                     </span>
-                    <span className="text-xs font-semibold text-white">{step.title}</span>
+                    <span className="text-xs font-semibold text-strong">{step.title}</span>
                     <Badge tone="muted">{step.stepType}</Badge>
                     {step.estimatedMinutes ? (
-                      <span className="text-[10px] text-ink-500">
+                      <span className="text-[10px] text-muted">
                         {step.estimatedMinutes} min
                       </span>
                     ) : null}
                     {step.officeZoneKey ? (
-                      <span className="text-[10px] text-ink-500">
+                      <span className="text-[10px] text-muted">
                         · zone: {step.officeZoneKey}
                       </span>
                     ) : null}
                   </div>
 
-                  <p className="mt-1.5 font-mono text-[10px] text-ink-500">
+                  <p className="mt-1.5 font-mono text-[10px] text-muted">
                     key: {step.key} · unlock: {JSON.stringify(step.unlockRule)}
                   </p>
 
@@ -51,10 +51,10 @@ export default function AdminScenariosPage() {
                     {step.tasks.map((task) => (
                       <li
                         key={task.key}
-                        className="flex flex-wrap items-center gap-2 rounded-lg bg-ink-950/50 px-3 py-1.5"
+                        className="flex flex-wrap items-center gap-2 rounded-lg bg-sunken px-3 py-1.5"
                       >
                         <Badge tone="muted">{task.kind}</Badge>
-                        <span className="text-[11px] text-ink-200">{task.title}</span>
+                        <span className="text-[11px] text-strong">{task.title}</span>
                         {task.required === false ? (
                           <Badge tone="muted">optional</Badge>
                         ) : null}
@@ -63,7 +63,7 @@ export default function AdminScenariosPage() {
                             persona: {task.personaKey}
                           </span>
                         ) : null}
-                        <span className="font-mono text-[10px] text-ink-500">
+                        <span className="font-mono text-[10px] text-muted">
                           {(task.fields ?? []).length} fields · completion:{' '}
                           {task.completion.type}
                         </span>

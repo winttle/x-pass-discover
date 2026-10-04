@@ -31,10 +31,10 @@ export function EventCard({
       <div className="px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="warn">Incoming message</Badge>
-          <span className="text-[11px] text-ink-400">{payload.from}</span>
+          <span className="text-[11px] text-muted">{payload.from}</span>
         </div>
-        <h3 className="mt-3 text-sm font-semibold text-white">{payload.headline}</h3>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-300">
+        <h3 className="mt-3 text-sm font-semibold text-strong">{payload.headline}</h3>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-body">
           {payload.body}
         </p>
 
@@ -43,12 +43,12 @@ export function EventCard({
             {payload.facts.map((fact) => (
               <div
                 key={fact.label}
-                className="rounded-lg border border-ink-800 bg-ink-950/50 px-3 py-2"
+                className="rounded-lg border border-line bg-sunken px-3 py-2"
               >
-                <dt className="text-[10px] uppercase tracking-wider text-ink-500">
+                <dt className="text-[10px] uppercase tracking-wider text-muted">
                   {fact.label}
                 </dt>
-                <dd className="mt-0.5 text-xs text-ink-200">{fact.value}</dd>
+                <dd className="mt-0.5 text-xs text-strong">{fact.value}</dd>
               </div>
             ))}
           </dl>

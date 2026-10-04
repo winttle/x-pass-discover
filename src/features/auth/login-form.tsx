@@ -41,8 +41,8 @@ export function LoginForm() {
     <Card className="p-6">
       <Logo />
 
-      <h1 className="mt-6 text-lg font-semibold text-white">Sign in to BITE</h1>
-      <p className="mt-1 text-xs text-ink-400">
+      <h1 className="mt-6 text-lg font-semibold text-strong">Sign in to BITE</h1>
+      <p className="mt-1 text-xs text-muted">
         MVP identity only — no password is collected or stored.
       </p>
 

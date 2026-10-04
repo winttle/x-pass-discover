@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" role="img" aria-label="Portrait">
+  <defs>
+    <clipPath id="creception"><circle cx="72" cy="72" r="68"/></clipPath>
+    <linearGradient id="breception" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#creception)">
+    <rect width="144" height="144" fill="url(#breception)"/>
+    <circle cx="112" cy="26" r="30" fill="#94a3b8" opacity="0.25"/>
+    <!-- shoulders -->
+    <path d="M18 144v-14c0-20 18-30 54-30s54 10 54 30v14z" fill="#64748b"/>
+    <path d="M60 100h24v12c0 7-24 7-24 0z" fill="#f0cdae"/>
+    <!-- head -->
+    <circle cx="72" cy="66" r="26" fill="#f0cdae"/>
+    <!-- hair -->
+    <path d="M48 50a24 24 0 0 1 48 0v5c0 3-4 4-6 1-4-7-11-10-18-10s-14 3-18 10c-2 3-6 2-6-1z" fill="#4b4453"/>
+    <!-- features -->
+    <circle cx="63" cy="66" r="2.6" fill="#36302f"/>
+    <circle cx="81" cy="66" r="2.6" fill="#36302f"/>
+    <path d="M66 78c4 3 8 3 12 0" stroke="#b9735c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <rect x="58" y="102" width="28" height="6" rx="3" fill="#ffffff" opacity="0.8"/>
+  </g>
+  <circle cx="72" cy="72" r="68" fill="none" stroke="#64748b" stroke-opacity="0.25" stroke-width="3"/>
+</svg>

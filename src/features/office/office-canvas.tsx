@@ -28,26 +28,38 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
       game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: containerRef.current,
-        backgroundColor: '#080b14',
+        backgroundColor: '#eef1f7',
         scale: {
           mode: Phaser.Scale.RESIZE,
           autoCenter: Phaser.Scale.CENTER_BOTH,
         },
         fps: {
           target: 60,
-          // Phaser's delta smoothing clamps the frame delta to the target frame
-          // time, so on a machine that cannot hold 60fps the whole simulation
-          // runs in slow motion — walking speed would depend on the player's
-          // hardware. Use the real elapsed time instead.
-          smoothStep: false,
+          /*
+           * `min` is the slowest frame rate the simulation will honour: a frame
+           * longer than 1/30s is treated as 1/30s. That bounds how far the
+           * avatar can move in a single physics step (~7px against 32px walls),
+           * which is what stops a stalled tab or a long GC pause from letting
+           * the player walk straight through a wall.
+           */
+          min: 30,
+          /*
+           * Smoothing stays ON: it carries Phaser's protection against
+           * pathological deltas (tab restore, context loss). Combined with
+           * `fixedStep: false` below, movement is wall-clock based rather than
+           * frame-count based, so walking speed does not depend on the
+           * player's hardware.
+           */
+          smoothStep: true,
         },
         physics: {
           default: 'arcade',
           arcade: {
             gravity: { x: 0, y: 0 },
-            // Integrate with the real frame delta. With Arcade's default fixed
-            // step, a slow frame rate also slows the avatar down — walking
-            // speed would depend on the player's machine.
+            // Integrate with the real frame delta. Arcade's default fixed step
+            // runs at most one 1/60s step per frame with no catch-up, so a slow
+            // frame rate also slows the avatar down. The clamped delta above is
+            // what keeps this safe.
             fixedStep: false,
           },
         },
@@ -73,7 +85,7 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
   return (
     <div
       ref={containerRef}
-      className="h-[clamp(420px,calc(100dvh-230px),760px)] w-full overflow-hidden bg-ink-950"
+      className="h-[clamp(420px,calc(100dvh-230px),760px)] w-full overflow-hidden bg-canvas"
     />
   );
 }

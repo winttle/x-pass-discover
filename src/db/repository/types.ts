@@ -57,7 +57,7 @@ export type EventFilter = {
  *  - `FileRepository`    (local JSON, used when DATABASE_URL is absent)
  */
 export interface XPassRepository {
-  readonly mode: 'neon' | 'file';
+  readonly mode: 'neon' | 'file' | 'memory';
 
   // --- identity -----------------------------------------------------------
   findUserByEmail(email: string): Promise<User | null>;

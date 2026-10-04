@@ -180,6 +180,8 @@ export type DepartmentDefinition = {
   finalOutput: string;
   officeZoneKey: string;
   accentColor: string;
+  /** Illustration shown on the department card and the workspace header. */
+  coverImage: string;
   /** Only Sales is playable in this milestone. */
   status: 'playable' | 'coming_soon';
   scenarioKey: string | null;

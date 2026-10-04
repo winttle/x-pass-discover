@@ -33,10 +33,10 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TONE_STYLES: Record<ToastTone, string> = {
-  info: 'border-ink-600 bg-ink-850/95 text-ink-100',
-  success: 'border-accent-400/45 bg-accent-500/15 text-accent-400',
-  warn: 'border-warn-400/45 bg-warn-400/12 text-warn-400',
-  danger: 'border-danger-400/45 bg-danger-400/12 text-danger-400',
+  info: 'border-line-strong bg-surface text-body',
+  success: 'border-accent-100 bg-accent-50 text-accent-700',
+  warn: 'border-warn-100 bg-warn-50 text-warn-700',
+  danger: 'border-danger-100 bg-danger-50 text-danger-700',
 };
 
 const TONE_ICONS: Record<ToastTone, string> = {
@@ -70,9 +70,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex animate-slide-in items-start gap-2.5 rounded-xl border px-3.5 py-2.5 shadow-xl shadow-black/40 backdrop-blur ${TONE_STYLES[toast.tone]}`}
+            className={`pointer-events-auto flex animate-slide-in items-start gap-2.5 rounded-xl border px-3.5 py-2.5 shadow-float ${TONE_STYLES[toast.tone]}`}
           >
-            <span className="mt-px grid size-4 shrink-0 place-items-center rounded-full bg-current/15 text-[10px] font-bold">
+            <span className="mt-px grid size-4 shrink-0 place-items-center rounded-full bg-current/12 text-[10px] font-bold">
               {TONE_ICONS[toast.tone]}
             </span>
             <div className="min-w-0 flex-1">

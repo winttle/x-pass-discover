@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" role="img" aria-label="hr department">
+  <defs>
+    <linearGradient id="ghr" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="200" fill="url(#ghr)"/>
+  <circle cx="352" cy="-16" r="104" fill="#ffedd5" opacity="0.6"/>
+  <circle cx="30" cy="196" r="72" fill="#ffedd5" opacity="0.45"/>
+
+  <rect x="52" y="68" width="92" height="114" rx="12" fill="#ffffff" stroke="#ffedd5" stroke-width="2"/>
+  <circle cx="98" cy="102" r="19" fill="#ffedd5"/>
+  <path d="M80 136a18 18 0 0 1 36 0z" fill="#ffedd5"/>
+  <rect x="70" y="148" width="56" height="7" rx="3.5" fill="#ffedd5"/>
+  <rect x="78" y="162" width="40" height="7" rx="3.5" fill="#ffedd5"/>
+  <rect x="154" y="56" width="92" height="126" rx="12" fill="#ffffff" stroke="#ea580c" stroke-width="2.5"/>
+  <circle cx="200" cy="96" r="21" fill="#f0c3a4"/>
+  <path d="M180 134a20 20 0 0 1 40 0z" fill="#ea580c"/>
+  <rect x="170" y="148" width="60" height="7" rx="3.5" fill="#ffedd5"/>
+  <rect x="180" y="162" width="40" height="7" rx="3.5" fill="#ffedd5"/>
+  <rect x="256" y="68" width="92" height="114" rx="12" fill="#ffffff" stroke="#ffedd5" stroke-width="2"/>
+  <circle cx="302" cy="102" r="19" fill="#ffedd5"/>
+  <path d="M284 136a18 18 0 0 1 36 0z" fill="#ffedd5"/>
+  <rect x="274" y="148" width="56" height="7" rx="3.5" fill="#ffedd5"/>
+  <circle cx="200" cy="44" r="13" fill="#ea580c"/>
+  <path d="M194 44l5 5 9-10" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

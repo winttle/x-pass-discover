@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="The BITE head office">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcebfb"/><stop offset="100%" stop-color="#f3f7fd"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cfe2f7"/><stop offset="100%" stop-color="#eaf2fb"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eef3f9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#sky)"/>
+  <circle cx="1010" cy="92" r="46" fill="#fde9c8"/>
+
+  <!-- back towers -->
+  <rect x="70" y="150" width="120" height="270" rx="6" fill="#e3ecf6"/>
+  <rect x="210" y="104" width="92" height="316" rx="6" fill="#dbe6f3"/>
+  <rect x="940" y="132" width="150" height="288" rx="6" fill="#e3ecf6"/>
+
+  <!-- main building -->
+  <rect x="330" y="62" width="540" height="358" rx="12" fill="url(#tower)"/>
+  <rect x="330" y="62" width="540" height="358" rx="12" fill="none" stroke="#d6e0ec" stroke-width="2"/>
+  <g fill="url(#glass)">
+    <rect x="362" y="104" width="150" height="56" rx="5"/>
+    <rect x="528" y="104" width="150" height="56" rx="5"/>
+    <rect x="694" y="104" width="144" height="56" rx="5"/>
+    <rect x="362" y="180" width="150" height="56" rx="5"/>
+    <rect x="528" y="180" width="150" height="56" rx="5"/>
+    <rect x="694" y="180" width="144" height="56" rx="5"/>
+    <rect x="362" y="256" width="150" height="56" rx="5"/>
+    <rect x="694" y="256" width="144" height="56" rx="5"/>
+  </g>
+  <!-- lit window -->
+  <rect x="528" y="256" width="150" height="56" rx="5" fill="#bcd8f6"/>
+
+  <!-- entrance -->
+  <rect x="520" y="330" width="166" height="90" rx="8" fill="#e7eef7"/>
+  <rect x="556" y="352" width="94" height="68" rx="6" fill="#cddff2"/>
+  <rect x="520" y="316" width="166" height="16" rx="8" fill="#2563eb"/>
+
+  <!-- sign -->
+  <rect x="372" y="88" width="96" height="30" rx="8" fill="#2563eb"/>
+  <text x="420" y="109" font-family="ui-sans-serif, system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle">BITE</text>
+
+  <!-- ground -->
+  <rect y="400" width="1200" height="20" fill="#e6ecf4"/>
+  <!-- planting -->
+  <g fill="#3fae7c">
+    <circle cx="272" cy="378" r="26"/><circle cx="300" cy="392" r="18"/>
+    <circle cx="930" cy="382" r="24"/><circle cx="902" cy="394" r="16"/>
+  </g>
+  <rect x="266" y="396" width="12" height="18" fill="#c89272"/>
+  <rect x="924" y="398" width="12" height="16" fill="#c89272"/>
+
+  <!-- people -->
+  <g>
+    <circle cx="760" cy="366" r="11" fill="#f0c3a4"/>
+    <path d="M749 420v-28a11 11 0 0 1 22 0v28z" fill="#2563eb"/>
+    <circle cx="796" cy="372" r="10" fill="#e8b48f"/>
+    <path d="M786 420v-26a10 10 0 0 1 20 0v26z" fill="#64748b"/>
+  </g>
+</svg>

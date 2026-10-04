@@ -158,7 +158,7 @@ export function DynamicForm({
             return (
               <div key={field.key}>
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-ink-200">
+                  <span className="text-xs font-medium text-strong">
                     {field.label}
                     {field.required ? <span className="ml-1 text-danger-400">*</span> : null}
                   </span>
@@ -167,7 +167,7 @@ export function DynamicForm({
                   ) : null}
                 </div>
                 {field.helpText ? (
-                  <p className="mb-2 text-[11px] text-ink-400">{field.helpText}</p>
+                  <p className="mb-2 text-[11px] text-muted">{field.helpText}</p>
                 ) : null}
                 <RepeatableGroup
                   field={field}
@@ -212,8 +212,8 @@ export function DynamicForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-800 pt-4">
-        <p className="flex flex-wrap items-center gap-2 text-[11px] text-ink-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+        <p className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
           <span className="inline-flex items-center gap-1.5">
             <span
               aria-hidden
@@ -224,7 +224,7 @@ export function DynamicForm({
                     ? 'bg-danger-400'
                     : saveState === 'saved'
                       ? 'bg-accent-400'
-                      : 'bg-ink-600'
+                      : 'bg-faint'
               }`}
             />
             {saveState === 'saving'
@@ -256,7 +256,7 @@ export function DynamicForm({
       </div>
 
       {warnings.some((w) => w.severity === 'violation') ? (
-        <p className="text-[11px] leading-relaxed text-ink-500">
+        <p className="text-[11px] leading-relaxed text-muted">
           You can still submit this. BITE will flag it, and the choice is recorded —
           guardrail warnings do not silently correct your answer.
         </p>

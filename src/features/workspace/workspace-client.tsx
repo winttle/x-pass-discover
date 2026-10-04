@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RuntimeBadges } from '@/components/app-shell';
 import { Badge, Card, CardHeader } from '@/components/ui';
+import { Cover } from '@/components/media';
 import { ResourcePanel } from '@/features/resources/resource-panel';
 import { startStep } from '@/lib/client-api';
 import type { SessionView } from '@/types/session-view';
@@ -53,34 +54,51 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
   const isComplete = view.session.status === 'completed';
 
   if (!activeStep) {
-    return <p className="text-sm text-ink-400">This scenario has no steps.</p>;
+    return <p className="text-sm text-muted">This scenario has no steps.</p>;
   }
 
   return (
     <div className="grid gap-5 xl:grid-cols-[272px_minmax(0,1fr)_356px]">
       {/* Left: progress + step timeline */}
       <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
-        <Card accent={view.department.accentColor} className="p-4">
+        <Card>
+          <Cover
+            src={view.department.coverImage}
+            alt=""
+            className="h-24 border-b border-line"
+            overlay={
+              <span className="absolute bottom-2.5 left-3.5">
+                <span
+                  className="rounded-full bg-surface/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider shadow-card"
+                  style={{ color: view.department.accentColor }}
+                >
+                  {view.department.name}
+                </span>
+              </span>
+            }
+          />
+          <div className="p-4">
           <ProgressRing steps={view.steps} />
 
-          <dl className="mt-4 space-y-2 border-t border-ink-800 pt-3 text-[11px]">
+          <dl className="mt-4 space-y-2 border-t border-line pt-3 text-[11px]">
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-500">Role</dt>
-              <dd className="truncate text-right text-ink-300" title={view.scenario.studentRole}>
+              <dt className="text-muted">Role</dt>
+              <dd className="truncate text-right text-body" title={view.scenario.studentRole}>
                 {view.scenario.studentRole}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-500">Deadline</dt>
+              <dt className="text-muted">Deadline</dt>
               <dd>
                 <DeadlineCountdown deadlineAt={view.session.deadlineAt} />
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-ink-500">Scenario</dt>
-              <dd className="font-mono text-ink-300">v{view.scenario.version}</dd>
+              <dt className="text-muted">Scenario</dt>
+              <dd className="font-mono text-body">v{view.scenario.version}</dd>
             </div>
           </dl>
+          </div>
         </Card>
 
         <Card className="p-2">
@@ -94,19 +112,20 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
         <Card className="p-4">
           <RuntimeBadges
             persistenceLabel={view.runtime.persistenceLabel}
+            persistenceIsEphemeral={view.runtime.persistenceIsEphemeral}
             aiLabel={view.runtime.aiLabel}
             aiModeDowngraded={view.runtime.aiModeDowngraded}
           />
-          <div className="mt-3 flex flex-col gap-1.5 border-t border-ink-800 pt-3 text-[11px]">
+          <div className="mt-3 flex flex-col gap-1.5 border-t border-line pt-3 text-[11px]">
             <Link
               href={`/office?session=${view.session.id}`}
-              className="flex items-center gap-1.5 text-ink-400 transition-colors hover:text-white"
+              className="flex items-center gap-1.5 text-muted transition-colors hover:text-strong"
             >
               <span aria-hidden>🏢</span> Enter the 2D office
             </Link>
             <Link
               href={`/admin/events?session=${view.session.id}`}
-              className="flex items-center gap-1.5 text-ink-400 transition-colors hover:text-white"
+              className="flex items-center gap-1.5 text-muted transition-colors hover:text-strong"
             >
               <span aria-hidden>📊</span> Inspect behavior events
             </Link>
@@ -123,7 +142,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
                 <Badge tone="success" dot>
                   Bootcamp complete
                 </Badge>
-                <p className="mt-2 text-sm text-ink-100">
+                <p className="mt-2 text-sm text-strong">
                   You submitted the {view.scenario.finalOutputTitle}.
                 </p>
               </div>
@@ -148,7 +167,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
             }
           />
           {activeStep.instructions ? (
-            <p className="px-5 py-4 text-[13px] leading-relaxed text-ink-300">
+            <p className="px-5 py-4 text-[13px] leading-relaxed text-body">
               {activeStep.instructions}
             </p>
           ) : null}
@@ -156,10 +175,10 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
 
         {!activeStep.unlocked ? (
           <Card className="px-5 py-10 text-center">
-            <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-ink-850 text-base">
+            <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-sunken text-base">
               🔒
             </div>
-            <p className="text-sm text-ink-400">
+            <p className="text-sm text-muted">
               {activeStep.lockedReason ?? 'This step is not available yet.'}
             </p>
           </Card>

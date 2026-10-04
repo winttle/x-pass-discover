@@ -7,12 +7,12 @@ export function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   return (
     <span className="flex items-center gap-2.5">
       <span
-        className={`grid ${box} place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 font-bold text-white shadow-lg shadow-brand-600/25`}
+        className={`grid ${box} place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 font-bold text-white shadow-sm shadow-brand-600/30`}
       >
         X
       </span>
-      <span className="text-sm font-semibold tracking-tight text-white">
-        X-PASS <span className="font-normal text-ink-400">Discover</span>
+      <span className="text-sm font-semibold tracking-tight text-strong">
+        X-PASS <span className="font-normal text-muted">Discover</span>
       </span>
     </span>
   );
@@ -20,16 +20,26 @@ export function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 export function RuntimeBadges({
   persistenceLabel,
+  persistenceIsEphemeral,
   aiLabel,
   aiModeDowngraded,
 }: {
   persistenceLabel: string;
+  persistenceIsEphemeral?: boolean;
   aiLabel: string;
   aiModeDowngraded?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Badge tone="muted" dot title="Where runtime state is being written">
+      <Badge
+        tone={persistenceIsEphemeral ? 'warn' : 'muted'}
+        dot
+        title={
+          persistenceIsEphemeral
+            ? 'No DATABASE_URL: work is held in memory and lost on restart'
+            : 'Where runtime state is being written'
+        }
+      >
         {persistenceLabel}
       </Badge>
       <Badge
@@ -64,25 +74,25 @@ export function AppShell({
   const container = wide ? 'max-w-[1680px]' : 'max-w-7xl';
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-30 border-b border-ink-800/70 bg-ink-950/75 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-sm">
         <div className={`mx-auto flex ${container} flex-wrap items-center gap-4 px-5 py-2.5`}>
           <Link href="/" className="shrink-0">
             <Logo size="sm" />
           </Link>
-          <span className="h-5 w-px bg-ink-800" aria-hidden />
+          <span className="h-5 w-px bg-sunken" aria-hidden />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-semibold tracking-tight text-white">
+            <h1 className="truncate text-sm font-semibold tracking-tight text-strong">
               {title}
             </h1>
             {subtitle ? (
-              <p className="truncate text-[11px] text-ink-400">{subtitle}</p>
+              <p className="truncate text-[11px] text-muted">{subtitle}</p>
             ) : null}
           </div>
           {right}
           {backHref ? (
             <Link
               href={backHref}
-              className="shrink-0 rounded-lg border border-ink-700 px-2.5 py-1.5 text-[11px] text-ink-300 transition-colors hover:border-ink-500 hover:bg-ink-850 hover:text-white"
+              className="shrink-0 rounded-lg border border-line px-2.5 py-1.5 text-[11px] text-body transition-colors hover:border-line-strong hover:bg-sunken hover:text-strong"
             >
               ← {backLabel ?? 'Back'}
             </Link>

@@ -1,29 +1,70 @@
 @import 'tailwindcss';
 
+/*
+ * Light theme.
+ *
+ * Colours are semantic, not numeric: a component says `bg-surface` /
+ * `text-muted` / `border-line`, so the whole palette can be retuned (or a dark
+ * mode added back) by editing this block alone.
+ *
+ * A light UI gets its hierarchy from borders and soft shadows rather than from
+ * surface lightness, which is why `--shadow-*` is part of the token set.
+ */
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
 
-  --color-ink-950: #060910;
-  --color-ink-900: #0b1120;
-  --color-ink-850: #10182b;
-  --color-ink-800: #161f36;
-  --color-ink-700: #212d4a;
-  --color-ink-600: #32416a;
-  --color-ink-500: #4a5b88;
-  --color-ink-400: #7a89b0;
-  --color-ink-300: #a7b3d2;
-  --color-ink-200: #cdd6ec;
-  --color-ink-100: #e8edf9;
+  /* Surfaces */
+  --color-canvas: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-sunken: #f2f5fa;
+  --color-line: #e6eaf2;
+  --color-line-strong: #d2d9e6;
 
-  --color-brand-600: #2563eb;
+  /* Text */
+  --color-strong: #0f1729;
+  --color-body: #3c4759;
+  --color-muted: #697689;
+  --color-subtle: #8f9bad;
+  --color-faint: #c2cada;
+
+  /* Brand */
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dce9fe;
+  --color-brand-200: #bdd6fd;
+  --color-brand-300: #90bbfb;
+  --color-brand-400: #609bf8;
   --color-brand-500: #3b82f6;
-  --color-brand-400: #60a5fa;
-  --color-brand-300: #93c5fd;
-  --color-accent-500: #10b981;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+
+  /* Positive */
+  --color-accent-50: #ecfdf5;
+  --color-accent-100: #d1fae5;
   --color-accent-400: #34d399;
+  --color-accent-500: #10b981;
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+
+  /* Caution */
+  --color-warn-50: #fffbeb;
+  --color-warn-100: #fef3c7;
   --color-warn-400: #fbbf24;
+  --color-warn-500: #f59e0b;
+  --color-warn-600: #d97706;
+  --color-warn-700: #b45309;
+
+  /* Negative */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
   --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 3px rgba(15, 23, 41, 0.06);
+  --shadow-raised: 0 2px 4px rgba(15, 23, 41, 0.04), 0 8px 20px -8px rgba(15, 23, 41, 0.12);
+  --shadow-float: 0 12px 32px -12px rgba(15, 23, 41, 0.22), 0 2px 6px rgba(15, 23, 41, 0.06);
 
   --animate-fade-up: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pop: pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -48,17 +89,16 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   background:
-    radial-gradient(1200px 620px at 10% -12%, #1a2440 0%, transparent 55%),
-    radial-gradient(1000px 520px at 92% -6%, #132544 0%, transparent 52%),
-    radial-gradient(900px 700px at 50% 110%, #0f1c33 0%, transparent 60%),
-    var(--color-ink-950);
+    radial-gradient(900px 480px at 8% -8%, #e8effc 0%, transparent 60%),
+    radial-gradient(760px 420px at 96% -4%, #eaf3ee 0%, transparent 55%),
+    var(--color-canvas);
   background-attachment: fixed;
-  color: var(--color-ink-200);
+  color: var(--color-body);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -66,36 +106,36 @@ body {
 
 /* A single, consistent focus ring everywhere. */
 :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-brand-400);
+  outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
 /* Rendered markdown inside resource panels. */
-.prose-xp h2 { @apply mt-6 mb-2 text-sm font-semibold tracking-tight text-white; }
-.prose-xp h3 { @apply mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-ink-300; }
-.prose-xp p { @apply my-2 text-[13px] leading-relaxed text-ink-300; }
-.prose-xp ul { @apply my-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-ink-300; }
-.prose-xp ol { @apply my-2 list-decimal space-y-1 pl-5 text-[13px] leading-relaxed text-ink-300; }
-.prose-xp strong { @apply font-semibold text-white; }
-.prose-xp blockquote { @apply my-3 rounded-r-lg border-l-2 border-brand-500/70 bg-brand-500/5 py-2 pl-3 pr-2 text-[13px] italic leading-relaxed text-ink-200; }
-.prose-xp code { @apply rounded bg-ink-950 px-1.5 py-0.5 font-mono text-[11px] text-accent-400; }
-.prose-xp pre { @apply my-3 overflow-x-auto rounded-xl border border-ink-800 bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-ink-300; }
-.prose-xp pre code { @apply bg-transparent p-0 text-ink-300; }
+.prose-xp h2 { @apply mt-6 mb-2 text-sm font-semibold tracking-tight text-strong; }
+.prose-xp h3 { @apply mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-muted; }
+.prose-xp p { @apply my-2 text-[13px] leading-relaxed text-body; }
+.prose-xp ul { @apply my-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-body marker:text-faint; }
+.prose-xp ol { @apply my-2 list-decimal space-y-1 pl-5 text-[13px] leading-relaxed text-body marker:text-subtle; }
+.prose-xp strong { @apply font-semibold text-strong; }
+.prose-xp blockquote { @apply my-3 rounded-r-lg border-l-2 border-brand-400 bg-brand-50 py-2 pl-3 pr-2 text-[13px] italic leading-relaxed text-body; }
+.prose-xp code { @apply rounded bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-accent-700; }
+.prose-xp pre { @apply my-3 overflow-x-auto rounded-xl border border-line bg-sunken p-3 font-mono text-[11px] leading-relaxed text-body; }
+.prose-xp pre code { @apply bg-transparent p-0 text-body; }
 .prose-xp table { @apply my-3 w-full border-collapse overflow-hidden text-[13px]; }
-.prose-xp th { @apply border-b border-ink-700 px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-ink-400; }
-.prose-xp td { @apply border-b border-ink-800/80 px-2 py-1.5 align-top text-ink-300; }
+.prose-xp th { @apply border-b border-line-strong px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted; }
+.prose-xp td { @apply border-b border-line px-2 py-1.5 align-top text-body; }
 .prose-xp tr:last-child td { @apply border-b-0; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #243052;
+  background: #cfd7e4;
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
-::-webkit-scrollbar-thumb:hover { background: #35456e; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #b4bfd1; background-clip: content-box; }
 
 /* Phaser canvas should fill its container without layout surprises. */
 canvas { display: block; }

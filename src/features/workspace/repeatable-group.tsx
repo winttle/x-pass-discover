@@ -48,7 +48,7 @@ export function RepeatableGroup({
       {padded.map((row, index) => (
         <div
           key={index}
-          className="rounded-xl border border-ink-800 bg-ink-950/40 p-3.5"
+          className="rounded-xl border border-line bg-sunken p-3.5"
         >
           <div className="mb-3 flex items-center justify-between">
             <Badge tone="muted">#{index + 1}</Badge>
@@ -57,7 +57,7 @@ export function RepeatableGroup({
                 type="button"
                 disabled={disabled}
                 onClick={() => onChange(padded.filter((_, i) => i !== index))}
-                className="text-[11px] text-ink-500 transition-colors hover:text-danger-400 disabled:opacity-40"
+                className="text-[11px] text-muted transition-colors hover:text-danger-400 disabled:opacity-40"
               >
                 Remove
               </button>
@@ -68,7 +68,7 @@ export function RepeatableGroup({
             {subFields.map((sub) => (
               <label key={sub.key} className="block">
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] font-medium text-ink-300">
+                  <span className="text-[11px] font-medium text-body">
                     {sub.label}
                     {sub.required ? <span className="ml-1 text-danger-400">*</span> : null}
                   </span>
@@ -86,7 +86,7 @@ export function RepeatableGroup({
                   disabled={disabled}
                 />
                 {sub.helpText ? (
-                  <p className="mt-1 text-[10px] text-ink-500">{sub.helpText}</p>
+                  <p className="mt-1 text-[10px] text-muted">{sub.helpText}</p>
                 ) : null}
               </label>
             ))}

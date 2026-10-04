@@ -63,18 +63,27 @@ const now = () => new Date().toISOString();
  * Writes are serialised through a promise chain and committed atomically.
  */
 export class FileRepository implements XPassRepository {
-  readonly mode = 'file' as const;
+  readonly mode: 'file' | 'memory';
 
   private readonly filePath: string;
+  /** When true nothing is written to disk — the cache IS the database. */
+  private readonly ephemeral: boolean;
   private cache: FileShape | null = null;
   private queue: Promise<unknown> = Promise.resolve();
+  private warnedAboutDisk = false;
 
-  constructor(dataDir = env.dataDir) {
+  constructor(dataDir = env.dataDir, ephemeral = env.persistenceMode === 'memory') {
     this.filePath = path.resolve(process.cwd(), dataDir, 'x-pass-dev-db.json');
+    this.ephemeral = ephemeral;
+    this.mode = ephemeral ? 'memory' : 'file';
   }
 
   private async load(): Promise<FileShape> {
     if (this.cache) return this.cache;
+    if (this.ephemeral) {
+      this.cache = structuredClone(EMPTY);
+      return this.cache;
+    }
     try {
       const raw = await readFile(this.filePath, 'utf8');
       const parsed = JSON.parse(raw) as Partial<FileShape>;
@@ -86,10 +95,24 @@ export class FileRepository implements XPassRepository {
   }
 
   private async flush(data: FileShape): Promise<void> {
-    await mkdir(path.dirname(this.filePath), { recursive: true });
-    const tmp = `${this.filePath}.${randomUUID()}.tmp`;
-    await writeFile(tmp, JSON.stringify(data, null, 2), 'utf8');
-    await rename(tmp, this.filePath);
+    if (this.ephemeral) return;
+    try {
+      await mkdir(path.dirname(this.filePath), { recursive: true });
+      const tmp = `${this.filePath}.${randomUUID()}.tmp`;
+      await writeFile(tmp, JSON.stringify(data, null, 2), 'utf8');
+      await rename(tmp, this.filePath);
+    } catch (error) {
+      // A read-only filesystem must not take the student's session down with
+      // it: keep serving from the in-memory cache and say so once.
+      if (!this.warnedAboutDisk) {
+        this.warnedAboutDisk = true;
+        console.warn(
+          '[persistence] cannot write to disk, continuing in memory only. ' +
+            'Set DATABASE_URL to persist anything.',
+          error,
+        );
+      }
+    }
   }
 
   /**

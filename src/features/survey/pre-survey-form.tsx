@@ -62,7 +62,7 @@ export function PreSurveyForm({
                   >
                     {department.name}
                   </span>
-                  <span className="text-[11px] text-ink-400">{department.tagline}</span>
+                  <span className="text-[11px] text-muted">{department.tagline}</span>
                 </div>
                 <div className="mt-2 flex gap-2">
                   {[1, 2, 3, 4, 5].map((score) => (
@@ -73,8 +73,8 @@ export function PreSurveyForm({
                       aria-pressed={current === score}
                       className={`h-9 flex-1 rounded-lg border text-xs font-medium transition-all duration-150 active:scale-[0.97] ${
                         current === score
-                          ? 'border-brand-500 bg-brand-500/20 text-white shadow-sm shadow-brand-600/20'
-                          : 'border-ink-700 text-ink-500 hover:border-ink-500 hover:bg-ink-850 hover:text-ink-200'
+                          ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm shadow-brand-600/10'
+                          : 'border-line text-muted hover:border-line-strong hover:bg-sunken hover:text-strong'
                       }`}
                     >
                       {score}

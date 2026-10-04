@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Badge, Button, Card } from '@/components/ui';
+import { Cover } from '@/components/media';
 import { useToast } from '@/components/toast';
 import type { DepartmentDefinition } from '@/types/scenario';
 
@@ -100,20 +101,20 @@ export function DepartmentChooser({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink-800 bg-ink-900/50 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-sunken px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex gap-1" aria-hidden>
             {[0, 1, 2].map((index) => (
               <span
                 key={index}
                 className={`h-1.5 w-7 rounded-full transition-colors duration-300 ${
-                  index < selected.length ? 'bg-brand-500' : 'bg-ink-800'
+                  index < selected.length ? 'bg-brand-500' : 'bg-sunken'
                 }`}
               />
             ))}
           </div>
-          <p className="text-[11px] text-ink-400">
-            <span className="font-semibold text-white">{selected.length}</span> of 3
+          <p className="text-[11px] text-muted">
+            <span className="font-semibold text-strong">{selected.length}</span> of 3
             selected · Sales is playable in this build; the others run on the same engine.
           </p>
         </div>
@@ -143,6 +144,29 @@ export function DepartmentChooser({
                 isSelected ? 'border-brand-500/60 shadow-lg shadow-brand-600/10' : ''
               }`}
             >
+              <Cover
+                src={department.coverImage}
+                alt=""
+                className="h-32 border-b border-line"
+                overlay={
+                  <>
+                    <span
+                      className="absolute inset-x-0 bottom-0 h-px"
+                      style={{ background: department.accentColor, opacity: 0.35 }}
+                    />
+                    <span className="absolute right-3 top-3">
+                      {playable ? (
+                        <Badge tone="success" dot>
+                          Playable
+                        </Badge>
+                      ) : (
+                        <Badge tone="muted">Coming soon</Badge>
+                      )}
+                    </span>
+                  </>
+                }
+              />
+
               <button
                 type="button"
                 onClick={() => toggle(department.slug)}
@@ -168,7 +192,7 @@ export function DepartmentChooser({
                       >
                         {department.name}
                       </div>
-                      <div className="text-[11px] text-ink-500">{department.tagline}</div>
+                      <div className="text-[11px] text-muted">{department.tagline}</div>
                     </div>
                   </div>
 
@@ -176,7 +200,7 @@ export function DepartmentChooser({
                     className={`grid size-5 shrink-0 place-items-center rounded-md border text-[10px] transition-all duration-150 ${
                       isSelected
                         ? 'border-brand-500 bg-brand-500 text-white'
-                        : 'border-ink-600 text-transparent'
+                        : 'border-line-strong text-transparent'
                     }`}
                     aria-hidden
                   >
@@ -184,10 +208,10 @@ export function DepartmentChooser({
                   </span>
                 </div>
 
-                <p className="mt-4 text-sm font-medium text-white">
+                <p className="mt-4 text-sm font-medium text-strong">
                   {department.projectTitle}
                 </p>
-                <p className="mt-2 text-xs leading-relaxed text-ink-400">
+                <p className="mt-2 text-xs leading-relaxed text-muted">
                   {department.description}
                 </p>
 
@@ -201,14 +225,14 @@ export function DepartmentChooser({
                     ],
                   ].map(([label, value]) => (
                     <div key={label} className="flex justify-between gap-3">
-                      <dt className="shrink-0 text-ink-600">{label}</dt>
-                      <dd className="text-right text-ink-300">{value}</dd>
+                      <dt className="shrink-0 text-subtle">{label}</dt>
+                      <dd className="text-right text-body">{value}</dd>
                     </div>
                   ))}
                 </dl>
               </button>
 
-              <div className="border-t border-ink-800 px-5 py-3.5">
+              <div className="border-t border-line px-5 py-3.5">
                 {playable ? (
                   <div className="flex items-center gap-2">
                     <Button
@@ -225,12 +249,9 @@ export function DepartmentChooser({
                     ) : null}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-ink-600">
-                      Scenario content not authored yet
-                    </span>
-                    <Badge tone="muted">Coming soon</Badge>
-                  </div>
+                  <span className="text-[11px] text-subtle">
+                    Scenario content not authored yet — the engine already supports it
+                  </span>
                 )}
               </div>
             </Card>
@@ -241,7 +262,7 @@ export function DepartmentChooser({
       <div className="flex justify-end">
         <Link
           href="/office"
-          className="text-xs text-ink-400 underline-offset-4 transition-colors hover:text-white hover:underline"
+          className="text-xs text-muted underline-offset-4 transition-colors hover:text-strong hover:underline"
         >
           Or walk into the 2D office first →
         </Link>

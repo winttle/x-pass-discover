@@ -24,9 +24,9 @@ export function GuardrailList({ warnings }: { warnings: GuardrailWarning[] }) {
               <Badge tone={isViolation ? 'danger' : 'warn'}>
                 {isViolation ? 'Outside BITE guardrail' : 'QuickMart criteria'}
               </Badge>
-              <span className="text-xs font-semibold text-white">{warning.title}</span>
+              <span className="text-xs font-semibold text-strong">{warning.title}</span>
             </div>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-300">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-body">
               {warning.message}
             </p>
           </div>

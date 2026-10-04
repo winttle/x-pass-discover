@@ -15,7 +15,9 @@ declare global {
 export function getRepository(): XPassRepository {
   if (!globalThis.__xPassRepository) {
     globalThis.__xPassRepository =
-      env.persistenceMode === 'neon' ? new DrizzleRepository() : new FileRepository();
+      env.persistenceMode === 'neon'
+        ? new DrizzleRepository()
+        : new FileRepository();
   }
   return globalThis.__xPassRepository;
 }

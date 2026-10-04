@@ -37,7 +37,7 @@ export function Minimap({
       role="img"
       aria-label="Office minimap"
     >
-      <rect width={width} height={height} rx={6} fill="#0a1020" />
+      <rect width={width} height={height} rx={6} fill="#f1f4f9" />
 
       {CORRIDORS.map((corridor, index) => (
         <rect
@@ -46,7 +46,7 @@ export function Minimap({
           y={corridor.y * SCALE}
           width={corridor.w * SCALE}
           height={corridor.h * SCALE}
-          fill="#27345a"
+          fill="#ffffff"
         />
       ))}
 
@@ -61,9 +61,9 @@ export function Minimap({
               height={room.h * SCALE}
               rx={2}
               fill={hex(room.color)}
-              fillOpacity={isActive ? 1 : 0.62}
-              stroke={isActive ? '#93c5fd' : '#3a4b73'}
-              strokeWidth={isActive ? 1.5 : 0.75}
+              fillOpacity={1}
+              stroke={isActive ? '#2563eb' : '#c3cbda'}
+              strokeWidth={isActive ? 1.5 : 0.6}
             />
             {room.action.kind !== 'info' ? (
               <circle
@@ -85,7 +85,7 @@ export function Minimap({
           cy={(npc.y + 0.5) * SCALE}
           r={2}
           fill={hex(npc.color)}
-          stroke="#0b1222"
+          stroke="#ffffff"
           strokeWidth={0.75}
         />
       ))}
@@ -111,7 +111,7 @@ export function Minimap({
             cy={(player.y + 0.5) * SCALE}
             r={2.4}
             fill="#ffffff"
-            stroke="#3b82f6"
+            stroke="#2563eb"
             strokeWidth={1.2}
           />
         </g>

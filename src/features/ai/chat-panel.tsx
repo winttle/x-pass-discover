@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Badge, Button, Card, CardHeader, inputClass, Spinner } from '@/components/ui';
 import { useToast } from '@/components/toast';
+import { Portrait } from '@/components/media';
 import { conversationAction } from '@/lib/client-api';
 import type { ConversationView, PublicPersona } from '@/types/ai';
 import type { SessionView } from '@/types/session-view';
@@ -131,8 +132,8 @@ export function ChatPanel({
     <Card className="flex h-[640px] flex-col overflow-hidden">
       <CardHeader
         title={
-          <span className="flex items-center gap-2">
-            <Avatar persona={persona} />
+          <span className="flex items-center gap-2.5">
+            <Avatar persona={persona} size={32} />
             {persona.name}
           </span>
         }
@@ -152,8 +153,8 @@ export function ChatPanel({
         }
       />
 
-      <div className="space-y-2.5 border-b border-ink-800 bg-ink-950/50 px-5 py-3">
-        <p className="text-[11px] leading-relaxed text-ink-400">
+      <div className="space-y-2.5 border-b border-line bg-sunken px-5 py-3">
+        <p className="text-[11px] leading-relaxed text-muted">
           {persona.visibleContext}
         </p>
         {total > 0 ? <DiscoveryMeter found={found} total={total} /> : null}
@@ -162,11 +163,11 @@ export function ChatPanel({
       <div className="relative flex-1 overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-ink-900/90 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-surface to-transparent"
         />
         <div ref={scrollRef} className="h-full space-y-3 overflow-y-auto px-5 py-4">
         {!conversation ? (
-          <div className="flex items-center gap-2 text-xs text-ink-500">
+          <div className="flex items-center gap-2 text-xs text-muted">
             <Spinner /> Connecting…
           </div>
         ) : null}
@@ -184,7 +185,7 @@ export function ChatPanel({
                   className={`rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
                     isStudent
                       ? 'rounded-br-md bg-brand-600 text-white'
-                      : 'rounded-bl-md border border-ink-800 bg-ink-950/70 text-ink-200'
+                      : 'rounded-bl-md border border-line bg-sunken text-strong'
                   }`}
                 >
                   {message.content}
@@ -206,11 +207,11 @@ export function ChatPanel({
         {sending ? (
           <div className="flex gap-2.5">
             <Avatar persona={persona} className="mt-0.5" />
-            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-ink-800 bg-ink-950/70 px-4 py-3.5">
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-line bg-sunken px-4 py-3.5">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="size-1.5 rounded-full bg-ink-400"
+                  className="size-1.5 rounded-full bg-subtle"
                   style={{
                     animation: 'dot-pulse 1.3s ease-in-out infinite',
                     animationDelay: `${i * 0.16}s`,
@@ -229,9 +230,9 @@ export function ChatPanel({
         </p>
       ) : null}
 
-      <div className="border-t border-ink-800 bg-ink-900/60 px-5 py-3">
+      <div className="border-t border-line bg-surface px-5 py-3">
         {ended ? (
-          <p className="text-xs text-ink-500">
+          <p className="text-xs text-muted">
             This conversation has ended. Your transcript is preserved.
           </p>
         ) : (
@@ -260,12 +261,12 @@ export function ChatPanel({
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10px] text-ink-500">
-                <kbd className="rounded border border-ink-700 bg-ink-850 px-1 py-px font-mono text-[9px]">
+              <p className="text-[10px] text-muted">
+                <kbd className="rounded border border-line bg-sunken px-1 py-px font-mono text-[9px]">
                   ⌘/Ctrl
                 </kbd>
                 {' + '}
-                <kbd className="rounded border border-ink-700 bg-ink-850 px-1 py-px font-mono text-[9px]">
+                <kbd className="rounded border border-line bg-sunken px-1 py-px font-mono text-[9px]">
                   ↵
                 </kbd>{' '}
                 to send
@@ -287,18 +288,20 @@ export function ChatPanel({
 function Avatar({
   persona,
   className,
+  size = 26,
 }: {
   persona: PublicPersona;
   className?: string;
+  size?: number;
 }) {
   return (
-    <span
-      className={`grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-ink-900 ${className ?? ''}`}
-      style={{ backgroundColor: persona.avatarColor }}
-      aria-hidden
-    >
-      {persona.name.slice(0, 1)}
-    </span>
+    <Portrait
+      src={persona.portrait}
+      alt={persona.name}
+      size={size}
+      ring={persona.avatarColor}
+      className={className}
+    />
   );
 }
 
@@ -307,10 +310,10 @@ function DiscoveryMeter({ found, total }: { found: number; total: number }) {
   return (
     <div>
       <div className="flex items-center justify-between text-[10px]">
-        <span className="font-medium uppercase tracking-wider text-ink-500">
+        <span className="font-medium uppercase tracking-wider text-muted">
           Specifics uncovered
         </span>
-        <span className="font-mono text-ink-300">
+        <span className="font-mono text-body">
           {found}/{total}
         </span>
       </div>
@@ -319,7 +322,7 @@ function DiscoveryMeter({ found, total }: { found: number; total: number }) {
           <span
             key={index}
             className={`h-1 flex-1 rounded-full transition-colors duration-500 ${
-              index < found ? 'bg-accent-400' : 'bg-ink-800'
+              index < found ? 'bg-accent-400' : 'bg-sunken'
             }`}
           />
         ))}

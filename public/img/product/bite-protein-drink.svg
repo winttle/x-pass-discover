@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="BITE Protein Drink bottle">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef5ff"/><stop offset="100%" stop-color="#f7fbff"/>
+    </linearGradient>
+    <linearGradient id="bottle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e9eef6"/><stop offset="42%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dfe7f1"/>
+    </linearGradient>
+    <linearGradient id="label" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="20" fill="url(#bg)"/>
+  <ellipse cx="160" cy="280" rx="74" ry="12" fill="#c9d6e8" opacity="0.55"/>
+
+  <!-- bottle -->
+  <path d="M126 70h68v16c0 8 10 12 10 26v146a22 22 0 0 1-22 22h-44a22 22 0 0 1-22-22V112c0-14 10-18 10-26z" fill="url(#bottle)" stroke="#d2dbe8" stroke-width="2"/>
+  <rect x="128" y="44" width="64" height="30" rx="7" fill="#1d4ed8"/>
+  <rect x="128" y="44" width="64" height="10" rx="5" fill="#2563eb"/>
+
+  <!-- label -->
+  <rect x="112" y="134" width="96" height="104" rx="10" fill="url(#label)"/>
+  <text x="160" y="164" font-family="ui-sans-serif, system-ui, sans-serif" font-size="19" font-weight="800" fill="#ffffff" text-anchor="middle">BITE</text>
+  <text x="160" y="182" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10" font-weight="600" fill="#bfdbfe" text-anchor="middle" letter-spacing="1.4">PROTEIN</text>
+  <rect x="126" y="192" width="68" height="1.5" fill="#60a5fa"/>
+  <text x="160" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">20g</text>
+  <text x="160" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="8" font-weight="600" fill="#bfdbfe" text-anchor="middle" letter-spacing="1">330ml · 160kcal</text>
+
+  <!-- highlight -->
+  <rect x="136" y="110" width="10" height="150" rx="5" fill="#ffffff" opacity="0.65"/>
+</svg>

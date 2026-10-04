@@ -8,6 +8,7 @@ export type PublicPersona = {
   /** Context the student is allowed to see before/while talking. */
   visibleContext: string;
   avatarColor: string;
+  portrait: string;
 };
 
 export type ChatMessageView = {

@@ -16,9 +16,9 @@ export default function AdminPersonasPage() {
   return (
     <div className="space-y-5">
       <Card className="border-warn-400/30 bg-warn-400/5">
-        <p className="px-5 py-3.5 text-[11px] leading-relaxed text-ink-300">
-          Hidden fact <strong className="text-white">content</strong> and persona{' '}
-          <strong className="text-white">system prompts</strong> are intentionally not
+        <p className="px-5 py-3.5 text-[11px] leading-relaxed text-body">
+          Hidden fact <strong className="text-strong">content</strong> and persona{' '}
+          <strong className="text-strong">system prompts</strong> are intentionally not
           rendered. They exist only in{' '}
           <code className="text-accent-400">src/content/**/personas.server.ts</code>, which
           is marked <code className="text-accent-400">server-only</code> — importing it from
@@ -58,40 +58,40 @@ export default function AdminPersonasPage() {
                 }
               />
 
-              <div className="border-b border-ink-800 px-5 py-3">
-                <p className="text-[10px] uppercase tracking-wider text-ink-500">
+              <div className="border-b border-line px-5 py-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted">
                   Visible context (client-safe)
                 </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-ink-300">
+                <p className="mt-1 text-[11px] leading-relaxed text-body">
                   {persona.visibleContext}
                 </p>
-                <p className="mt-2 text-[10px] uppercase tracking-wider text-ink-500">
+                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted">
                   Reachable from steps
                 </p>
-                <p className="mt-1 font-mono text-[11px] text-ink-300">
+                <p className="mt-1 font-mono text-[11px] text-body">
                   {persona.stepKeys.join(', ')}
                 </p>
               </div>
 
-              <ul className="divide-y divide-ink-800">
+              <ul className="divide-y divide-line">
                 {persona.facts.map((fact) => (
                   <li key={fact.id} className="px-5 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone={fact.visibility === 'hidden' ? 'danger' : 'success'}>
                         {fact.visibility}
                       </Badge>
-                      <span className="font-mono text-[11px] text-ink-200">{fact.id}</span>
-                      <span className="text-[11px] text-white">{fact.label}</span>
+                      <span className="font-mono text-[11px] text-strong">{fact.id}</span>
+                      <span className="text-[11px] text-strong">{fact.label}</span>
                     </div>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-ink-400">
-                      <span className="text-ink-500">Disclosure rule: </span>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+                      <span className="text-muted">Disclosure rule: </span>
                       {fact.disclosureRule}
                     </p>
-                    <p className="mt-1 font-mono text-[10px] leading-relaxed text-ink-600">
+                    <p className="mt-1 font-mono text-[10px] leading-relaxed text-subtle">
                       triggers: {fact.triggerTopics.join(' · ')}
                     </p>
                     {fact.visibility === 'hidden' ? (
-                      <p className="mt-1.5 rounded bg-ink-950/60 px-2 py-1 text-[10px] text-ink-600">
+                      <p className="mt-1.5 rounded bg-sunken px-2 py-1 text-[10px] text-subtle">
                         content withheld — server-only
                       </p>
                     ) : null}

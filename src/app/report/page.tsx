@@ -53,23 +53,23 @@ export default async function ReportPage() {
           />
 
           <div className="px-5 py-4">
-            <div className="grid grid-cols-[minmax(110px,1fr)_minmax(140px,2fr)_84px] gap-x-4 pb-2.5 text-[10px] font-medium uppercase tracking-wider text-ink-500">
+            <div className="grid grid-cols-[minmax(110px,1fr)_minmax(140px,2fr)_84px] gap-x-4 pb-2.5 text-[10px] font-medium uppercase tracking-wider text-muted">
               <span>Department</span>
               <span>
                 LIKE
-                <span className="ml-1.5 font-normal normal-case text-ink-600">
+                <span className="ml-1.5 font-normal normal-case text-subtle">
                   self-reported, before the work
                 </span>
               </span>
               <span className="text-right">
                 SKILL FIT
-                <span className="block font-normal normal-case text-ink-600">
+                <span className="block font-normal normal-case text-subtle">
                   from work evidence
                 </span>
               </span>
             </div>
 
-            <div className="divide-y divide-ink-800/70">
+            <div className="divide-y divide-line">
               {rows.map(({ department, like, completed }) => (
                 <div
                   key={department.slug}
@@ -81,7 +81,7 @@ export default async function ReportPage() {
                       className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: department.accentColor }}
                     />
-                    <span className="truncate text-xs text-ink-200">
+                    <span className="truncate text-xs text-strong">
                       {department.name}
                     </span>
                     {completed ? (
@@ -93,7 +93,7 @@ export default async function ReportPage() {
 
                   <div className="flex items-center gap-2.5">
                     <div
-                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-ink-850"
+                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-sunken"
                       role="img"
                       aria-label={
                         like === null
@@ -108,7 +108,7 @@ export default async function ReportPage() {
                         />
                       ) : null}
                     </div>
-                    <span className="w-8 shrink-0 text-right font-mono text-xs text-ink-200">
+                    <span className="w-8 shrink-0 text-right font-mono text-xs text-strong">
                       {like ?? '—'}
                     </span>
                   </div>
@@ -123,7 +123,7 @@ export default async function ReportPage() {
             </div>
 
             {!hasLike ? (
-              <p className="mt-3 rounded-lg border border-ink-800 bg-ink-950/50 px-3 py-2 text-[11px] text-ink-500">
+              <p className="mt-3 rounded-lg border border-line bg-sunken px-3 py-2 text-[11px] text-muted">
                 No LIKE values yet — complete the{' '}
                 <Link href="/pre-survey" className="text-brand-400 hover:underline">
                   pre-survey
@@ -133,9 +133,9 @@ export default async function ReportPage() {
             ) : null}
           </div>
 
-          <div className="border-t border-ink-800 px-5 py-4">
-            <p className="text-[11px] leading-relaxed text-ink-400">
-              <strong className="text-ink-200">NE = Not Enough Evidence.</strong> SKILL FIT
+          <div className="border-t border-line px-5 py-4">
+            <p className="text-[11px] leading-relaxed text-muted">
+              <strong className="text-strong">NE = Not Enough Evidence.</strong> SKILL FIT
               is produced by extracting evidence from your actual work and rating it
               against behaviourally anchored criteria. That pipeline is not implemented in
               this build, so nothing is shown rather than something invented. Behaviour
@@ -148,8 +148,8 @@ export default async function ReportPage() {
         <div className="space-y-5">
           <Card>
             <CardHeader title="How to read this" />
-            <div className="space-y-3 px-5 py-4 text-xs leading-relaxed text-ink-300">
-              <p className="rounded-lg border border-ink-800 bg-ink-950/50 px-3 py-2 text-ink-500 line-through">
+            <div className="space-y-3 px-5 py-4 text-xs leading-relaxed text-body">
+              <p className="rounded-lg border border-line bg-sunken px-3 py-2 text-muted line-through">
                 You are suited for Strategy.
               </p>
               <p>
@@ -157,7 +157,7 @@ export default async function ReportPage() {
                 some directions may be worth exploring more deeply — and shows you what you
                 said you liked beforehand, next to what you actually did.
               </p>
-              <p className="text-ink-400">
+              <p className="text-muted">
                 Liking a kind of work and being good at it are different questions. Keeping
                 them apart is the point.
               </p>
@@ -181,7 +181,7 @@ export default async function ReportPage() {
                     <li key={session.id} className="flex items-center justify-between gap-3">
                       <Link
                         href={`/workspace/${session.id}`}
-                        className="text-xs text-ink-200 underline-offset-4 transition-colors hover:text-white hover:underline"
+                        className="text-xs text-strong underline-offset-4 transition-colors hover:text-strong hover:underline"
                       >
                         {DEPARTMENTS.find((d) => d.slug === session.departmentSlug)?.name ??
                           session.departmentSlug}
@@ -199,7 +199,7 @@ export default async function ReportPage() {
             </div>
           </Card>
 
-          <p className="px-1 text-[11px] leading-relaxed text-ink-600">
+          <p className="px-1 text-[11px] leading-relaxed text-subtle">
             The post-survey that completes the LIKE side is not built yet, and the
             evaluator that fills SKILL FIT is the next milestone.
           </p>

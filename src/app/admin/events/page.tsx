@@ -36,7 +36,7 @@ export default async function AdminEventsPage({
         />
         <div className="flex flex-wrap gap-2 px-5 py-3">
           {sessions.length === 0 ? (
-            <p className="text-xs text-ink-500">No sessions yet.</p>
+            <p className="text-xs text-muted">No sessions yet.</p>
           ) : (
             sessions.map((session) => (
               <Link
@@ -44,8 +44,8 @@ export default async function AdminEventsPage({
                 href={`/admin/events?session=${session.id}`}
                 className={`rounded-lg border px-3 py-1.5 text-[11px] transition-colors ${
                   selected?.id === session.id
-                    ? 'border-brand-500 bg-brand-500/15 text-white'
-                    : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
+                    : 'border-line text-muted hover:border-line-strong hover:text-strong'
                 }`}
               >
                 {session.departmentSlug} · {session.id.slice(0, 8)}
@@ -75,7 +75,7 @@ export default async function AdminEventsPage({
                   {['#', 'Time', 'Event', 'Step', 'Task', 'Metadata'].map((h) => (
                     <th
                       key={h}
-                      className="border-b border-ink-700 px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-ink-400"
+                      className="border-b border-line px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-muted"
                     >
                       {h}
                     </th>
@@ -85,22 +85,22 @@ export default async function AdminEventsPage({
               <tbody>
                 {events.map((event, index) => (
                   <tr key={event.id}>
-                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-600">
+                    <td className="border-b border-line px-3 py-1.5 font-mono text-subtle">
                       {index + 1}
                     </td>
-                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-500">
+                    <td className="border-b border-line px-3 py-1.5 font-mono text-muted">
                       {new Date(event.occurredAt).toLocaleTimeString()}
                     </td>
-                    <td className="border-b border-ink-800 px-3 py-1.5">
+                    <td className="border-b border-line px-3 py-1.5">
                       <span className="font-mono text-brand-400">{event.eventType}</span>
                     </td>
-                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-400">
+                    <td className="border-b border-line px-3 py-1.5 font-mono text-muted">
                       {event.stepKey ?? '—'}
                     </td>
-                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-400">
+                    <td className="border-b border-line px-3 py-1.5 font-mono text-muted">
                       {event.taskKey ?? '—'}
                     </td>
-                    <td className="border-b border-ink-800 px-3 py-1.5 font-mono text-ink-500">
+                    <td className="border-b border-line px-3 py-1.5 font-mono text-muted">
                       {Object.keys(event.metadata).length > 0
                         ? JSON.stringify(event.metadata)
                         : '—'}
@@ -111,7 +111,7 @@ export default async function AdminEventsPage({
             </table>
           </div>
         )}
-        <p className="border-t border-ink-800 px-5 py-3 text-[11px] text-ink-500">
+        <p className="border-t border-line px-5 py-3 text-[11px] text-muted">
           These are evidence, not points. Counts and durations here must never be converted
           directly into a SKILL FIT score.
         </p>

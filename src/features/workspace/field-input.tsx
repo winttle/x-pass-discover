@@ -85,8 +85,8 @@ export function FieldInput({
                 }
                 className={`rounded-lg border px-2.5 py-1.5 text-xs transition-colors ${
                   active
-                    ? 'border-brand-500 bg-brand-500/20 text-white'
-                    : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
+                    : 'border-line text-muted hover:border-line-strong hover:text-strong'
                 }`}
               >
                 {option.label}
@@ -102,7 +102,7 @@ export function FieldInput({
       const options = evidenceOptions ?? [];
       if (options.length === 0) {
         return (
-          <p className="rounded-lg border border-dashed border-ink-700 px-3 py-3 text-xs text-ink-500">
+          <p className="rounded-lg border border-dashed border-line px-3 py-3 text-xs text-muted">
             Nothing to link yet — open resources and talk to people first.
           </p>
         );
@@ -112,7 +112,7 @@ export function FieldInput({
         <div className="space-y-3">
           {groups.map((group) => (
             <div key={group}>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-500">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
                 {group}
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -134,8 +134,8 @@ export function FieldInput({
                         }
                         className={`max-w-full truncate rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors ${
                           active
-                            ? 'border-accent-400 bg-accent-400/15 text-white'
-                            : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+                            ? 'border-accent-500 bg-accent-50 text-accent-700'
+                            : 'border-line text-muted hover:border-line-strong hover:text-strong'
                         }`}
                         title={option.label}
                       >
@@ -174,16 +174,16 @@ export function PrefillHint({
   disabled?: boolean;
 }) {
   return (
-    <div className="mt-1.5 flex items-start gap-2 rounded-lg border border-ink-800 bg-ink-950/50 px-2.5 py-2">
+    <div className="mt-1.5 flex items-start gap-2 rounded-lg border border-line bg-sunken px-2.5 py-2">
       <Badge tone="muted">From your earlier work</Badge>
-      <p className="min-w-0 flex-1 whitespace-pre-wrap text-[11px] leading-relaxed text-ink-400">
+      <p className="min-w-0 flex-1 whitespace-pre-wrap text-[11px] leading-relaxed text-muted">
         {prefill}
       </p>
       <button
         type="button"
         onClick={onApply}
         disabled={disabled}
-        className="shrink-0 rounded-md border border-ink-600 px-2 py-1 text-[10px] text-ink-300 transition-colors hover:border-brand-500 hover:text-white disabled:opacity-40"
+        className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-[10px] text-body transition-colors hover:border-brand-500 hover:text-strong disabled:opacity-40"
       >
         Use
       </button>

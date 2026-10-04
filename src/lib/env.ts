@@ -9,7 +9,7 @@ import 'server-only';
  * adapters are actually in use.
  */
 
-export type PersistenceMode = 'neon' | 'file';
+export type PersistenceMode = 'neon' | 'file' | 'memory';
 export type AiMode = 'openai' | 'mock';
 
 function readFlag(name: string): string | undefined {
@@ -30,6 +30,22 @@ function resolveAiMode(): AiMode {
 
 const aiMode = resolveAiMode();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+/**
+ * Where runtime state goes.
+ *
+ * `file` is a real convenience in development: it survives a restart, so a
+ * half-finished bootcamp is still there tomorrow. It is NOT viable in a
+ * serverless deployment — the filesystem is read-only and per-instance — so a
+ * production build with no DATABASE_URL degrades to `memory` and says so
+ * loudly rather than crashing on the first save.
+ */
+function resolvePersistenceMode(): PersistenceMode {
+  if (databaseUrl) return 'neon';
+  return isProduction ? 'memory' : 'file';
+}
+
 export const env = {
   databaseUrl,
   openAiKey,
@@ -37,13 +53,13 @@ export const env = {
   aiMode,
   /** True when `X_PASS_AI_MODE=openai` was requested but no key was supplied. */
   aiModeDowngraded: requestedAiMode === 'openai' && !openAiKey,
-  persistenceMode: (databaseUrl ? 'neon' : 'file') as PersistenceMode,
+  persistenceMode: resolvePersistenceMode(),
   appUrl: readFlag('NEXT_PUBLIC_APP_URL') ?? 'http://localhost:3000',
   authSecret: readFlag('AUTH_SECRET') ?? 'x-pass-insecure-dev-secret',
   authSecretIsDevFallback: !readFlag('AUTH_SECRET'),
   /** Where the file-backed dev store writes. Ignored in `neon` mode. */
   dataDir: readFlag('X_PASS_DATA_DIR') ?? '.data',
-  isProduction: process.env.NODE_ENV === 'production',
+  isProduction,
 } as const;
 
 /** Developer-facing banner copy; safe to render in the UI. */
@@ -53,7 +69,11 @@ export function runtimeModeSummary() {
     persistenceLabel:
       env.persistenceMode === 'neon'
         ? 'Neon PostgreSQL'
-        : 'Local file store (no DATABASE_URL)',
+        : env.persistenceMode === 'file'
+          ? 'Local file store (no DATABASE_URL)'
+          : 'Demo mode — nothing is saved',
+    /** True when work will be lost on the next restart. Surfaced in the UI. */
+    persistenceIsEphemeral: env.persistenceMode === 'memory',
     ai: env.aiMode,
     aiLabel:
       env.aiMode === 'openai'

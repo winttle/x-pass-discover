@@ -57,13 +57,13 @@ export default function AdminOverviewPage() {
 
       <Card>
         <CardHeader title="Content" subtitle="Loaded from the scenario registry" />
-        <dl className="grid grid-cols-2 gap-px bg-ink-800 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-px bg-sunken sm:grid-cols-4">
           {stats.map(([label, value]) => (
-            <div key={label} className="bg-ink-900 px-4 py-3">
-              <dt className="text-[10px] uppercase tracking-wider text-ink-500">
+            <div key={label} className="bg-surface px-4 py-3">
+              <dt className="text-[10px] uppercase tracking-wider text-muted">
                 {label}
               </dt>
-              <dd className="mt-1 font-mono text-lg text-white">{value}</dd>
+              <dd className="mt-1 font-mono text-lg text-strong">{value}</dd>
             </div>
           ))}
         </dl>
@@ -71,7 +71,7 @@ export default function AdminOverviewPage() {
 
       <Card>
         <CardHeader title="Note on this admin" />
-        <p className="px-5 py-4 text-xs leading-relaxed text-ink-400">
+        <p className="px-5 py-4 text-xs leading-relaxed text-muted">
           This is an inspection surface, not an authoring CMS. Scenario content is defined
           in <code className="text-accent-400">src/content/</code> and seeded into Neon so
           that the database carries the same definitions. Hidden persona fact content is

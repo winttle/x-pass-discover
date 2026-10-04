@@ -12,19 +12,19 @@ export default function AdminResourcesPage() {
               title={`${scenario.title} — resources`}
               subtitle={`${resources.length} resources in the Data Room`}
             />
-            <ul className="divide-y divide-ink-800">
+            <ul className="divide-y divide-line">
               {resources.map((resource) => (
                 <li key={resource.key} className="px-5 py-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone="muted">{resource.resourceType}</Badge>
-                    <span className="text-xs font-medium text-white">
+                    <span className="text-xs font-medium text-strong">
                       {resource.title}
                     </span>
-                    <span className="font-mono text-[10px] text-ink-500">
+                    <span className="font-mono text-[10px] text-muted">
                       {resource.key} · {resource.body.kind} · {resource.visibility}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-ink-400">{resource.description}</p>
+                  <p className="mt-1 text-[11px] text-muted">{resource.description}</p>
                 </li>
               ))}
             </ul>
