@@ -29,7 +29,6 @@ function ResourceBodyView({ resource }: { resource: ResourceDefinition }) {
         src={resource.image.src}
         alt={resource.image.alt}
         fill
-        unoptimized
         sizes="(max-width: 768px) 100vw, 340px"
         className="object-cover"
       />

@@ -1,4 +1,6 @@
 import type { ScenarioVersionDefinition, TaskField } from '@/types/scenario';
+import { BITE_UNIT_ECONOMICS } from '@/content/company';
+import { MEDIA } from '@/content/media';
 
 /**
  * Sales vertical slice: BITE Protein Drink × QuickMart.
@@ -19,6 +21,33 @@ const DECISION_AFFECTED_OPTIONS = [
   { label: 'Risk-sharing', value: 'risk_sharing' },
   { label: 'Other', value: 'other' },
 ];
+
+const e = BITE_UNIT_ECONOMICS;
+
+/** Reference panels. Numbers come from the economics constants, never retyped. */
+const PRODUCT_REFERENCE = {
+  src: MEDIA.product.src,
+  alt: MEDIA.product.alt,
+  title: 'BITE Protein Drink',
+  caption: '330 ml · 20 g protein · refrigerated · 30-day shelf life',
+  facts: [
+    { label: 'Recommended retail', value: `¥${e.recommendedRetailPriceYen}` },
+    { label: 'Standard wholesale', value: `¥${e.standardWholesalePriceYen}` },
+    { label: 'Base contribution', value: `¥${e.baseContributionYen}/unit` },
+  ],
+};
+
+const ACCOUNT_REFERENCE = {
+  src: MEDIA.account.src,
+  alt: MEDIA.account.alt,
+  title: 'QuickMart',
+  caption: 'Japanese convenience store chain · approx. 1,200 stores',
+  facts: [
+    { label: 'Age 18–29 share', value: '31%' },
+    { label: 'Morning sales share', value: '18%' },
+    { label: 'Refrigerated waste', value: '4.2%' },
+  ],
+};
 
 const PROPOSAL_FIELDS: TaskField[] = [
   {
@@ -242,6 +271,7 @@ export const SALES_SCENARIO: ScenarioVersionDefinition = {
     // ---------------------------------------------------------------- STEP 0B
     {
       key: 'onboarding',
+      media: PRODUCT_REFERENCE,
       title: 'Onboarding — Understand BITE and the product',
       stepType: 'briefing',
       sortOrder: 1,
@@ -314,6 +344,7 @@ export const SALES_SCENARIO: ScenarioVersionDefinition = {
     // ----------------------------------------------------------------- STEP 1
     {
       key: 'account-research',
+      media: ACCOUNT_REFERENCE,
       title: 'Account Research',
       stepType: 'research',
       sortOrder: 2,
@@ -477,6 +508,7 @@ export const SALES_SCENARIO: ScenarioVersionDefinition = {
     // ----------------------------------------------------------------- STEP 3
     {
       key: 'buyer-meeting',
+      media: ACCOUNT_REFERENCE,
       title: 'AI Buyer Meeting',
       stepType: 'ai_interaction',
       sortOrder: 4,
@@ -602,6 +634,7 @@ export const SALES_SCENARIO: ScenarioVersionDefinition = {
     // ----------------------------------------------------------------- STEP 5
     {
       key: 'proposal-v1',
+      media: PRODUCT_REFERENCE,
       title: 'Initial Sales Proposal',
       stepType: 'decision',
       sortOrder: 6,
@@ -721,6 +754,7 @@ export const SALES_SCENARIO: ScenarioVersionDefinition = {
     // ----------------------------------------------------------------- STEP 7
     {
       key: 'negotiation',
+      media: PRODUCT_REFERENCE,
       title: 'Final Negotiation',
       stepType: 'ai_interaction',
       sortOrder: 8,

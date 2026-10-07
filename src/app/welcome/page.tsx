@@ -22,7 +22,7 @@ export default async function WelcomePage() {
         description={BITE_COMPANY.profile}
       />
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1.4fr_1fr]">
         <Card className="p-6">
           <p className="text-sm leading-relaxed text-body">
             You will choose three departments. Each one runs as a bootcamp of roughly

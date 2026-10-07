@@ -177,6 +177,7 @@ export function buildSessionView(
         lockedReason: unlocked ? null : describeLock(step.unlockRule, scenario),
         resourceKeys: step.resourceKeys ?? [],
         eventPayload: step.eventPayload ?? null,
+        media: step.media ?? null,
         tasks: step.tasks.map((task) =>
           buildTaskView(scenario, step.key, task, state),
         ),
@@ -198,7 +199,7 @@ export function buildSessionView(
       name: department?.name ?? session.departmentSlug,
       accentColor: department?.accentColor ?? '#2563eb',
       projectTitle: department?.projectTitle ?? scenario.title,
-      coverImage: department?.coverImage ?? '/img/cover/bite-office.svg',
+      coverImage: department?.coverImage ?? '/img/cover/bite-office.webp',
     },
     steps,
     resources: listResources(session.scenarioKey),

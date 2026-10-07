@@ -2,6 +2,7 @@ import type { PublicPersona } from './ai';
 import type { ResourceDefinition } from './resource';
 import type {
   ScenarioEventPayload,
+  ScenarioStepMedia,
   StepType,
   TaskField,
   TaskKind,
@@ -53,6 +54,7 @@ export type StepView = {
   lockedReason: string | null;
   resourceKeys: string[];
   eventPayload: ScenarioEventPayload | null;
+  media: ScenarioStepMedia | null;
   tasks: TaskView[];
 };
 

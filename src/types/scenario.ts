@@ -145,6 +145,19 @@ export type ScenarioStepDefinition = {
   officeZoneKey?: string;
   /** Structured payload for `unexpected_event` steps (not just a text popup). */
   eventPayload?: ScenarioEventPayload;
+  /**
+   * A reference image for this step — the account you are researching, the
+   * product you are pricing. Content-driven so every department can use it.
+   */
+  media?: ScenarioStepMedia;
+};
+
+export type ScenarioStepMedia = {
+  src: string;
+  alt: string;
+  title: string;
+  caption?: string;
+  facts?: Array<{ label: string; value: string }>;
 };
 
 export type ScenarioEventPayload = {

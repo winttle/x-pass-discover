@@ -108,7 +108,6 @@ export default async function LandingPage() {
                   src={department.coverImage}
                   alt=""
                   fill
-                  unoptimized
                   sizes="(max-width: 768px) 100vw, 360px"
                   className="object-cover"
                 />

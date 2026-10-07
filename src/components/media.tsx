@@ -5,10 +5,12 @@ import { cn } from './ui';
 /**
  * Imagery primitives.
  *
- * Artwork is first-party SVG (see `src/content/media.ts`), so these render
- * through `next/image` with `unoptimized` — there is nothing to re-encode, and
- * it keeps the swap to real photography a one-line change per image.
+ * `next/image` optimises raster photography but must not be pointed at SVG
+ * without `dangerouslyAllowSVG`, so the decision is made per source: anything
+ * ending in `.svg` is passed through untouched, everything else is resized and
+ * re-encoded by Next. That lets photography and illustration coexist.
  */
+const isVector = (src: string) => src.toLowerCase().endsWith('.svg');
 
 export function Cover({
   src,
@@ -29,7 +31,7 @@ export function Cover({
         src={src}
         alt={alt}
         fill
-        unoptimized
+        unoptimized={isVector(src)}
         priority={priority}
         sizes="(max-width: 768px) 100vw, 480px"
         className="object-cover"
@@ -65,7 +67,14 @@ export function Portrait({
         boxShadow: ring ? `0 0 0 2px ${ring}33` : undefined,
       }}
     >
-      <Image src={src} alt={alt} fill unoptimized sizes={`${size}px`} className="object-cover" />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        unoptimized={isVector(src)}
+        sizes={`${size * 2}px`}
+        className="object-cover"
+      />
     </span>
   );
 }
@@ -124,21 +133,25 @@ export function HeroBanner({
           src={src}
           alt={alt}
           fill
-          unoptimized
+          unoptimized={isVector(src)}
           priority
           sizes="100vw"
           className="object-cover"
           style={{ objectPosition }}
         />
-        {/* Keeps the copy readable while leaving the right side of the art visible. */}
+        {/*
+          Two layers rather than one: a wide horizontal wash that keeps the copy
+          readable, plus a flat scrim over the whole frame. A single gradient
+          that reaches full transparency leaves a visible band where it ends.
+        */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(100deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.94) 34%, rgba(255,255,255,0.55) 56%, rgba(255,255,255,0) 82%)',
+              'linear-gradient(100deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.96) 30%, rgba(255,255,255,0.78) 52%, rgba(255,255,255,0.42) 72%, rgba(255,255,255,0.28) 100%)',
           }}
         />
-        <div className="absolute inset-0 flex flex-col justify-center gap-2 px-6 sm:px-8">
+        <div className="absolute inset-0 flex flex-col items-start justify-center gap-2 px-6 sm:px-8">
           {eyebrow}
           <h2
             className="max-w-xl text-xl font-bold tracking-tight text-strong sm:text-2xl"

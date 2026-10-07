@@ -103,6 +103,26 @@ That claim is load-bearing, so the HR requirements were designed for up front:
 | Bias / pressure event | `unexpected_event` steps carry structured `eventPayload`, not a text popup |
 | Offer constraints | Guardrails are a registry of named checks evaluated against any task's answer |
 
+### Imagery and its provenance
+
+The photography is concept-stage fictional material produced for X-PASS. The
+originals live in `assets-src/`; `scripts/build-image-assets.sh` derives the
+web-ready crops in `public/img/`, and every crop is a recorded decision rather
+than a hand-edited file.
+
+**Read that script before touching an image.** Some originals were generated
+while the fictional company was still called *MOGU FOODS* and carry that
+wordmark inside the photograph — on a building facade, an office sign, a page
+being held, and the product labels. This app's company is BITE, so those frames
+are either cropped to exclude the wordmark or not used at all. The script lists
+exactly which, and why. Four originals are retained but unused for that reason;
+drop in BITE-branded replacements and they become usable.
+
+Images are addressed from content — `src/content/media.ts`, a department's
+`coverImage`, a persona's `portrait`, a step's `media` — so re-shooting one is a
+content change. `next/image` optimises raster sources and passes SVG through
+untouched, so illustration and photography can coexist.
+
 ### Hidden information never reaches the browser
 
 This is the core product mechanic, so it is enforced structurally rather than by

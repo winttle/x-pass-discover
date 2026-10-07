@@ -9,6 +9,7 @@ import { ResourcePanel } from '@/features/resources/resource-panel';
 import { startStep } from '@/lib/client-api';
 import type { SessionView } from '@/types/session-view';
 import { EventCard } from './event-card';
+import { ReferencePanel } from './reference-panel';
 import { DeadlineCountdown, ProgressRing, StepRail } from './step-rail';
 import { TaskCard } from './task-card';
 
@@ -208,8 +209,11 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
         )}
       </section>
 
-      {/* Right: resources */}
-      <aside className="xl:sticky xl:top-20 xl:self-start">
+      {/* Right: reference material and the Data Room */}
+      <aside className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+        {activeStep.media && activeStep.unlocked ? (
+          <ReferencePanel media={activeStep.media} />
+        ) : null}
         <ResourcePanel
           sessionId={view.session.id}
           resources={view.resources}
