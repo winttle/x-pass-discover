@@ -26,8 +26,8 @@ export default async function DepartmentsPage() {
       backLabel="Welcome"
     >
       <HeroBanner
-        src={MEDIA.companyHero.src}
-        alt={MEDIA.companyHero.alt}
+        src={MEDIA.companyOffice.src}
+        alt={MEDIA.companyOffice.alt}
         height="h-40"
         eyebrow={<Badge tone="brand" dot>1 department = 1 bootcamp</Badge>}
         title="Same company, different work"

@@ -1,6 +1,7 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
 import { getDepartment } from '@/content/departments';
+import { MEDIA } from '@/content/media';
 import {
   getPublishedScenario,
   getScenarioVersion,
@@ -199,7 +200,7 @@ export function buildSessionView(
       name: department?.name ?? session.departmentSlug,
       accentColor: department?.accentColor ?? '#2563eb',
       projectTitle: department?.projectTitle ?? scenario.title,
-      coverImage: department?.coverImage ?? '/img/cover/bite-office.webp',
+      coverImage: department?.coverImage ?? MEDIA.companyOffice.src,
     },
     steps,
     resources: listResources(session.scenarioKey),

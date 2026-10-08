@@ -14,8 +14,8 @@ export default async function WelcomePage() {
   return (
     <AppShell title="Welcome to BITE" subtitle={`Signed in as ${user.displayName}`}>
       <HeroBanner
-        src={MEDIA.companyHero.src}
-        alt={MEDIA.companyHero.alt}
+        src={MEDIA.companyOffice.src}
+        alt={MEDIA.companyOffice.alt}
         height="h-52"
         eyebrow={<Badge tone="brand" dot>Day one</Badge>}
         title="“I came to work at BITE today.”"
