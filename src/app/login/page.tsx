@@ -20,18 +20,24 @@ export default async function LoginPage() {
       {/* The photograph only appears where there is room for it to mean something. */}
       <aside className="relative hidden lg:block">
         <Image
-          src={MEDIA.companyHero.src}
-          alt={MEDIA.companyHero.alt}
+          src={MEDIA.companyExterior.src}
+          alt={MEDIA.companyExterior.alt}
           fill
           priority
           sizes="50vw"
           className="object-cover"
+          /*
+            A half-width column crops a 16:9 frame hard. Favour the right of the
+            photograph so the signage and the entrance both survive the crop —
+            centred, the sign falls outside the frame.
+          */
+          style={{ objectPosition: '70% 50%' }}
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(200deg, rgba(15,23,41,0.08) 0%, rgba(15,23,41,0.5) 62%, rgba(15,23,41,0.82) 100%)',
+              'linear-gradient(200deg, rgba(15,23,41,0.06) 0%, rgba(15,23,41,0.34) 48%, rgba(15,23,41,0.72) 76%, rgba(15,23,41,0.9) 100%)',
           }}
         />
         <div className="absolute inset-x-0 bottom-0 p-10">

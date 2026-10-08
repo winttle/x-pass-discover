@@ -9,3 +9,6 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .data/
+
+# Local verification screenshots — generated, never committed.
+.screenshots/

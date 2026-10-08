@@ -110,13 +110,23 @@ originals live in `assets-src/`; `scripts/build-image-assets.sh` derives the
 web-ready crops in `public/img/`, and every crop is a recorded decision rather
 than a hand-edited file.
 
-**Read that script before touching an image.** Some originals were generated
-while the fictional company was still called *MOGU FOODS* and carry that
+**Read that script before touching an image.** An early batch was generated
+while the fictional company was still called *MOGU FOODS* and carries that
 wordmark inside the photograph — on a building facade, an office sign, a page
 being held, and the product labels. This app's company is BITE, so those frames
-are either cropped to exclude the wordmark or not used at all. The script lists
-exactly which, and why. Four originals are retained but unused for that reason;
-drop in BITE-branded replacements and they become usable.
+are cropped to exclude the wordmark, superseded by a re-generated frame, or not
+used at all. The script lists exactly which, and why, and every frame it does
+use has been checked at full resolution for legible text: the only wordmark that
+survives anywhere is BITE on the headquarters facade. Six originals are retained
+but unused — four for the wordmark, two simply superseded by a better frame.
+Drop in BITE-branded replacements and the first four become usable.
+
+The company is pictured twice, and the two are not interchangeable.
+`MEDIA.companyExterior` is the headquarters seen from the plaza and runs where
+the student is still outside — the landing page and the sign-in screen.
+`MEDIA.companyOffice` is the team at work and takes over once they are signed in.
+`MEDIA.decisionDesk` is dark enough to carry white type, which is why it backs
+the decision-revision band rather than sitting in the department cover row.
 
 Images are addressed from content — `src/content/media.ts`, a department's
 `coverImage`, a persona's `portrait`, a step's `media` — so re-shooting one is a

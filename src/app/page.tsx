@@ -15,6 +15,17 @@ const FLOW = [
   ['Revise', 'Something changes. Decide what holds and what moves.'],
 ];
 
+/**
+ * The revision band. Each claim here describes behaviour that exists: saves are
+ * versioned in `task_answer_revisions` alongside the value they replaced, and
+ * behaviour logs are evidence rather than points.
+ */
+const REVISION_POINTS = [
+  ['Versioned', 'Every save keeps the value it replaced.'],
+  ['Not a correction', 'Revising on new evidence is the work, not a mistake.'],
+  ['Evidence, not points', 'What you changed is recorded. It never becomes a score on its own.'],
+];
+
 export default async function LandingPage() {
   const user = await getCurrentUser();
   const runtime = runtimeModeSummary();
@@ -70,11 +81,17 @@ export default async function LandingPage() {
           </div>
         </div>
 
+        {/* The company is a place before it is a product, so the front door leads. */}
         <Cover
-          src={MEDIA.companyHero.src}
-          alt={MEDIA.companyHero.alt}
+          src={MEDIA.companyExterior.src}
+          alt={MEDIA.companyExterior.alt}
           priority
           className="h-64 rounded-2xl border border-line shadow-raised sm:h-80"
+          overlay={
+            <span className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-medium text-body shadow-card">
+              BITE headquarters
+            </span>
+          }
         />
       </section>
 
@@ -137,6 +154,58 @@ export default async function LandingPage() {
               </div>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/*
+        One dark band in an otherwise light page, and it earns it: revising a
+        decision is the part of the work most products leave out, and a dusk
+        photograph is the one frame here that can carry white type.
+      */}
+      <section className="relative mt-16 overflow-hidden rounded-3xl border border-line shadow-raised">
+        <Image
+          src={MEDIA.decisionDesk.src}
+          alt={MEDIA.decisionDesk.alt}
+          fill
+          sizes="(max-width: 1024px) 100vw, 1152px"
+          className="object-cover"
+          style={{ objectPosition: '50% 42%' }}
+        />
+        {/*
+          A flat base plus a horizontal wash, for the same reason HeroBanner
+          layers its overlay: a single gradient that reaches full transparency
+          leaves a visible band where it ends.
+        */}
+        <div className="absolute inset-0 bg-[#0b1220]/35" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(94deg, rgba(11,18,32,0.94) 0%, rgba(11,18,32,0.90) 42%, rgba(11,18,32,0.74) 64%, rgba(11,18,32,0.42) 86%, rgba(11,18,32,0.32) 100%)',
+          }}
+        />
+
+        <div className="relative px-7 py-12 sm:px-10 sm:py-14">
+          <Badge tone="brand" dot className="bg-white/95">
+            Decision revision
+          </Badge>
+          <h2 className="mt-5 max-w-xl text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl">
+            Something changes. Decide what holds and what moves.
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/75">
+            Late in the project, new information lands — and the proposal you already
+            defended may not be the right one any more. Reworking it is part of the job,
+            so the product treats it that way.
+          </p>
+
+          <dl className="mt-8 grid max-w-2xl gap-x-7 gap-y-5 sm:grid-cols-3">
+            {REVISION_POINTS.map(([term, detail]) => (
+              <div key={term} className="border-t border-white/20 pt-3">
+                <dt className="text-xs font-semibold text-white">{term}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-white/70">{detail}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
