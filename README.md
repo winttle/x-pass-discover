@@ -306,7 +306,7 @@ Requires **Node 20+**. Nothing else.
 
 ```bash
 git clone -b claude/intelligent-planck-39vf7c \
-  https://github.com/winttle/x-pass-discover.git
+  https://github.com/x-pass-gcsc/x-pass-discover.git
 cd x-pass-discover
 npm install          # ~25s
 npm run dev          # http://localhost:3000
@@ -360,8 +360,10 @@ The header badge switches from *Mock AI* to *OpenAI*.
 The app is a standard Next.js App Router project, so any Node host works;
 Vercel needs no configuration file.
 
-1. Import `winttle/x-pass-discover` in Vercel and pick the branch to deploy
-   (Settings → Git → Production Branch).
+1. Import `x-pass-gcsc/x-pass-discover` in Vercel and set **Settings → Git →
+   Production Branch** to `main`. The repository's default branch is
+   `claude/intelligent-planck-39vf7c`, which is where work lands; `main` carries
+   the same application code and is the branch to deploy.
 2. Set environment variables:
 
    | Variable | Needed? | Why |
