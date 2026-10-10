@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { AppShell, RuntimeBadges } from '@/components/app-shell';
+import { AppShell } from '@/components/app-shell';
+import { RuntimeBadges } from '@/components/branding';
 import { getRepository } from '@/db/repository';
 import { getCurrentUser } from '@/lib/auth/session';
 import { runtimeModeSummary } from '@/lib/env';

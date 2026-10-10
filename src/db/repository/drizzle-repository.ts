@@ -72,17 +72,17 @@ export class DrizzleRepository implements XPassRepository {
     return row ? this.toUser(row) : null;
   }
 
-  async upsertUser(input: { email: string; displayName: string }): Promise<User> {
+  async createUser(input: { email: string; displayName: string }): Promise<User | null> {
     const email = input.email.trim().toLowerCase();
+    // DO NOTHING + RETURNING yields no row when the unique email index already
+    // holds one, which is how "that address is taken" comes back without a
+    // separate SELECT that another request could slip past.
     const [row] = await this.db
       .insert(schema.users)
       .values({ email, displayName: input.displayName })
-      .onConflictDoUpdate({
-        target: schema.users.email,
-        set: { displayName: input.displayName },
-      })
+      .onConflictDoNothing({ target: schema.users.email })
       .returning();
-    return this.toUser(row);
+    return row ? this.toUser(row) : null;
   }
 
   private toUser(row: typeof schema.users.$inferSelect): User {

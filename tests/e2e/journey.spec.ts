@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   completePreSurvey,
   openStep,
-  signIn,
+  signUp,
   startBootcamp,
   stepButton,
   uniqueEmail,
@@ -24,7 +24,7 @@ test.describe('the student journey', () => {
   test('a student can walk a whole bootcamp from sign-in to the report', async ({
     page,
   }) => {
-    await signIn(page, { email: uniqueEmail(), displayName: 'Mina Okada' });
+    await signUp(page, { email: uniqueEmail(), displayName: 'Mina Okada' });
 
     await expect(page.getByText('Signed in as Mina Okada')).toBeVisible();
 
@@ -81,8 +81,7 @@ test.describe('the student journey', () => {
   });
 
   test('an unfinished bootcamp is resumed, not restarted', async ({ page }) => {
-    const email = uniqueEmail();
-    await signIn(page, { email, displayName: 'Resuming Student' });
+    await signUp(page, { email: uniqueEmail(), displayName: 'Resuming Student' });
     const sessionId = await startBootcamp(page, 'sales');
 
     const stepKeys = await page
