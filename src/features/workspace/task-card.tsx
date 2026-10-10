@@ -40,7 +40,13 @@ export function TaskCard({
   onSessionUpdate: (view: SessionView) => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      data-task-key={task.key}
+      data-task-kind={task.kind}
+      data-task-status={task.status}
+      data-task-required={task.required ? 'true' : 'false'}
+    >
       <Card>
         <CardHeader
           title={task.title}
@@ -98,7 +104,7 @@ function TaskBody({
         sessionId={sessionId}
         stepKey={step.key}
         persona={persona}
-        minStudentMessages={task.conversation?.minStudentMessages ?? 0}
+        minStudentMessages={task.minStudentMessages}
         onSessionUpdate={onSessionUpdate}
       />
     );
@@ -165,7 +171,11 @@ function AcknowledgeTask({
           : 'Mark this complete when you have read the material above.'}
       </p>
       {error ? <p className="text-xs text-danger-400">{error}</p> : null}
-      <Button onClick={acknowledge} disabled={pending || done}>
+      <Button
+        onClick={acknowledge}
+        disabled={pending || done}
+        data-testid="acknowledge"
+      >
         {done ? '✓ Completed' : pending ? 'Saving…' : 'Mark complete'}
       </Button>
     </div>

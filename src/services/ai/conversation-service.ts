@@ -254,6 +254,28 @@ export async function sendStudentMessage(
   return buildConversationView(session, personaKey, stepKey);
 }
 
+/**
+ * How many questions this step's conversation task requires before it may be
+ * ended. Read from the scenario definition, which is the same place the
+ * completion rule reads it from — so the two can never disagree.
+ */
+function minStudentMessagesFor(
+  session: ProjectSession,
+  personaKey: string,
+  stepKey: string,
+): number {
+  const scenario = getScenarioForSession(session);
+  const step = getStep(scenario, stepKey);
+  const task = step?.tasks.find(
+    (candidate) =>
+      candidate.completion.type === 'conversation_ended' &&
+      candidate.completion.personaKey === personaKey,
+  );
+  return task?.completion.type === 'conversation_ended'
+    ? (task.completion.minStudentMessages ?? 0)
+    : 0;
+}
+
 export async function endConversation(
   session: ProjectSession,
   personaKey: string,
@@ -267,6 +289,21 @@ export async function endConversation(
   });
 
   if (conversation.status !== 'ended') {
+    // Ending a conversation is irreversible, and a conversation ended below the
+    // minimum can never satisfy its task — the step would be sealed with no way
+    // back. The UI keeps the button disabled; this makes the state
+    // unreachable rather than merely hard to reach.
+    const required = minStudentMessagesFor(session, personaKey, stepKey);
+    if (required > 0) {
+      const messages = await repo.listMessages(conversation.id);
+      const sent = messages.filter((message) => message.role === 'student').length;
+      if (sent < required) {
+        throw new ScenarioRuleError(
+          `Ask at least ${required} question${required === 1 ? '' : 's'} before ending this conversation — ${sent} so far.`,
+        );
+      }
+    }
+
     await repo.updateConversation(conversation.id, {
       status: 'ended',
       endedAt: new Date().toISOString(),
