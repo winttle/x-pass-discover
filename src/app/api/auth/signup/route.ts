@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { NextResponse } from 'next/server';
 import { EmailAlreadyRegisteredError, signUp } from '@/lib/auth/session';
-import { jsonError, parseBody } from '@/lib/api';
+import { faultResponse, jsonError, parseBody } from '@/lib/api';
 
 /** Creates an account and signs into it. Returning students use `/api/auth/login`. */
 const schema = z.object({
@@ -18,7 +18,9 @@ export async function POST(request: Request) {
     if (error instanceof EmailAlreadyRegisteredError) {
       return jsonError(error.message, 409, 'email_taken');
     }
-    const message = error instanceof Error ? error.message : 'Sign-up failed';
-    return jsonError(message, 400);
+    if (error instanceof ZodError) {
+      return jsonError(error.issues[0]?.message ?? 'Invalid request', 400);
+    }
+    return faultResponse(error, 'Sign-up failed. Please try again.');
   }
 }

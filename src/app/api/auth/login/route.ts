@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { NextResponse } from 'next/server';
 import { AccountNotFoundError, signIn } from '@/lib/auth/session';
-import { jsonError, parseBody } from '@/lib/api';
+import { faultResponse, jsonError, parseBody } from '@/lib/api';
 
 /** Signs into an existing account. Creating one is `/api/auth/signup`. */
 const schema = z.object({
@@ -17,7 +17,9 @@ export async function POST(request: Request) {
     if (error instanceof AccountNotFoundError) {
       return jsonError(error.message, 404, 'account_not_found');
     }
-    const message = error instanceof Error ? error.message : 'Sign-in failed';
-    return jsonError(message, 400);
+    if (error instanceof ZodError) {
+      return jsonError(error.issues[0]?.message ?? 'Invalid request', 400);
+    }
+    return faultResponse(error, 'Sign-in failed. Please try again.');
   }
 }

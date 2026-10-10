@@ -374,13 +374,19 @@ Vercel needs no configuration file.
    | `X_PASS_ADMIN_EMAILS` | Optional | `/admin` is **closed** in production unless an email is allow-listed |
    | `NEXT_PUBLIC_APP_URL` | Optional | Your deployment URL |
 
-3. With `DATABASE_URL` set, run the migration and seed once against that
-   database before the first real session:
+3. **With `DATABASE_URL` set, run the migration and seed once against that
+   database before the first real session.** A fresh Neon database is empty —
+   setting the connection string does not create the tables:
 
    ```bash
    DATABASE_URL='postgres://…' npm run db:migrate
    DATABASE_URL='postgres://…' npm run db:seed
    ```
+
+   Skip this and the deployment looks fine until the first write, which fails
+   with *“This deployment’s database has no tables yet.”* That message is the
+   whole diagnosis: run the two commands above and try again. Both are
+   idempotent, so running them against an already-migrated database is safe.
 
 **Demo mode.** A serverless filesystem is read-only and per-instance, so the
 local file store cannot be used in production. A production build with no

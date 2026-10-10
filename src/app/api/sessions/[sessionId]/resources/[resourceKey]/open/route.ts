@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getResource } from '@/content/registry';
 import { parseBody, withUser } from '@/lib/api';
+import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import { requireOwnedSession } from '@/services/scenario/session-service';
 
@@ -18,7 +19,7 @@ export async function POST(
     const body = await parseBody(request, schema).catch(() => ({ stepKey: null }));
     const session = await requireOwnedSession(sessionId, user.id);
     const resource = getResource(session.scenarioKey, resourceKey);
-    if (!resource) throw new Error(`Unknown resource: ${resourceKey}`);
+    if (!resource) throw new ScenarioRuleError(`Unknown resource: ${resourceKey}`);
 
     await logEvent({
       userId: user.id,
