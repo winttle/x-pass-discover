@@ -41,7 +41,12 @@ export function ReferenceAnswers({
       />
       <div className="divide-y divide-line">
         {tasks.map(({ step, task }) => (
-          <details key={task.key} className="group">
+          <details
+            key={task.key}
+            data-reference-task-key={task.key}
+            data-reference-version={task.version}
+            className="group"
+          >
             <summary className="flex cursor-pointer items-center justify-between gap-2 px-5 py-3 text-xs hover:bg-sunken">
               <span className="min-w-0">
                 <span className="block font-medium text-strong">{task.title}</span>

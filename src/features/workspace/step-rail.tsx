@@ -52,6 +52,9 @@ export function StepRail({
             <button
               type="button"
               disabled={locked}
+              data-step-key={step.key}
+              data-step-status={step.status}
+              data-step-unlocked={step.unlocked ? 'true' : 'false'}
               onClick={() => onSelect(step.key)}
               title={locked ? (step.lockedReason ?? undefined) : undefined}
               aria-current={isActive ? 'step' : undefined}

@@ -76,6 +76,8 @@ export function FieldInput({
                 key={option.value}
                 type="button"
                 disabled={disabled}
+                data-option-value={option.value}
+                aria-pressed={active}
                 onClick={() =>
                   onChange(
                     active
@@ -125,6 +127,8 @@ export function FieldInput({
                         key={option.value}
                         type="button"
                         disabled={disabled}
+                        data-option-value={option.value}
+                        aria-pressed={active}
                         onClick={() =>
                           onChange(
                             active

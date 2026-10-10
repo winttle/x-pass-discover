@@ -138,6 +138,8 @@ export function DepartmentChooser({
           return (
             <Card
               key={department.slug}
+              data-department-slug={department.slug}
+              data-department-status={department.status}
               accent={department.accentColor}
               interactive
               className={`flex flex-col transition-shadow duration-200 ${

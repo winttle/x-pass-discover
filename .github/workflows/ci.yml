@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A second push to the same branch makes the first run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (types, lint, invariants, Postgres)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Typecheck, lint, the office floor plan, the disclosure matcher, and the
+      # real Drizzle queries against an embedded PostgreSQL. No credentials.
+      - run: npm run verify
+
+  e2e:
+    name: end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:e2e:install
+      # Playwright builds the app and serves it itself — see playwright.config.ts.
+      # No DATABASE_URL and no OPENAI_API_KEY on purpose: the suite runs the
+      # credential-free path, which is the one a fresh checkout gets.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: tests/e2e/.artifacts/report
+          retention-days: 7

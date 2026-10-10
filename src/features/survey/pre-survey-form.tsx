@@ -54,7 +54,7 @@ export function PreSurveyForm({
             const key = `interest_${department.slug}`;
             const current = Number(answers[key] ?? 3);
             return (
-              <div key={department.slug}>
+              <div key={department.slug} data-interest-key={key}>
                 <div className="flex items-baseline justify-between gap-3">
                   <span
                     className="text-sm font-medium"

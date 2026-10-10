@@ -177,6 +177,8 @@ export function ChatPanel({
           return (
             <div
               key={message.id}
+              data-testid="chat-message"
+              data-role={message.role}
               className={`flex animate-fade-up gap-2.5 ${isStudent ? 'justify-end' : 'justify-start'}`}
             >
               {!isStudent ? <Avatar persona={persona} className="mt-0.5" /> : null}
@@ -240,6 +242,7 @@ export function ChatPanel({
             <div className="flex gap-2">
               <textarea
                 rows={2}
+                data-testid="chat-input"
                 className={inputClass}
                 value={draft}
                 disabled={readOnly || sending}
@@ -256,6 +259,7 @@ export function ChatPanel({
                 onClick={send}
                 disabled={readOnly || sending || !draft.trim()}
                 className="self-stretch"
+                data-testid="chat-send"
               >
                 Send
               </Button>
@@ -274,7 +278,14 @@ export function ChatPanel({
                   ? ` · ${remaining} more question${remaining === 1 ? '' : 's'} before you can end this`
                   : ' · you can end this whenever you are ready'}
               </p>
-              <Button variant="secondary" size="sm" onClick={end} disabled={!canEnd} loading={ending}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={end}
+                disabled={!canEnd}
+                loading={ending}
+                data-testid="chat-end"
+              >
                 End meeting
               </Button>
             </div>
@@ -308,7 +319,7 @@ function Avatar({
 /** Shows what the student has earned by asking well — never a score. */
 function DiscoveryMeter({ found, total }: { found: number; total: number }) {
   return (
-    <div>
+    <div data-testid="discovery-meter" data-found={found} data-total={total}>
       <div className="flex items-center justify-between text-[10px]">
         <span className="font-medium uppercase tracking-wider text-muted">
           Specifics uncovered
