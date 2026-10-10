@@ -16,6 +16,21 @@ export class ScenarioRuleError extends Error {
 }
 
 /**
+ * The deployment is not finished, and only whoever deployed it can finish it.
+ *
+ * Distinct from `ScenarioRuleError` (the engine saying no to a student) and
+ * from an ordinary fault (whose message belongs in the log, not on a screen).
+ * These messages are written for the operator and are meant to reach them,
+ * because the alternative is a student staring at a failure nobody can act on.
+ */
+export class SetupRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SetupRequiredError';
+  }
+}
+
+/**
  * What an operator is told when the database has no tables.
  *
  * This is the one deployment mistake the app cannot do anything about and

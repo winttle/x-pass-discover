@@ -53,7 +53,7 @@ async function main() {
   const response = faultResponse(missingSchema, 'Sign-up failed. Please try again.');
   const body = (await response.json()) as { error: string; code?: string };
   check('the API answers 503, not a 400 that looks like bad input', response.status === 503);
-  check('with a code the client can branch on', body.code === 'schema_missing');
+  check('with a code the client can branch on', body.code === 'setup_required', body.code);
   check('and an instruction rather than a driver message', body.error.includes('db:migrate'));
   check(
     'the driver message is not forwarded to the browser',
@@ -79,11 +79,36 @@ async function main() {
   );
   check('projects.product_id is NULLABLE', nullable.rows[0].is_nullable === 'YES');
 
-  console.log('\n=== seeding scenario content ===');
   // Point the global repository at this database before services load it.
   const repo = new DrizzleRepository(db as never);
   (globalThis as { __xPassRepository?: unknown }).__xPassRepository = repo;
 
+  // Migrated but not seeded is the other half-finished deployment: sign-up
+  // works, so nothing looks wrong until a student presses "Start bootcamp".
+  console.log('\n=== a migrated-but-unseeded database says what is missing ===');
+  const { SetupRequiredError } = await import('@/lib/errors');
+  let unseeded: unknown = null;
+  try {
+    await repo.createSession({
+      userId: '00000000-0000-0000-0000-000000000000',
+      departmentSlug: 'sales',
+      projectKey: 'sales',
+      scenarioKey: 'sales-quickmart',
+      scenarioVersion: 1,
+      deadlineHours: 24,
+      initialStepKey: 'sales-training',
+    });
+  } catch (error) {
+    unseeded = error;
+  }
+  check('starting a bootcamp fails before the seed', unseeded !== null);
+  check('and says so as a setup problem', unseeded instanceof SetupRequiredError);
+  const unseededResponse = faultResponse(unseeded, 'Could not start the bootcamp.');
+  const unseededBody = (await unseededResponse.json()) as { error: string; code?: string };
+  check('answered as 503 setup_required', unseededResponse.status === 503 && unseededBody.code === 'setup_required');
+  check('naming the command that fixes it', unseededBody.error.includes('db:seed'), unseededBody.error);
+
+  console.log('\n=== seeding scenario content ===');
   const { seed } = await import('@/db/seed/run');
   await seed(db as never);
 

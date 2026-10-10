@@ -5,6 +5,7 @@ import { UnauthenticatedError, requireUser } from '@/lib/auth/session';
 import {
   MISSING_SCHEMA_MESSAGE,
   ScenarioRuleError,
+  SetupRequiredError,
   isMissingSchemaError,
 } from '@/lib/errors';
 import { SessionAccessError } from '@/services/scenario/session-service';
@@ -68,7 +69,11 @@ export async function withUser<T>(
 export function faultResponse(error: unknown, fallback: string) {
   if (isMissingSchemaError(error)) {
     console.error('[api] database schema missing — run the migration:', error);
-    return jsonError(MISSING_SCHEMA_MESSAGE, 503, 'schema_missing');
+    return jsonError(MISSING_SCHEMA_MESSAGE, 503, 'setup_required');
+  }
+  if (error instanceof SetupRequiredError) {
+    console.error('[api] setup required:', error.message);
+    return jsonError(error.message, 503, 'setup_required');
   }
   console.error('[api]', error);
   return jsonError(fallback, 500);
