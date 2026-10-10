@@ -80,10 +80,14 @@ async function main() {
   check('re-seed keeps 5 departments', (await counts('departments')) === 5);
 
   console.log('\n=== exercising DrizzleRepository through the real services ===');
-  const user = await repo.createUser({ email: 'pg@example.com', displayName: 'PG Student' });
-  check('createUser', Boolean(user.id));
+  const user = await repo.upsertUser({ email: 'pg@example.com', displayName: 'PG Student' });
+  check('upsertUser creates', Boolean(user.id));
   check('findUserByEmail round-trips', (await repo.findUserByEmail('pg@example.com'))?.id === user.id);
-  check('createUser is idempotent on email', (await repo.createUser({ email: 'pg@example.com', displayName: 'PG Student' })).id === user.id);
+  const resigned = await repo.upsertUser({ email: 'pg@example.com', displayName: 'PG Student Renamed' });
+  check('upsertUser keeps one account per email', resigned.id === user.id);
+  check('upsertUser adopts the new display name', resigned.displayName === 'PG Student Renamed', resigned.displayName);
+  check('upsertUser leaves role and createdAt alone', resigned.role === user.role && resigned.createdAt === user.createdAt);
+  check('the new name is what a later read returns', (await repo.getUser(user.id))?.displayName === 'PG Student Renamed');
 
   await repo.savePreSurvey(user.id, { interest_sales: 5 });
   check('pre-survey upsert', (await repo.getPreSurvey(user.id))?.answers.interest_sales === 5);
@@ -155,7 +159,7 @@ async function main() {
 
   console.log('\n=== session listing / isolation ===');
   check('listSessionsForUser', (await repo.listSessionsForUser(user.id)).length === 1);
-  const other = await repo.createUser({ email: 'other-pg@example.com', displayName: 'Other' });
+  const other = await repo.upsertUser({ email: 'other-pg@example.com', displayName: 'Other' });
   check('other user has no sessions', (await repo.listSessionsForUser(other.id)).length === 0);
 
   await client.close();

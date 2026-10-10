@@ -72,7 +72,7 @@ export class DrizzleRepository implements XPassRepository {
     return row ? this.toUser(row) : null;
   }
 
-  async createUser(input: { email: string; displayName: string }): Promise<User> {
+  async upsertUser(input: { email: string; displayName: string }): Promise<User> {
     const email = input.email.trim().toLowerCase();
     const [row] = await this.db
       .insert(schema.users)
