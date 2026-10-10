@@ -13,7 +13,7 @@
 
 前のセッションは `winttle/x-pass-discover` に紐づいていて、同名リポジトリは
 同一セッションに同居できない（チェックアウト先が衝突する）ため、新リポジトリへ
-直接プッシュできませんでした。**最後の2コミットだけ winttle 側に残っています。**
+直接プッシュできませんでした。**最後の数コミットが winttle 側にだけ残っています。**
 
 両ブランチとも早送りで入ります。マージコミットは不要です。
 
@@ -22,11 +22,11 @@ git fetch https://github.com/winttle/x-pass-discover.git \
   'refs/heads/*:refs/remotes/winttle/*'
 
 git checkout -B claude/intelligent-planck-39vf7c origin/claude/intelligent-planck-39vf7c
-git merge --ff-only winttle/claude/intelligent-planck-39vf7c   # 9b0c9a9 → 0166824
+git merge --ff-only winttle/claude/intelligent-planck-39vf7c   # 9b0c9a9 から早送り
 git push -u origin claude/intelligent-planck-39vf7c
 
 git checkout -B main origin/main
-git merge --ff-only winttle/main                               # bdf6de4 → 0f6f7a0
+git merge --ff-only winttle/main                               # bdf6de4 から早送り
 git push -u origin main
 ```
 
@@ -35,22 +35,31 @@ git push -u origin main
 > origin と winttle の2つ存在するため、`git checkout main` は
 > 「複数のリモートに一致」で**失敗します**。実際にクローンして確認済みです。
 
-取り込む内容はこの2件です。
+gcsc 側の現在地は dev が `9b0c9a9`、main が `bdf6de4` です。そこから先、
+winttle 側にだけ存在するのが以下です（到達後の SHA はあえて書きません。
+この引き継ぎ自体もコミットされているため、数が増える可能性があります）。
 
-| コミット | 内容 |
-|---|---|
-| `9b0c9a9` / `bdf6de4` | BITE本社の写真をヒーローとサインインへ。Product のカバー差し替え。「Decision revision」バンド新設。タブアイコン追加 |
-| `0166824` / `0f6f7a0` | サインイン画面に「サインアップ専用画面は無い」と明記。README の該当2箇所も更新 |
+| 内容 |
+|---|
+| サインイン画面に「サインアップ専用画面は無い」と明記。README の該当2箇所も更新 |
+| この引き継ぎノート（`HANDOVER.md`）の追加 |
+
+早送りが成功したかは、SHA を目で比べるのではなくこれで確認してください。
+
+```bash
+test "$(git rev-parse HEAD)" = "$(git rev-parse winttle/main)" && echo "main OK"
+```
 
 > ⚠️ **同期が終わるまで `winttle/x-pass-discover` を削除しないでください。**
-> 上の2コミットはそこにしか存在しません。
+> 上の差分はそこにしか存在しません。
 >
 > もし winttle から fetch できなかった場合は、その場で止めて報告してください。
 > 差分は README と `src/features/auth/login-form.tsx` の2ファイルだけなので、
 > 手で貼り直すこともできます。
 
-同期後は `git log --oneline -3` で両ブランチの先頭が上表どおりか確認し、
-`npm install && npm run verify` が通ることを確かめてから次の作業に入ってください。
+両ブランチとも上の等価チェックが通り、`npm install && npm run verify` が
+グリーンになることを確かめてから次の作業に入ってください。
+確認できたら `git rm HANDOVER.md` でこのファイルを消してコミットしてください。
 
 ---
 
