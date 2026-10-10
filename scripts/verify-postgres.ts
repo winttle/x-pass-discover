@@ -31,6 +31,36 @@ async function main() {
   await client.waitReady;
   const db = drizzle(client, { schema });
 
+  // Before the migration, this database is exactly what a deployment looks
+  // like when DATABASE_URL is set and `db:migrate` was never run. The app has
+  // to recognise that and say so, rather than forwarding PostgreSQL's
+  // `relation "users" does not exist` to whoever is testing the deployment.
+  console.log('\n=== an un-migrated database is recognised as such ===');
+  const { isMissingSchemaError } = await import('@/lib/errors');
+  let missingSchema: unknown = null;
+  try {
+    await new DrizzleRepository(db as never).findUserByEmail('nobody@example.com');
+  } catch (error) {
+    missingSchema = error;
+  }
+  check('a query against an empty database fails', missingSchema !== null);
+  check('and is recognised as a missing schema', isMissingSchemaError(missingSchema));
+  check('a genuine fault is not mistaken for one', !isMissingSchemaError(new Error('boom')));
+
+  // The whole path, from the error PostgreSQL actually raised to the response
+  // the browser actually receives.
+  const { faultResponse } = await import('@/lib/api');
+  const response = faultResponse(missingSchema, 'Sign-up failed. Please try again.');
+  const body = (await response.json()) as { error: string; code?: string };
+  check('the API answers 503, not a 400 that looks like bad input', response.status === 503);
+  check('with a code the client can branch on', body.code === 'schema_missing');
+  check('and an instruction rather than a driver message', body.error.includes('db:migrate'));
+  check(
+    'the driver message is not forwarded to the browser',
+    !body.error.includes('does not exist'),
+    body.error,
+  );
+
   console.log('\n=== applying generated migration ===');
   const dir = path.join(ROOT, 'drizzle');
   const file = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()[0];

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseBody, withUser } from '@/lib/api';
+import { ScenarioRuleError } from '@/lib/errors';
 import {
   assertPersonaAllowedInStep,
   buildConversationView,
@@ -41,7 +42,7 @@ export async function POST(
     }
 
     if (body.action === 'send') {
-      if (!body.message) throw new Error('message is required');
+      if (!body.message) throw new ScenarioRuleError('message is required');
       const conversation = await sendStudentMessage(
         session,
         body.personaKey,
@@ -74,7 +75,9 @@ export async function GET(
   const stepKey = url.searchParams.get('stepKey');
 
   return withUser(async (user) => {
-    if (!personaKey || !stepKey) throw new Error('personaKey and stepKey are required');
+    if (!personaKey || !stepKey) {
+      throw new ScenarioRuleError('personaKey and stepKey are required');
+    }
     const session = await requireOwnedSession(sessionId, user.id);
     assertPersonaAllowedInStep(session, personaKey, stepKey);
     return { conversation: await buildConversationView(session, personaKey, stepKey) };
