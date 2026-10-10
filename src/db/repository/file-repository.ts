@@ -153,11 +153,14 @@ export class FileRepository implements XPassRepository {
     return this.read((d) => d.users.find((u) => u.id === id) ?? null);
   }
 
-  async createUser(input: { email: string; displayName: string }) {
+  async upsertUser(input: { email: string; displayName: string }) {
     return this.mutate((d) => {
       const normalized = input.email.trim().toLowerCase();
       const existing = d.users.find((u) => u.email === normalized);
-      if (existing) return existing;
+      if (existing) {
+        existing.displayName = input.displayName;
+        return existing;
+      }
       const user: User = {
         id: randomUUID(),
         email: normalized,

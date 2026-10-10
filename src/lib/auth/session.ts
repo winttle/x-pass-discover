@@ -51,9 +51,7 @@ function decode(token: string): string | null {
 
 export async function signIn(email: string, displayName: string): Promise<User> {
   const repo = getRepository();
-  const existing = await repo.findUserByEmail(email);
-  const user =
-    existing ?? (await repo.createUser({ email, displayName }));
+  const user = await repo.upsertUser({ email, displayName });
 
   const store = await cookies();
   store.set(COOKIE_NAME, encode(user.id), {

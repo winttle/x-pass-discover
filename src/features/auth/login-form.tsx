@@ -15,6 +15,10 @@ import { Logo } from '@/components/app-shell';
  * then branch, because telling an anonymous visitor whether an email is already
  * registered is account enumeration — a real sign-up flow would still want the
  * two paths to look identical from outside.
+ *
+ * The display name is asked for on every sign-in, so every sign-in sets it. A
+ * returning student who types a different name is renamed rather than quietly
+ * ignored; the account itself still keys off the email.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -65,7 +69,11 @@ export function LoginForm() {
             autoComplete="email"
           />
         </Field>
-        <Field label="Display name" required>
+        <Field
+          label="Display name"
+          helpText="Signing in again with a different name updates it."
+          required
+        >
           <input
             type="text"
             required
