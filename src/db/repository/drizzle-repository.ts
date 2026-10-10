@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, asc, desc, eq, ne } from 'drizzle-orm';
 import { requireDb, schema, type Database } from '@/db/client';
+import { SetupRequiredError } from '@/lib/errors';
 import { deepEquals } from '@/lib/stable-json';
 import type {
   AiConversation,
@@ -250,8 +251,12 @@ export class DrizzleRepository implements XPassRepository {
       .limit(1);
 
     if (!department || !project || !version) {
-      throw new Error(
-        `Scenario content is not seeded for ${input.scenarioKey} v${input.scenarioVersion}. Run \`npm run db:seed\`.`,
+      // The other half of a half-finished deployment: the migration ran, so
+      // sign-up works and everything looks healthy right up until someone
+      // tries to start a bootcamp.
+      throw new SetupRequiredError(
+        `Scenario content is not seeded for ${input.scenarioKey} v${input.scenarioVersion}. ` +
+          'Run `npm run db:seed` against this deployment\u2019s DATABASE_URL, then try again.',
       );
     }
 

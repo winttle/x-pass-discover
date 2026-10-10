@@ -379,14 +379,19 @@ Vercel needs no configuration file.
    setting the connection string does not create the tables:
 
    ```bash
-   DATABASE_URL='postgres://…' npm run db:migrate
-   DATABASE_URL='postgres://…' npm run db:seed
+   DATABASE_URL='postgres://…' npm run db:setup   # migrate, then seed
    ```
 
-   Skip this and the deployment looks fine until the first write, which fails
-   with *“This deployment’s database has no tables yet.”* That message is the
-   whole diagnosis: run the two commands above and try again. Both are
-   idempotent, so running them against an already-migrated database is safe.
+   Skip it and the deployment looks healthy until the first write. Both halves
+   fail with the instruction rather than a driver error — *“This deployment's
+   database has no tables yet…”* if the migration is missing, *“Scenario content
+   is not seeded…”* if only the seed is. Running `db:setup` fixes either; it is
+   idempotent, so re-running it against a database that is already set up is
+   safe.
+
+   Run it from a checkout of this repository — the seed is a TypeScript script
+   that mirrors the content registry into the tables, so pasting the migration
+   SQL into a database console gets you only half of it.
 
 **Demo mode.** A serverless filesystem is read-only and per-instance, so the
 local file store cannot be used in production. A production build with no
