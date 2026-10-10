@@ -9,6 +9,12 @@ import { Logo } from '@/components/app-shell';
  * Development identity, not authentication. There is no password: this exists
  * so sessions, submissions and behavior events are attributed to a stable user.
  * Replacing it with Auth.js means changing `lib/auth/session.ts` and this form.
+ *
+ * Sign-in and sign-up are deliberately one action. An unknown email creates the
+ * account; a known one resumes it. The form does not probe the address first and
+ * then branch, because telling an anonymous visitor whether an email is already
+ * registered is account enumeration — a real sign-up flow would still want the
+ * two paths to look identical from outside.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -42,8 +48,9 @@ export function LoginForm() {
       <Logo />
 
       <h1 className="mt-6 text-lg font-semibold text-strong">Sign in to BITE</h1>
-      <p className="mt-1 text-xs text-muted">
-        MVP identity only — no password is collected or stored.
+      <p className="mt-1 text-xs leading-relaxed text-muted">
+        First time here? There is no separate sign-up — entering your email
+        creates your account. No password is collected or stored.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">

@@ -304,7 +304,9 @@ That is the whole setup. No database, no API key, no `.env`.
 
 Then: sign in (email + display name, **no password** — it is a development
 identity, see §8) → pre-survey → choose departments → **Start bootcamp** on
-Sales → work through the ten steps. Walk into the 2D office from the workspace
+Sales → work through the ten steps. There is no separate sign-up screen: an
+email the store has not seen creates the account, a known one resumes it, so any
+address works on a fresh checkout. Walk into the 2D office from the workspace
 sidebar, or go straight to `/office`.
 
 Things worth trying, because they are where the design decisions show:
@@ -435,7 +437,11 @@ obviously on-topic question still counts as discovery.
   identity* with no password. The architecture docs prefer Auth.js; this keeps
   the same three-function seam (`signIn` / `signOut` / `getCurrentUser`) so
   swapping in Auth.js means reimplementing that one file. **Not production
-  auth.**
+  auth.** There is consequently no registration step to speak of — no password,
+  no email verification, no recovery, and no way to prove the person typing an
+  address owns it. Sign-in and sign-up are one action by design, and should stay
+  one action after Auth.js lands; what Auth.js adds is the proof, not a second
+  screen.
 - **Evaluation / SKILL FIT.** Tables and the `NE` concept exist; no evidence
   extraction or rating pipeline. The report shows `NE` rather than a number.
 - **Post-survey.** Table exists, no UI.
