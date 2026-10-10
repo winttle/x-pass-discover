@@ -14,6 +14,9 @@ export function GuardrailList({ warnings }: { warnings: GuardrailWarning[] }) {
         return (
           <div
             key={warning.key}
+            data-testid="guardrail"
+            data-guardrail-key={warning.key}
+            data-severity={warning.severity}
             className={`rounded-xl border px-3.5 py-3 ${
               isViolation
                 ? 'border-danger-400/40 bg-danger-400/10'

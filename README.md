@@ -50,6 +50,10 @@ rules from the implementation pack.
   resources, AI personas, events.
 - Career report page that shows the LIKE/SKILL FIT split honestly — SKILL FIT
   reads `NE` (Not Enough Evidence) because the evaluator is not built yet.
+- A Playwright suite that walks the whole bootcamp in a real browser and pins
+  the rules the product rests on: no server-only persona data in any payload,
+  guardrails that warn without correcting, and earlier work preserved rather
+  than overwritten. See §6.
 
 ---
 
@@ -227,6 +231,17 @@ src/
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
   verify-disclosure.ts    checks the hidden-fact matcher against real phrasings
+tests/e2e/
+  journey.spec.ts         the whole bootcamp, driven off the step rail
+  hidden-information.spec.ts  nothing server-only reaches the browser
+  conversation.spec.ts    a meeting cannot be ended before it is held
+  guardrails.spec.ts      warnings do not block, and do not correct
+  revision.spec.ts        earlier work is preserved, not overwritten
+  identity.spec.ts        sign-in is sign-up; the name typed is the name kept
+  admin.spec.ts           admin is closed in production; it withholds content
+  office.spec.ts          Phaser boots and its prompt tracks proximity
+  helpers/                flow helpers and the generic form filler
+  fixtures/               derives the server-only strings the leak spec uses
 drizzle/                  generated migration SQL
 ```
 
@@ -380,7 +395,13 @@ npm run verify            # typecheck + lint + office map + disclosure + Postgre
 npm run db:verify         # migration + seed + every Drizzle query on embedded PG
 npm run verify:disclosure # hidden-fact matcher against realistic phrasings
 npm run verify:office     # floor plan: every room, door and NPC still reachable
+
+npm run test:e2e:install  # one-off: fetch the Chromium build Playwright expects
+npm run test:e2e          # the browser suite (builds and serves the app itself)
 ```
+
+`npm run verify` is the fast gate and stays credential-free; `npm run test:e2e`
+is the slow one. Both run in CI (`.github/workflows/ci.yml`) as separate jobs.
 
 `npm run db:verify` boots an embedded PostgreSQL (PGlite), applies the generated
 migration, runs the seed twice (idempotency), and drives `DrizzleRepository`
@@ -390,6 +411,37 @@ a Neon account.
 `npm run verify:office` matters because office furniture is solid: moving a desk
 can quietly wall off a room or trap an NPC. It flood-fills the real collision
 grid and fails if any room, door or NPC becomes unreachable.
+
+### The browser suite
+
+`npm run test:e2e` runs Playwright against a **production build** that it starts
+itself. That is deliberate: `next start` sets `NODE_ENV=production`, which is
+what makes the app choose `memory` persistence — the exact adapter a
+credential-less deployment gets. Running against `next dev` would exercise the
+file store instead and quietly skip the demo-mode path. It also means every run
+starts from an empty store. `DATABASE_URL` and `OPENAI_API_KEY` are blanked for
+the suite, so a developer's `.env` can neither point the tests at a real
+database nor turn them into billable API calls.
+
+Three things make it maintainable rather than a wall of selectors:
+
+- **It addresses `data-*` hooks, never copy.** Rewording a label does not fail
+  a test. `data-field-key` / `data-field-type` / `data-task-kind` /
+  `data-step-key` are the contract.
+- **The walkthrough is driven off the step rail, not a list of the ten Sales
+  steps.** `completeCurrentStep` reads `data-task-kind` and fills whatever is
+  there, and `fillTask` fills from `data-field-type`. The engine is supposed to
+  know nothing about Sales; so does the test that drives it. Authoring
+  Marketing or HR should make `journey.spec.ts` longer, not broken — and if it
+  does break, that is the architecture claim failing, which is worth knowing.
+- **The leak spec derives its forbidden strings from the real content files.**
+  A global setup runs `tests/e2e/fixtures/dump-server-secrets.ts` under
+  `tsx --conditions=react-server` and writes out every system prompt,
+  conversation rule and disclosure rule. A new persona or hidden fact is
+  covered the day it is written, with no test to remember to update.
+
+Point `E2E_BASE_URL` at a running instance (a preview deployment, say) to skip
+the build and test that instead.
 
 ---
 
@@ -467,9 +519,10 @@ obviously on-topic question still counts as discovery.
 - The follow-up detection that distinguishes `ai_followup_asked` from
   `ai_message_sent` is a word-overlap heuristic. Fine as evidence, not as a
   measure.
-- No automated test runner is wired up. The verification scripts under
-  `scripts/` plus `npm run verify` cover the critical invariants; a proper
-  Vitest/Playwright suite in CI is the natural next step.
+- There is no unit-test runner. `npm run verify` and the Playwright suite cover
+  the critical invariants end to end; a Vitest layer for the pure functions
+  (`engine.ts`, `calculators.ts`, `guardrails.ts`, `stable-json.ts`) would make
+  failures point at a line instead of a page.
 - `next` carries a transitive build-time `postcss` advisory that is only fixed
   in Next 16 (a breaking major). Deferred deliberately.
 - The office renders ~1M pixels per frame. That is nothing for a GPU, but in a
@@ -482,8 +535,10 @@ obviously on-topic question still counts as discovery.
 ## 10. Recommended next phase
 
 1. **Play it end to end as a real student** and fix what that exposes. The
-   architecture has been exercised by automation, not by someone trying to do
-   the job.
+   browser suite now walks the whole bootcamp on every run, and writing it
+   already surfaced one dead end (a meeting that could be ended before it was
+   held, sealing the step). But automation only finds what it is told to look
+   at. Nobody has yet sat down and tried to do the job.
 2. **Implement HR as the second scenario.** It is the stress test that matters:
    conditional content, multiple candidate personas, repeated scorecard rows,
    several interview transcripts, and an executive pressure event. Writing it

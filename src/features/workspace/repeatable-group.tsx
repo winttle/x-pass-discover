@@ -48,6 +48,7 @@ export function RepeatableGroup({
       {padded.map((row, index) => (
         <div
           key={index}
+          data-row-index={index}
           className="rounded-xl border border-line bg-sunken p-3.5"
         >
           <div className="mb-3 flex items-center justify-between">
@@ -66,7 +67,14 @@ export function RepeatableGroup({
 
           <div className="space-y-3">
             {subFields.map((sub) => (
-              <label key={sub.key} className="block">
+              <label
+                key={sub.key}
+                className="block"
+                data-field-scope="row"
+                data-field-key={sub.key}
+                data-field-type={sub.type}
+                data-field-required={sub.required ? 'true' : 'false'}
+              >
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-medium text-body">
                     {sub.label}
@@ -100,6 +108,7 @@ export function RepeatableGroup({
           disabled={disabled}
           onClick={() => onChange([...padded, {}])}
           className="w-full"
+          data-testid="add-row"
         >
           + Add another
         </Button>
