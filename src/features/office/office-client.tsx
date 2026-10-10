@@ -379,7 +379,7 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
               sessionId={view.session.id}
               stepKey={overlay.stepKey}
               persona={activePersona}
-              minStudentMessages={chatTask?.conversation?.minStudentMessages ?? 0}
+              minStudentMessages={chatTask?.minStudentMessages ?? 0}
               onSessionUpdate={setView}
             />
           </div>
