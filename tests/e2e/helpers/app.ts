@@ -21,36 +21,62 @@ export function uniqueEmail(prefix = 'student'): string {
   return `${prefix}-${process.pid}-${Date.now().toString(36)}-${counter}@x-pass.test`;
 }
 
-export async function signIn(
+export async function signUp(
   page: Page,
   { email, displayName }: { email: string; displayName: string },
 ): Promise<void> {
-  await page.goto('/login');
+  await page.goto('/signup');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Display name').fill(displayName);
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.waitForURL('**/welcome');
+}
+
+export async function signIn(page: Page, email: string): Promise<void> {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(email);
   await page.getByRole('button', { name: 'Enter BITE' }).click();
   await page.waitForURL('**/welcome');
 }
 
 /**
- * Signs the browser out through the real endpoint.
- *
- * There is no sign-out control in the UI yet, so this posts to the route the
- * app exposes. `page.request` shares the context's cookie jar, so the cleared
- * cookie applies to the page as well.
+ * Signs the browser out through the real endpoint. The UI button is exercised
+ * by `identity.spec.ts`; everywhere else this is setup, not the thing under
+ * test, and a POST is faster and independent of which page is open.
  */
 export async function signOut(page: Page): Promise<void> {
   const response = await page.request.post('/api/auth/logout');
   expect(response.ok(), 'the logout endpoint should accept the request').toBe(true);
 }
 
-/** Sign in as a brand-new student and return the address used. */
-export async function signInAsNewStudent(
+/**
+ * For the fixed addresses a spec reuses across tests (the allow-listed admin,
+ * say): create the account the first time, sign into it afterwards.
+ */
+export async function ensureSignedIn(
+  page: Page,
+  { email, displayName }: { email: string; displayName: string },
+): Promise<void> {
+  await page.goto('/signup');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Display name').fill(displayName);
+  await page.getByRole('button', { name: 'Create account' }).click();
+
+  await Promise.race([
+    page.waitForURL('**/welcome'),
+    page.getByTestId('auth-error').waitFor({ state: 'visible' }),
+  ]);
+  if (page.url().includes('/welcome')) return;
+  await signIn(page, email);
+}
+
+/** Creates a brand-new account and returns the address used. */
+export async function signUpAsNewStudent(
   page: Page,
   displayName = 'Test Student',
 ): Promise<string> {
   const email = uniqueEmail();
-  await signIn(page, { email, displayName });
+  await signUp(page, { email, displayName });
   return email;
 }
 
@@ -88,9 +114,9 @@ export async function startBootcamp(page: Page, slug = 'sales'): Promise<string>
   return sessionId;
 }
 
-/** Sign in, skip the survey, and open the Sales workspace. */
+/** Create an account, skip the survey, and open the Sales workspace. */
 export async function enterSalesWorkspace(page: Page): Promise<string> {
-  await signInAsNewStudent(page);
+  await signUpAsNewStudent(page);
   return startBootcamp(page, 'sales');
 }
 

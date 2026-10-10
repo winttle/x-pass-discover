@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RuntimeBadges } from '@/components/app-shell';
+import { RuntimeBadges } from '@/components/branding';
 import { Badge, Card, CardHeader } from '@/components/ui';
 import { Cover } from '@/components/media';
 import { ResourcePanel } from '@/features/resources/resource-panel';

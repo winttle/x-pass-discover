@@ -9,10 +9,17 @@ import type { User } from '@/types/runtime';
  * Minimal signed-cookie session.
  *
  * DELIBERATE MVP SIMPLIFICATION. The architecture docs prefer Auth.js; this is
- * a placeholder that keeps the same three-function seam (`signIn`, `signOut`,
- * `getCurrentUser`) so swapping in Auth.js means reimplementing this file and
- * nothing else. There is no password here — it is a development identity, not
- * an authentication system. See README "Production-ready vs placeholder".
+ * a placeholder that keeps the same narrow seam (`signUp`, `signIn`,
+ * `signOut`, `getCurrentUser`) so swapping in Auth.js means reimplementing this
+ * file and nothing else. There is no password here — it is a development
+ * identity, not an authentication system. See README "Production-ready vs
+ * placeholder".
+ *
+ * Because there is no password, `signIn` knowing whether an address exists
+ * leaks nothing a visitor could not already learn by signing in as it. Once
+ * credentials are real, both paths need to answer identically to an
+ * unauthenticated caller — that is a change to these two functions and the two
+ * routes that call them, not to anything downstream.
  */
 
 const COOKIE_NAME = 'x_pass_session';
@@ -49,10 +56,7 @@ function decode(token: string): string | null {
   return userId;
 }
 
-export async function signIn(email: string, displayName: string): Promise<User> {
-  const repo = getRepository();
-  const user = await repo.upsertUser({ email, displayName });
-
+async function establishSession(user: User): Promise<User> {
   const store = await cookies();
   store.set(COOKIE_NAME, encode(user.id), {
     httpOnly: true,
@@ -62,6 +66,25 @@ export async function signIn(email: string, displayName: string): Promise<User> 
     maxAge: MAX_AGE_SECONDS,
   });
   return user;
+}
+
+/**
+ * Signs in an account that already exists. Creating one is `signUp`, and the
+ * two are deliberately separate: a single call that silently created an
+ * account for a mistyped address would hand the student an empty bootcamp and
+ * no clue why their work was gone.
+ */
+export async function signIn(email: string): Promise<User> {
+  const user = await getRepository().findUserByEmail(email);
+  if (!user) throw new AccountNotFoundError();
+  return establishSession(user);
+}
+
+/** Creates the account and signs into it. Refuses an address already in use. */
+export async function signUp(email: string, displayName: string): Promise<User> {
+  const user = await getRepository().createUser({ email, displayName });
+  if (!user) throw new EmailAlreadyRegisteredError();
+  return establishSession(user);
 }
 
 export async function signOut(): Promise<void> {
@@ -92,5 +115,19 @@ export class UnauthenticatedError extends Error {
   constructor() {
     super('Not signed in');
     this.name = 'UnauthenticatedError';
+  }
+}
+
+export class AccountNotFoundError extends Error {
+  constructor() {
+    super('No account uses that email address yet.');
+    this.name = 'AccountNotFoundError';
+  }
+}
+
+export class EmailAlreadyRegisteredError extends Error {
+  constructor() {
+    super('That email address already has an account.');
+    this.name = 'EmailAlreadyRegisteredError';
   }
 }

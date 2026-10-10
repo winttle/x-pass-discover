@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { signInAsNewStudent } from './helpers/app';
+import { signUpAsNewStudent } from './helpers/app';
 
 /**
  * The 2D office is the experience layer and nothing else. It is checked here
@@ -13,7 +13,7 @@ import { signInAsNewStudent } from './helpers/app';
 
 /** Phaser moves on held keys, so a tap would barely shift the player. */
 async function walk(
-  page: Parameters<typeof signInAsNewStudent>[0],
+  page: Parameters<typeof signUpAsNewStudent>[0],
   key: string,
   ms: number,
 ): Promise<void> {
@@ -23,7 +23,7 @@ async function walk(
 }
 
 test('the office boots and its prompt follows the player', async ({ page }) => {
-  await signInAsNewStudent(page, 'Office Visitor');
+  await signUpAsNewStudent(page, 'Office Visitor');
 
   await page.goto('/office');
   const canvas = page.locator('canvas');

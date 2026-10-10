@@ -1,42 +1,95 @@
 import { expect, test } from '@playwright/test';
-import { signIn, signOut, uniqueEmail } from './helpers/app';
+import { signIn, signUp, signUpAsNewStudent, uniqueEmail } from './helpers/app';
 
 /**
- * Sign-in is also sign-up, and the display name belongs to the sign-in.
- *
- * The second test is a regression: the form asked for a display name every
- * time and then discarded it for anyone who already had an account, so the
- * first name a student ever typed was the one they were stuck with.
+ * Sign-up and sign-in are two screens that do two different things, and the
+ * difference matters: one starts a fresh bootcamp, the other resumes one that
+ * may already hold hours of work. A form that blurs them eventually loses
+ * somebody's.
  */
-test('an unknown email creates the account and a known one resumes it', async ({ page }) => {
+test('a new student creates an account, and comes back to the same one', async ({
+  page,
+}) => {
   const email = uniqueEmail();
 
-  await signIn(page, { email, displayName: 'Haruka Sato' });
+  await signUp(page, { email, displayName: 'Haruka Sato' });
   await expect(page.getByText('Signed in as Haruka Sato')).toBeVisible();
 
-  await signOut(page);
-  await signIn(page, { email, displayName: 'Haruka Sato' });
-  await expect(page.getByText('Signed in as Haruka Sato')).toBeVisible();
+  await page.getByTestId('sign-out').click();
+  await page.waitForURL(/\/$/);
 
-  // No separate sign-up screen exists, and the form says so rather than
-  // leaving a returning student hunting for one.
-  await signOut(page);
-  await page.goto('/login');
-  await expect(page.getByText(/There is no separate sign-up/)).toBeVisible();
+  await signIn(page, email);
+  await expect(
+    page.getByText('Signed in as Haruka Sato'),
+    'signing back in should reach the same account, name and all',
+  ).toBeVisible();
 });
 
-test('signing in with a different display name updates it', async ({ page }) => {
+test('signing up with an email that already has an account is refused', async ({
+  page,
+}) => {
   const email = uniqueEmail();
+  await signUp(page, { email, displayName: 'First Owner' });
+  await page.getByTestId('sign-out').click();
+  await page.waitForURL(/\/$/);
 
-  await signIn(page, { email, displayName: 'Before Rename' });
-  await expect(page.getByText('Signed in as Before Rename')).toBeVisible();
+  await page.goto('/signup');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Display name').fill('Someone Else');
+  await page.getByRole('button', { name: 'Create account' }).click();
 
-  await signOut(page);
-  await signIn(page, { email, displayName: 'After Rename' });
+  const error = page.getByTestId('auth-error');
+  await expect(error).toBeVisible();
+  await expect(error).toContainText('already has an account');
+  expect(page.url(), 'a refused sign-up stays on the sign-up page').toContain('/signup');
 
-  await expect(
-    page.getByText('Signed in as After Rename'),
-    'the name typed at sign-in should be the name shown',
-  ).toBeVisible();
-  await expect(page.getByText('Signed in as Before Rename')).toHaveCount(0);
+  // The way forward is offered rather than left for the student to work out.
+  await error.getByRole('link', { name: /Sign in with this email/ }).click();
+  await page.waitForURL('**/login**');
+  await page.getByRole('button', { name: 'Enter BITE' }).click();
+  await page.waitForURL('**/welcome');
+
+  // The original account is reached, and its display name was not overwritten.
+  await expect(page.getByText('Signed in as First Owner')).toBeVisible();
+});
+
+test('signing in with an unknown email offers sign-up instead of inventing an account', async ({
+  page,
+}) => {
+  const email = uniqueEmail('never-registered');
+
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(email);
+  await page.getByRole('button', { name: 'Enter BITE' }).click();
+
+  const error = page.getByTestId('auth-error');
+  await expect(error).toBeVisible();
+  await expect(error).toContainText('No account uses that email');
+  expect(page.url()).toContain('/login');
+
+  await error.getByRole('link', { name: /Create an account with this email/ }).click();
+  await page.waitForURL('**/signup**');
+
+  // The address is carried over, so a student who mistyped nothing does not
+  // type it twice.
+  await expect(page.getByLabel('Email')).toHaveValue(email);
+});
+
+test('signing out ends the session and leaves the private pages unreachable', async ({
+  page,
+}) => {
+  await signUpAsNewStudent(page, 'Leaving Student');
+
+  await page.goto('/departments');
+  await expect(page.getByTestId('account-menu')).toBeVisible();
+  await expect(page.getByTestId('account-menu')).toContainText('Leaving Student');
+
+  await page.getByTestId('sign-out').click();
+  await page.waitForURL(/\/$/);
+
+  // Back on the front door, offered as a visitor rather than a student.
+  await expect(page.getByRole('link', { name: 'Create an account' })).toBeVisible();
+
+  await page.goto('/departments');
+  await page.waitForURL('**/login');
 });

@@ -237,7 +237,7 @@ tests/e2e/
   conversation.spec.ts    a meeting cannot be ended before it is held
   guardrails.spec.ts      warnings do not block, and do not correct
   revision.spec.ts        earlier work is preserved, not overwritten
-  identity.spec.ts        sign-in is sign-up; the name typed is the name kept
+  identity.spec.ts        sign-up, sign-in and sign-out, and their refusals
   admin.spec.ts           admin is closed in production; it withholds content
   office.spec.ts          Phaser boots and its prompt tracks proximity
   helpers/                flow helpers and the generic form filler
@@ -317,12 +317,12 @@ That is the whole setup. No database, no API key, no `.env`.
 > The first `npm run dev` fetches the Inter and JetBrains Mono webfonts, so it
 > needs network access once. After that it works offline.
 
-Then: sign in (email + display name, **no password** — it is a development
-identity, see §8) → pre-survey → choose departments → **Start bootcamp** on
-Sales → work through the ten steps. There is no separate sign-up screen: an
-email the store has not seen creates the account, a known one resumes it, so any
-address works on a fresh checkout. Walk into the 2D office from the workspace
-sidebar, or go straight to `/office`.
+Then: **Create an account** (email + display name, **no password** — it is a
+development identity, see §8) → pre-survey → choose departments → **Start
+bootcamp** on Sales → work through the ten steps. Returning students sign in at
+`/login` with the email alone. Sign out from the header on any signed-in page.
+Walk into the 2D office from the workspace sidebar, or go straight to
+`/office`.
 
 Things worth trying, because they are where the design decisions show:
 
@@ -489,13 +489,21 @@ obviously on-topic question still counts as discovery.
 
 - **Authentication.** `src/lib/auth/session.ts` is a signed-cookie *development
   identity* with no password. The architecture docs prefer Auth.js; this keeps
-  the same three-function seam (`signIn` / `signOut` / `getCurrentUser`) so
+  the same narrow seam (`signUp` / `signIn` / `signOut` / `getCurrentUser`) so
   swapping in Auth.js means reimplementing that one file. **Not production
-  auth.** There is consequently no registration step to speak of — no password,
-  no email verification, no recovery, and no way to prove the person typing an
-  address owns it. Sign-in and sign-up are one action by design, and should stay
-  one action after Auth.js lands; what Auth.js adds is the proof, not a second
-  screen.
+  auth**: no password, no email verification, no recovery, and no way to prove
+  the person typing an address owns it. Anyone can sign in as any registered
+  address.
+
+  Sign-up and sign-in are separate screens, and `/login` says plainly when an
+  address has no account. That is an enumeration oracle, and it is an honest
+  one here — with no password, an attacker does not need to enumerate anything,
+  they can simply sign in. It is also the only way to stop a typo from silently
+  creating a second, empty account and making a student's work look lost.
+  **When Auth.js lands, that trade expires**: once there is a credential worth
+  guessing, both screens must answer identically to an unauthenticated caller.
+  That is a change to `signIn`/`signUp` and the two routes that call them,
+  nothing downstream.
 - **Evaluation / SKILL FIT.** Tables and the `NE` concept exist; no evidence
   extraction or rating pipeline. The report shows `NE` rather than a number.
 - **Post-survey.** Table exists, no UI.

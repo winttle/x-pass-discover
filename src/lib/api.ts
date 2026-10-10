@@ -14,8 +14,15 @@ import type { User } from '@/types/runtime';
  * parsed through a Zod schema before it reaches a service.
  */
 
-export function jsonError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status });
+/**
+ * `code` is for the cases a form needs to react to rather than just print —
+ * offering a link to the sign-up page when the address is unknown, say. The
+ * message stays the thing a human reads.
+ */
+export function jsonError(message: string, status: number, code?: string) {
+  return NextResponse.json(code ? { error: message, code } : { error: message }, {
+    status,
+  });
 }
 
 export async function withUser<T>(

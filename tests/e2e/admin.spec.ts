@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { ADMIN_EMAIL } from '../../playwright.config';
-import { enterSalesWorkspace, openStep, signIn } from './helpers/app';
+import { enterSalesWorkspace, ensureSignedIn, openStep } from './helpers/app';
 import { completeCurrentStep } from './helpers/forms';
 import { ReceivedTraffic } from './helpers/leak-scan';
 import { hiddenFactSecrets, loadServerSecrets } from './helpers/secrets';
@@ -25,7 +25,7 @@ test('a student cannot reach the admin screens in a production build', async ({ 
 
 test('the persona inspector shows the wiring and withholds the content', async ({ page }) => {
   const traffic = new ReceivedTraffic(page);
-  await signIn(page, { email: ADMIN_EMAIL, displayName: 'E2E Admin' });
+  await ensureSignedIn(page, { email: ADMIN_EMAIL, displayName: 'E2E Admin' });
 
   await page.goto('/admin/ai-personas');
   await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible();
@@ -45,7 +45,7 @@ test('the persona inspector shows the wiring and withholds the content', async (
  * scoring mechanism the brief rules out.
  */
 test('the behavior log records ordered evidence and scores nothing', async ({ page }) => {
-  await signIn(page, { email: ADMIN_EMAIL, displayName: 'E2E Admin' });
+  await ensureSignedIn(page, { email: ADMIN_EMAIL, displayName: 'E2E Admin' });
 
   // Do a little work so there is something to log.
   const { startBootcamp } = await import('./helpers/app');

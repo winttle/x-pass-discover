@@ -80,14 +80,19 @@ async function main() {
   check('re-seed keeps 5 departments', (await counts('departments')) === 5);
 
   console.log('\n=== exercising DrizzleRepository through the real services ===');
-  const user = await repo.upsertUser({ email: 'pg@example.com', displayName: 'PG Student' });
-  check('upsertUser creates', Boolean(user.id));
+  const user = await repo.createUser({ email: 'pg@example.com', displayName: 'PG Student' });
+  check('createUser creates', Boolean(user?.id));
+  if (!user) throw new Error('createUser returned null on a fresh email');
   check('findUserByEmail round-trips', (await repo.findUserByEmail('pg@example.com'))?.id === user.id);
-  const resigned = await repo.upsertUser({ email: 'pg@example.com', displayName: 'PG Student Renamed' });
-  check('upsertUser keeps one account per email', resigned.id === user.id);
-  check('upsertUser adopts the new display name', resigned.displayName === 'PG Student Renamed', resigned.displayName);
-  check('upsertUser leaves role and createdAt alone', resigned.role === user.role && resigned.createdAt === user.createdAt);
-  check('the new name is what a later read returns', (await repo.getUser(user.id))?.displayName === 'PG Student Renamed');
+  // A taken address comes back as null rather than a second account or an
+  // overwritten name — the sign-up form depends on being able to tell.
+  const duplicate = await repo.createUser({
+    email: 'PG@Example.com',
+    displayName: 'Someone Else',
+  });
+  check('createUser refuses an email that already has an account', duplicate === null);
+  check('the existing account is untouched', (await repo.getUser(user.id))?.displayName === 'PG Student');
+  check('and there is still only one of it', (await counts('users')) === 1);
 
   await repo.savePreSurvey(user.id, { interest_sales: 5 });
   check('pre-survey upsert', (await repo.getPreSurvey(user.id))?.answers.interest_sales === 5);
@@ -159,7 +164,8 @@ async function main() {
 
   console.log('\n=== session listing / isolation ===');
   check('listSessionsForUser', (await repo.listSessionsForUser(user.id)).length === 1);
-  const other = await repo.upsertUser({ email: 'other-pg@example.com', displayName: 'Other' });
+  const other = await repo.createUser({ email: 'other-pg@example.com', displayName: 'Other' });
+  if (!other) throw new Error('createUser returned null on a fresh email');
   check('other user has no sessions', (await repo.listSessionsForUser(other.id)).length === 0);
 
   await client.close();
