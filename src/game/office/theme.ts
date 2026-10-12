@@ -24,13 +24,12 @@ export const PALETTE = {
   threshold: 0x3b82f6,
 
   backWall: 0xeee8de,
-  backWallCap: 0xd9d2c6,
+  backWallCap: 0x5b6475,
   windowFrame: 0x4a5366,
   sky: [0xcfe6fb, 0xbcdcf8, 0xaed3f5] as const,
   skyline: [0x9fb9d6, 0x8eaacb, 0xb3c7de] as const,
   partition: 0xe9e6e1,
   partitionCap: 0xc69c70,
-  partitionTop: 0xeeebe5,
   glass: 0xbfe3ff,
   glassFrame: 0x56627a,
 

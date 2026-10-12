@@ -18,13 +18,16 @@ import {
   type OfficeRoom,
 } from './map';
 import {
-  VIEW_HEIGHT,
-  VIEW_WIDTH,
+  HALF_H,
+  HALF_W,
+  ISO_ORIGIN_X,
+  ISO_ORIGIN_Y,
+  ISO_WORLD_HEIGHT,
+  ISO_WORLD_WIDTH,
   depthAt,
-  pieceDepth,
-  project,
-  scaleAt,
-} from './view';
+  tileCenter,
+  toScreen,
+} from './iso';
 import {
   bookcasePiece,
   boxesPiece,
@@ -43,8 +46,6 @@ import {
   rgb,
   rng,
   serverPiece,
-  setFrame,
-  pt,
   shade,
   shelfPiece,
   sofaPiece,
@@ -65,15 +66,12 @@ import type { OfficeBridge } from './bridge';
 
 const PLAYER_SPEED = 215;
 const NPC_INTERACT_RADIUS = 60;
-const CAMERA_ZOOM = 1.05;
+const CAMERA_ZOOM = 1.3;
 const PLAYER_SIZE = 22;
 
 /** Pieces and people are baked at 2× and the floor at 1.5×, then shown scaled down. */
 const PIECE_RES = 2;
-const FLOOR_RES = Math.min(1.25, 4096 / VIEW_WIDTH, 4096 / VIEW_HEIGHT);
-/** Pixels per tile of the flat floor plan that is then laid into perspective. */
-const PLAN_TILE = 40;
-const ATLAS_SIZE = 2048;
+const FLOOR_RES = 1.5;
 const PERSON_W = 48;
 const PERSON_H = 70;
 const PERSON_FEET = 62;
@@ -95,7 +93,7 @@ type Direction = 'up' | 'down' | 'left' | 'right';
  * `map.ts`: an invisible physics body walks it, collides with its walls and
  * furniture, and decides which room the player is in — exactly as before, so
  * `verify:office`, the minimap and the bridge events are unchanged. The
- * *visible* office is that grid photographed in perspective (`view.ts`) and drawn
+ * *visible* office is that grid projected isometrically (`iso.ts`) and drawn
  * procedurally (`art.ts`); every frame the avatar is placed where the body is.
  *
  * It holds no business state: every meaningful interaction is emitted to React
@@ -122,10 +120,6 @@ export class OfficeScene extends Phaser.Scene {
   private speechFor: string | null = null;
   private facing: Direction = 'down';
   private walkPhase = 0;
-  private atlases: Phaser.Textures.CanvasTexture[] = [];
-  private atlasCursor = { x: 0, y: 0, rowHeight: 0 };
-  private pieceCount = 0;
-  private glowTile = { x: -1, y: -1 };
   private wasMoving = false;
   private lastReportedTile = { x: -1, y: -1 };
 
@@ -145,7 +139,7 @@ export class OfficeScene extends Phaser.Scene {
 
   create(): void {
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.cameras.main.setBounds(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    this.cameras.main.setBounds(0, 0, ISO_WORLD_WIDTH, ISO_WORLD_HEIGHT);
     this.cameras.main.setBackgroundColor(PALETTE.void);
     this.cameras.main.setZoom(CAMERA_ZOOM);
     this.cameras.main.setRoundPixels(true);
@@ -154,7 +148,6 @@ export class OfficeScene extends Phaser.Scene {
     this.paintFloor(walls);
     this.placeWalls(walls);
     this.placeProps();
-    for (const atlas of this.atlases) atlas.refresh();
     this.placeRoomSigns();
     this.createNpcs();
 
@@ -192,96 +185,59 @@ export class OfficeScene extends Phaser.Scene {
   /**
    * The floor is flat, so all of it — boards, carpet and stone, rugs, the soft
    * shadows furniture casts, light falling in from the windows and the shade
-   * at the foot of every wall — is painted once as a flat plan, one unit per
-   * tile. The plan is then laid into perspective tile by tile (each tile is
-   * small enough that an affine stretch of it is indistinguishable from the
-   * true projection), clipped to the tile's exact outline, and the result is
-   * shown as one image.
+   * at the foot of every wall — is painted once into a single canvas at 1.5×
+   * and shown as one image. It is drawn in *tile space*: the canvas is skewed
+   * so a floor tile is a unit square.
    */
   private paintFloor(walls: boolean[][]): void {
-    const plan = document.createElement('canvas');
-    plan.width = GRID_WIDTH * PLAN_TILE;
-    plan.height = GRID_HEIGHT * PLAN_TILE;
-    const pc = plan.getContext('2d');
-    if (!pc) return;
-    pc.scale(PLAN_TILE, PLAN_TILE);
-
-    const materialAt = this.floorMaterials(walls);
-    for (let row = 0; row < GRID_HEIGHT; row += 1) {
-      for (let col = 0; col < GRID_WIDTH; col += 1) {
-        const material = materialAt[row][col];
-        const outside = row === 0 || col === 0 || col === GRID_WIDTH - 1;
-        if (material) this.paintTile(pc, col, row, material);
-        else if (outside) {
-          pc.fillStyle = rgb(PALETTE.void);
-          pc.fillRect(col, row, 1, 1);
-        } else {
-          pc.fillStyle = rgb(PALETTE.partition);
-          pc.fillRect(col, row, 1, 1);
-        }
-      }
-    }
-    this.paintRugs(pc);
-    this.paintDoorways(pc);
-    this.paintContactShadows(pc);
-    this.paintWallShade(pc, walls);
-    this.paintWindowLight(pc, walls);
-
     const key = 'office-floor';
     if (this.textures.exists(key)) this.textures.remove(key);
     const texture = this.textures.createCanvas(
       key,
-      Math.ceil(VIEW_WIDTH * FLOOR_RES),
-      Math.ceil(VIEW_HEIGHT * FLOOR_RES),
+      Math.ceil(ISO_WORLD_WIDTH * FLOOR_RES),
+      Math.ceil(ISO_WORLD_HEIGHT * FLOOR_RES),
     );
     if (!texture) return;
     const ctx = texture.getContext();
     ctx.setTransform(FLOOR_RES, 0, 0, FLOOR_RES, 0, 0);
 
-    // The building's slab: its front edge drops away into the night.
-    const slab = 30;
-    const sw = project(0, GRID_HEIGHT);
-    const se = project(GRID_WIDTH, GRID_HEIGHT);
-    ctx.fillStyle = '#343b4d';
-    ctx.beginPath();
-    ctx.moveTo(sw.x, sw.y);
-    ctx.lineTo(se.x, se.y);
-    ctx.lineTo(se.x, se.y + slab);
-    ctx.lineTo(sw.x, sw.y + slab);
-    ctx.closePath();
-    ctx.fill();
+    // The building's slab: its two front edges drop away into the night.
+    const slab = 26;
+    const sw = toScreen(0, GRID_HEIGHT);
+    const se = toScreen(GRID_WIDTH, GRID_HEIGHT);
+    const ne = toScreen(GRID_WIDTH, 0);
+    const quad = (points: Array<{ x: number; y: number }>, fill: string | CanvasGradient) => {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+      ctx.closePath();
+      ctx.fill();
+    };
+    quad([sw, se, { x: se.x, y: se.y + slab }, { x: sw.x, y: sw.y + slab }], '#3a4256');
+    quad([se, ne, { x: ne.x, y: ne.y + slab }, { x: se.x, y: se.y + slab }], '#2a3142');
 
+    ctx.save();
+    ctx.transform(HALF_W, HALF_H, -HALF_W, HALF_H, ISO_ORIGIN_X, ISO_ORIGIN_Y);
+
+    const materialAt = this.floorMaterials(walls);
     for (let row = 0; row < GRID_HEIGHT; row += 1) {
       for (let col = 0; col < GRID_WIDTH; col += 1) {
-        const o = project(col, row);
-        const a = project(col + 1, row);
-        const d = project(col + 1, row + 1);
-        const b = project(col, row + 1);
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(o.x - 0.4, o.y - 0.4);
-        ctx.lineTo(a.x + 0.4, a.y - 0.4);
-        ctx.lineTo(d.x + 0.4, d.y + 0.4);
-        ctx.lineTo(b.x - 0.4, b.y + 0.4);
-        ctx.closePath();
-        ctx.clip();
-        ctx.transform(
-          (a.x - o.x) / PLAN_TILE,
-          (a.y - o.y) / PLAN_TILE,
-          (b.x - o.x) / PLAN_TILE,
-          (b.y - o.y) / PLAN_TILE,
-          o.x,
-          o.y,
-        );
-        const sx = Math.max(0, col * PLAN_TILE - 2);
-        const sy = Math.max(0, row * PLAN_TILE - 2);
-        const sw2 = Math.min(plan.width - sx, PLAN_TILE + 4);
-        const sh2 = Math.min(plan.height - sy, PLAN_TILE + 4);
-        ctx.drawImage(plan, sx, sy, sw2, sh2, sx - col * PLAN_TILE, sy - row * PLAN_TILE, sw2, sh2);
-        ctx.restore();
+        const material = materialAt[row][col];
+        if (material) this.paintTile(ctx, col, row, material);
+        else {
+          ctx.fillStyle = rgb(PALETTE.partition);
+          ctx.fillRect(col - 0.01, row - 0.01, 1.02, 1.02);
+        }
       }
     }
 
+    this.paintRugs(ctx);
+    this.paintDoorways(ctx);
+    this.paintContactShadows(ctx);
+    this.paintWallShade(ctx, walls);
+    this.paintWindowLight(ctx, walls);
+
+    ctx.restore();
     texture.refresh();
     this.add.image(0, 0, key).setOrigin(0, 0).setScale(1 / FLOOR_RES).setDepth(DEPTH_FLOOR);
   }
@@ -528,94 +484,39 @@ export class OfficeScene extends Phaser.Scene {
         [4.2, row + 1],
       );
     }
-    const east = GRID_WIDTH - 1;
-    for (let row = 1; row < GRID_HEIGHT; row += 1) {
-      if (!this.backWallStyle(east, row).window || walls[row]?.[east - 1]) continue;
-      pane(
-        [[east, row + 0.12], [east, row + 0.88], [east - 3.2, row + 2.2], [east - 3.2, row + 1.45]],
-        [east, row],
-        [east - 3.2, row + 1],
-      );
-    }
     ctx.restore();
   }
 
   // ------------------------------------------------------------------ pieces
 
   /**
-   * Bakes a one-tile piece into a shared atlas, at 2× so it stays sharp, and
-   * places it on the grid. Under perspective no two tiles look quite alike, so
-   * every piece is drawn for its own tile; packing them into a few large
-   * canvases keeps the GPU batching them together.
+   * Bakes a one-tile piece once per distinct look, at 2× so it stays sharp
+   * under the camera's zoom, and places it on the grid.
    */
   private placePiece(piece: Piece, col: number, row: number): void {
-    setFrame(col, row);
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const u of [-0.3, 1.3]) {
-      for (const v of [-0.3, 1.3]) {
-        for (const z of [0, piece.height + 8]) {
-          const p = pt(u, v, z);
-          minX = Math.min(minX, p.x);
-          minY = Math.min(minY, p.y);
-          maxX = Math.max(maxX, p.x);
-          maxY = Math.max(maxY, p.y);
-        }
-      }
+    const pad = 14;
+    const width = 64 + pad * 2;
+    const height = piece.height + 32 + pad * 2;
+    const originX = 32 + pad;
+    const originY = piece.height + 16 + pad;
+
+    const key = `piece:${piece.key}`;
+    if (!this.textures.exists(key)) {
+      const texture = this.textures.createCanvas(key, width * PIECE_RES, height * PIECE_RES);
+      if (!texture) return;
+      const ctx = texture.getContext();
+      ctx.scale(PIECE_RES, PIECE_RES);
+      ctx.translate(originX, originY);
+      piece.draw(ctx);
+      texture.refresh();
     }
-    const pad = 4;
-    const width = Math.ceil(maxX - minX + pad * 2);
-    const height = Math.ceil(maxY - minY + pad * 2);
-    const originX = pad - minX;
-    const originY = pad - minY;
 
-    const slot = this.allocate(width * PIECE_RES, height * PIECE_RES);
-    const ctx = slot.texture.getContext();
-    ctx.save();
-    ctx.setTransform(PIECE_RES, 0, 0, PIECE_RES, slot.x, slot.y);
-    ctx.beginPath();
-    ctx.rect(0, 0, width, height);
-    ctx.clip();
-    ctx.translate(originX, originY);
-    piece.draw(ctx);
-    ctx.restore();
-
-    const frame = `p${this.pieceCount}`;
-    this.pieceCount += 1;
-    slot.texture.add(frame, 0, slot.x, slot.y, width * PIECE_RES, height * PIECE_RES);
-
-    const at = project(col + 0.5, row + 0.5);
+    const at = tileCenter(col, row);
     this.add
-      .image(at.x, at.y, slot.texture.key, frame)
+      .image(at.x, at.y, key)
       .setOrigin(originX / width, originY / height)
       .setScale(1 / PIECE_RES)
-      .setDepth(pieceDepth(col, row));
-  }
-
-  /** Shelf-packs a rectangle into the current atlas, starting a new one when full. */
-  private allocate(w: number, h: number): { texture: Phaser.Textures.CanvasTexture; x: number; y: number } {
-    const cursor = this.atlasCursor;
-    if (cursor.x + w > ATLAS_SIZE) {
-      cursor.x = 0;
-      cursor.y += cursor.rowHeight + 1;
-      cursor.rowHeight = 0;
-    }
-    let texture = this.atlases[this.atlases.length - 1];
-    if (!texture || cursor.y + h > ATLAS_SIZE) {
-      const key = `office-atlas-${this.atlases.length}`;
-      if (this.textures.exists(key)) this.textures.remove(key);
-      texture = this.textures.createCanvas(key, ATLAS_SIZE, ATLAS_SIZE)!;
-      this.atlases.push(texture);
-      cursor.x = 0;
-      cursor.y = 0;
-      cursor.rowHeight = 0;
-    }
-    const slot = { texture, x: cursor.x, y: cursor.y };
-    cursor.x += w + 1;
-    cursor.rowHeight = Math.max(cursor.rowHeight, h);
-    return slot;
+      .setDepth(depthAt(col + 0.5, row + 0.5));
   }
 
   // ------------------------------------------------------------------- walls
@@ -638,10 +539,10 @@ export class OfficeScene extends Phaser.Scene {
     const kindAt = (col: number, row: number): WallKind | null => {
       if (col < 0 || row < 0 || col >= GRID_WIDTH || row >= GRID_HEIGHT) return null;
       if (!walls[row][col]) return null;
-      // The building's north, west and east walls frame the picture: tall and
-      // windowed. Its south wall is between the camera and the room, so low.
-      if (row === 0 || col === 0 || col === GRID_WIDTH - 1) return 'back';
-      if (row === GRID_HEIGHT - 1) return 'low';
+      // The building's north and west walls are the backdrop: tall, windowed.
+      if (row === 0 || col === 0) return 'back';
+      // Its south and east walls face the camera, so they stay low.
+      if (row === GRID_HEIGHT - 1 || col === GRID_WIDTH - 1) return 'low';
       const bordersGlass = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) =>
         this.roomAtTile(col + dx, row + dy)?.glass,
       );
@@ -661,15 +562,8 @@ export class OfficeScene extends Phaser.Scene {
         const faces = {
           south: heightAt(col, row + 1) < own,
           east: heightAt(col + 1, row) < own,
-          west: heightAt(col - 1, row) < own,
         };
-        const style =
-          kind === 'back'
-            ? {
-                ...this.backWallStyle(col, row),
-                edge: { north: row === 0, west: col === 0, east: col === GRID_WIDTH - 1 },
-              }
-            : {};
+        const style = kind === 'back' ? this.backWallStyle(col, row) : {};
         this.placePiece(wallPiece(kind, faces, (col * 3 + row * 5) % 8, style), col, row);
       }
     }
@@ -869,8 +763,8 @@ export class OfficeScene extends Phaser.Scene {
    */
   private placeRoomSigns(): void {
     for (const room of ROOMS) {
-      const anchor = project(room.x + room.w / 2, room.y + 0.2, room.y <= 1 ? 104 : 62);
-      const lift = 0;
+      const anchor = toScreen(room.x + Math.min(2.2, room.w / 2), room.y + 0.2);
+      const lift = room.y <= 1 ? 92 : 58;
       const container = this.add.container(anchor.x, anchor.y - lift).setDepth(DEPTH_SIGNS);
 
       const name = this.add.text(30, 7, room.name, {
@@ -958,11 +852,10 @@ export class OfficeScene extends Phaser.Scene {
 
   private createNpcs(): void {
     NPCS.forEach((npc, index) => {
-      const at = project(npc.x + 0.5, npc.y + 0.5);
-      const scale = scaleAt(npc.x + 0.5, npc.y + 0.5) / PIECE_RES;
+      const at = tileCenter(npc.x, npc.y);
       const container = this.add
         .container(at.x, at.y)
-        .setDepth(depthAt(npc.y + 0.5));
+        .setDepth(depthAt(npc.x + 0.5, npc.y + 0.5));
 
       // A soft ring on the floor marks someone you can talk to.
       const ring = this.add.ellipse(0, 0, 46, 22, npc.color, 0.18);
@@ -978,7 +871,6 @@ export class OfficeScene extends Phaser.Scene {
       });
 
       const body = this.personImage(this.personTexture(npc.key, this.lookFor(npc, index), 'down', 0));
-      body.setScale(scale);
 
       const name = this.add
         .text(0, 8, npc.name, {
@@ -996,7 +888,7 @@ export class OfficeScene extends Phaser.Scene {
       // A small idle bob keeps the office from feeling like a static diagram.
       this.tweens.add({
         targets: body,
-        scaleY: { from: scale, to: scale * 1.02 },
+        scaleY: { from: 1 / PIECE_RES, to: 1.02 / PIECE_RES },
         duration: 1400 + index * 170,
         yoyo: true,
         repeat: -1,
@@ -1015,6 +907,16 @@ export class OfficeScene extends Phaser.Scene {
 
     // The tile the player stands on glows, as in the reference office.
     this.tileGlow = this.add.graphics().setDepth(DEPTH_TILE_GLOW);
+    const tile = [
+      { x: 0, y: -16 },
+      { x: 32, y: 0 },
+      { x: 0, y: 16 },
+      { x: -32, y: 0 },
+    ];
+    this.tileGlow.fillStyle(PALETTE.tileGlow, 0.22);
+    this.tileGlow.fillPoints(tile, true);
+    this.tileGlow.lineStyle(2, PALETTE.tileGlow, 0.95);
+    this.tileGlow.strokePoints(tile, true);
     this.tweens.add({
       targets: this.tileGlow,
       alpha: { from: 1, to: 0.55 },
@@ -1121,9 +1023,8 @@ export class OfficeScene extends Phaser.Scene {
       g.strokeRoundedRect(0.5, 0.5, width - 1, height - 1, 8);
       this.speech.setSize(width, height);
     }
-    const at = project(npc.x + 0.5, npc.y + 0.5);
-    const lift = 60 * scaleAt(npc.x + 0.5, npc.y + 0.5) + 52;
-    this.speech.setPosition(Math.round(at.x - this.speech.width / 2), Math.round(at.y - lift));
+    const at = tileCenter(npc.x, npc.y);
+    this.speech.setPosition(Math.round(at.x - this.speech.width / 2), Math.round(at.y - 104));
     this.speech.setVisible(true);
   }
 
@@ -1135,7 +1036,11 @@ export class OfficeScene extends Phaser.Scene {
     this.updateProximity();
   }
 
-  /** The camera looks north, so the keys walk straight along the grid. */
+  /**
+   * Keys move the player relative to the *screen*, not the grid: "up" walks
+   * towards the back of the office. On the grid that is a diagonal, so a pair
+   * of keys (up + right) is what walks straight along a corridor.
+   */
   private handleMovement(delta: number): void {
     const body = this.mover.body;
     const left = this.cursors?.left.isDown || this.keys?.A.isDown;
@@ -1145,10 +1050,10 @@ export class OfficeScene extends Phaser.Scene {
 
     let vx = 0;
     let vy = 0;
-    if (left) vx -= 1;
-    if (right) vx += 1;
-    if (up) vy -= 1;
-    if (down) vy += 1;
+    if (up) { vx -= 1; vy -= 1; }
+    if (down) { vx += 1; vy += 1; }
+    if (left) { vx -= 1; vy += 1; }
+    if (right) { vx += 1; vy -= 1; }
 
     const length = Math.hypot(vx, vy);
     if (length > 0) {
@@ -1175,27 +1080,15 @@ export class OfficeScene extends Phaser.Scene {
   private syncAvatar(): void {
     const tileX = this.mover.x / TILE;
     const tileY = this.mover.y / TILE;
-    const at = project(tileX, tileY);
-    const scale = scaleAt(tileX, tileY);
+    const at = toScreen(tileX, tileY);
     this.avatar.setPosition(at.x, at.y);
-    this.avatar.setDepth(depthAt(tileY));
-    this.avatarBody.setScale(scale / PIECE_RES);
+    this.avatar.setDepth(depthAt(tileX, tileY));
 
-    // The glowing tile follows the player, drawn in the floor's perspective.
-    const col = Math.floor(tileX);
-    const row = Math.floor(tileY);
-    if (col !== this.glowTile.x || row !== this.glowTile.y) {
-      this.glowTile = { x: col, y: row };
-      const tile = [project(col, row), project(col + 1, row), project(col + 1, row + 1), project(col, row + 1)];
-      this.tileGlow.clear();
-      this.tileGlow.fillStyle(PALETTE.tileGlow, 0.22);
-      this.tileGlow.fillPoints(tile, true);
-      this.tileGlow.lineStyle(2, PALETTE.tileGlow, 0.95);
-      this.tileGlow.strokePoints(tile, true);
-    }
+    const glow = tileCenter(Math.floor(tileX), Math.floor(tileY));
+    this.tileGlow.setPosition(glow.x, glow.y);
 
     if (this.keycap.visible && !this.nearbyNpc) {
-      this.keycap.setPosition(at.x, at.y - 56 * scale - 14);
+      this.keycap.setPosition(at.x, at.y - 74);
     }
   }
 

@@ -306,7 +306,7 @@ export const PROPS: OfficeProp[] = [
   { kind: 'table', x: 3, y: 14, w: 4, h: 3, solid: true },
   { kind: 'chair', x: 2, y: 15 },
   { kind: 'chair', x: 7, y: 15, occupant: 0x8c5e3c },
-  { kind: 'screen', x: 7, y: 12, w: 2, h: 1, lines: ['Market Map', 'Share by channel'] },
+  { kind: 'screen', x: 8, y: 12, w: 1, h: 2, lines: ['Market Map', 'Share by channel'] },
   { kind: 'plant', x: 1, y: 18, solid: true },
 
   { kind: 'bookcase', x: 1, y: 12, solid: true },
@@ -342,18 +342,18 @@ export const PROPS: OfficeProp[] = [
   { kind: 'table', x: 35, y: 16, w: 3, h: 2, solid: true },
   { kind: 'chair', x: 34, y: 16 },
   { kind: 'chair', x: 38, y: 16 },
-  { kind: 'screen', x: 37, y: 12, w: 2, h: 1, lines: ['BITE × QuickMart', 'Protein drink pitch'] },
+  { kind: 'screen', x: 34, y: 12, w: 1, h: 2, lines: ['BITE × QuickMart', 'Protein drink pitch'] },
 
-  { kind: 'plant', x: 38, y: 18, solid: true },
+  { kind: 'plant', x: 38, y: 12, solid: true },
 
   // Meeting Room B
   { kind: 'rug', x: 40, y: 13, w: 5, h: 5 },
   { kind: 'table', x: 41, y: 16, w: 3, h: 2, solid: true },
   { kind: 'chair', x: 40, y: 16 },
   { kind: 'chair', x: 44, y: 16 },
-  { kind: 'screen', x: 43, y: 12, w: 2, h: 1, lines: ['Weekly Review', 'Pipeline and targets'] },
+  { kind: 'screen', x: 40, y: 12, w: 1, h: 2 },
 
-  { kind: 'plant', x: 44, y: 18, solid: true },
+  { kind: 'plant', x: 44, y: 12, solid: true },
 
   // My Desk
   { kind: 'rug', x: 3, y: 24, w: 5, h: 3 },

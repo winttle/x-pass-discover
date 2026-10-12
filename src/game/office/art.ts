@@ -1,5 +1,5 @@
 import type * as Phaser from 'phaser';
-import { CAMERA_X, project } from './view';
+import { HALF_H, HALF_W } from './iso';
 import { PALETTE } from './theme';
 
 /**
@@ -8,16 +8,15 @@ import { PALETTE } from './theme';
  * Every drawing here works in the local frame of ONE floor tile: `(u, v)` are
  * the tile's own coordinates from 0 to 1 along tile-space x and y, `z` is
  * height in screen pixels, and the tile's centre on the floor is the origin.
- * The scene sets the tile with `setFrame`, bakes the piece into an atlas and
- * places it there — so a desk two tiles long is two pieces, which is what lets
- * the painter's algorithm in `view.ts` sort the player correctly against it.
- * `pt` is the camera's exact perspective, so pieces meet without seams.
+ * The scene bakes each piece into a small canvas texture (at 2× for crispness)
+ * and places it by projecting the tile — so a desk two tiles long is two
+ * pieces, which is what lets the painter's algorithm in `iso.ts` sort the
+ * player correctly against it.
  *
- * The trick that keeps this readable is *face space*: `onSouth`, `onEast`,
- * `onWest` and `onTop` skew the canvas so that a side or top of a box can be
- * painted as an ordinary flat rectangle — wood grain, a window, a line of text
- * — and lands in perspective. Box faces are then clipped to their exact
- * projected outline.
+ * The trick that keeps this readable is *face space*: `onSouth`, `onEast` and
+ * `onTop` skew the canvas so that a side or top of a box can be painted as an
+ * ordinary flat rectangle — wood grain, a window, a line of text — and lands
+ * in perspective.
  */
 
 export type Ctx = CanvasRenderingContext2D;
@@ -71,98 +70,35 @@ export function rng(seed: number): () => number {
   };
 }
 
-let frame = { col: 0, row: 0, ox: 0, oy: 0 };
-
-/** Points every drawing that follows at tile (col, row); its floor centre becomes the origin. */
-export function setFrame(col: number, row: number): void {
-  const o = project(col + 0.5, row + 0.5, 0);
-  frame = { col, row, ox: o.x, oy: o.y };
-}
-
-/** A point in the current tile's local frame, projected and made relative to its centre. */
-export const pt = (u: number, v: number, z: number): Pt => {
-  const p = project(frame.col + u, frame.row + v, z);
-  return { x: p.x - frame.ox, y: p.y - frame.oy };
-};
-
-/** Whether the camera can see a face at u that looks east (+x), or west. */
-export const seesEast = (u: number) => CAMERA_X > frame.col + u;
-export const seesWest = (u: number) => CAMERA_X < frame.col + u;
-
-function skew(ctx: Ctx, o: Pt, a: Pt, b: Pt, ax: number, by: number): void {
-  ctx.transform((a.x - o.x) / ax, (a.y - o.y) / ax, (b.x - o.x) / by, (b.y - o.y) / by, o.x, o.y);
-}
+export const pt = (u: number, v: number, z: number): Pt => ({
+  x: (u - v) * HALF_W,
+  y: (u + v - 1) * HALF_H - z,
+});
 
 /** Paints on the plane v = const. X = u·32 runs left→right, Y = −z. */
-export function onSouth(ctx: Ctx, v: number, draw: () => void, reach = 40): void {
+export function onSouth(ctx: Ctx, v: number, draw: () => void): void {
+  const o = pt(0, v, 0);
   ctx.save();
-  skew(ctx, pt(0, v, 0), pt(1, v, 0), pt(0, v, reach), T, -reach);
+  ctx.transform(1, 0.5, 0, 1, o.x, o.y);
   draw();
   ctx.restore();
 }
 
-/** Paints on the plane u = const, seen from the east. X = (1 − v)·32, Y = −z. */
-export function onEast(ctx: Ctx, u: number, draw: () => void, reach = 40): void {
+/** Paints on the plane u = const. X = (1 − v)·32 runs left→right, Y = −z. */
+export function onEast(ctx: Ctx, u: number, draw: () => void): void {
+  const o = pt(u, 1, 0);
   ctx.save();
-  skew(ctx, pt(u, 1, 0), pt(u, 0, 0), pt(u, 1, reach), T, -reach);
-  draw();
-  ctx.restore();
-}
-
-/** Paints on the plane u = const, seen from the west. X = v·32, Y = −z. */
-export function onWest(ctx: Ctx, u: number, draw: () => void, reach = 40): void {
-  ctx.save();
-  skew(ctx, pt(u, 0, 0), pt(u, 1, 0), pt(u, 0, reach), T, -reach);
+  ctx.transform(1, -0.5, 0, 1, o.x, o.y);
   draw();
   ctx.restore();
 }
 
 /** Paints flat at height z. X = u·32, Y = v·32. */
 export function onTop(ctx: Ctx, z: number, draw: () => void): void {
+  const o = pt(0, 0, z);
   ctx.save();
-  skew(ctx, pt(0, 0, z), pt(1, 0, z), pt(0, 1, z), T, T);
+  ctx.transform(1, 0.5, -1, 0.5, o.x, o.y);
   draw();
-  ctx.restore();
-}
-
-/** Clips to a projected outline, pushed out a hair so neighbours overlap. */
-function clipTo(ctx: Ctx, quad: Pt[]): void {
-  const cx = quad.reduce((sum, p) => sum + p.x, 0) / quad.length;
-  const cy = quad.reduce((sum, p) => sum + p.y, 0) / quad.length;
-  ctx.beginPath();
-  quad.forEach((p, i) => {
-    const dx = p.x - cx;
-    const dy = p.y - cy;
-    const len = Math.hypot(dx, dy) || 1;
-    const x = p.x + (dx / len) * 0.35;
-    const y = p.y + (dy / len) * 0.35;
-    if (i) ctx.lineTo(x, y);
-    else ctx.moveTo(x, y);
-  });
-  ctx.closePath();
-  ctx.clip();
-}
-
-/** Face-space painting clipped to a whole tile face from z0 to z1. */
-function onFace(
-  ctx: Ctx,
-  side: 'south' | 'east' | 'west',
-  plane: number,
-  z0: number,
-  z1: number,
-  draw: () => void,
-): void {
-  ctx.save();
-  if (side === 'south') {
-    clipTo(ctx, [pt(0, plane, z1), pt(1, plane, z1), pt(1, plane, z0), pt(0, plane, z0)]);
-    onSouth(ctx, plane, draw, z1);
-  } else if (side === 'east') {
-    clipTo(ctx, [pt(plane, 1, z1), pt(plane, 0, z1), pt(plane, 0, z0), pt(plane, 1, z0)]);
-    onEast(ctx, plane, draw, z1);
-  } else {
-    clipTo(ctx, [pt(plane, 0, z1), pt(plane, 1, z1), pt(plane, 1, z0), pt(plane, 0, z0)]);
-    onWest(ctx, plane, draw, z1);
-  }
   ctx.restore();
 }
 
@@ -179,16 +115,13 @@ function paintRect(
   h: number,
   paint: Paint,
   k: number,
-  clip = true,
 ): void {
   if (w <= 0 || h <= 0) return;
   ctx.save();
   ctx.translate(x, y);
-  if (clip) {
-    ctx.beginPath();
-    ctx.rect(0, 0, w, h);
-    ctx.clip();
-  }
+  ctx.beginPath();
+  ctx.rect(0, 0, w, h);
+  ctx.clip();
   if (typeof paint === 'number') {
     const grad = ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, rgb(shade(paint, k * 1.04)));
@@ -208,66 +141,49 @@ function paintRect(
 type Box = { u0: number; u1: number; v0: number; v1: number; z0: number; z1: number };
 
 /**
- * A lit box. The camera sees its south face, its top, and whichever of its
- * east or west sides faces the middle of the picture; a piece in the middle of
- * a long desk skips the sides its neighbours cover. Each face is clipped to
- * its exact projected outline and painted a little past it, so faces and
- * pieces meet cleanly. Front top edges catch the light.
+ * A lit box. The south face (lower left on screen) and east face (lower right)
+ * are the only sides the camera can see; a piece in the middle of a long desk
+ * skips both, because its neighbours cover them. Front top edges catch the
+ * light, which is most of what makes a box read as solid.
  */
 function box(
   ctx: Ctx,
   b: Box,
   top: Paint,
   sides: Paint = top,
-  faces: { south?: boolean; east?: boolean; west?: boolean } = {},
+  faces: { south?: boolean; east?: boolean } = {},
 ): void {
   const south = faces.south !== false;
-  const east = faces.east !== false && seesEast(b.u1);
-  const west = faces.west !== false && seesWest(b.u0);
-  const height = Math.max(1, b.z1 - b.z0);
-  const reach = Math.max(1, b.z1);
-  if (east) {
-    ctx.save();
-    clipTo(ctx, [pt(b.u1, b.v1, b.z1), pt(b.u1, b.v0, b.z1), pt(b.u1, b.v0, b.z0), pt(b.u1, b.v1, b.z0)]);
-    onEast(ctx, b.u1, () =>
-      paintRect(ctx, (1 - b.v1) * T - 1, -b.z1 - 1, (b.v1 - b.v0) * T + 2, height + 2, sides, 0.7, false),
-    reach);
-    ctx.restore();
-  }
-  if (west) {
-    ctx.save();
-    clipTo(ctx, [pt(b.u0, b.v0, b.z1), pt(b.u0, b.v1, b.z1), pt(b.u0, b.v1, b.z0), pt(b.u0, b.v0, b.z0)]);
-    onWest(ctx, b.u0, () =>
-      paintRect(ctx, b.v0 * T - 1, -b.z1 - 1, (b.v1 - b.v0) * T + 2, height + 2, sides, 0.78, false),
-    reach);
-    ctx.restore();
-  }
+  const east = faces.east !== false;
   if (south) {
-    ctx.save();
-    clipTo(ctx, [pt(b.u0, b.v1, b.z1), pt(b.u1, b.v1, b.z1), pt(b.u1, b.v1, b.z0), pt(b.u0, b.v1, b.z0)]);
     onSouth(ctx, b.v1, () =>
-      paintRect(ctx, b.u0 * T - 1, -b.z1 - 1, (b.u1 - b.u0) * T + 2, height + 2, sides, 0.88, false),
-    reach);
-    ctx.restore();
+      paintRect(ctx, b.u0 * T, -b.z1, (b.u1 - b.u0) * T, b.z1 - b.z0, sides, 0.86),
+    );
   }
-  ctx.save();
-  clipTo(ctx, [pt(b.u0, b.v0, b.z1), pt(b.u1, b.v0, b.z1), pt(b.u1, b.v1, b.z1), pt(b.u0, b.v1, b.z1)]);
+  if (east) {
+    onEast(ctx, b.u1, () =>
+      paintRect(ctx, (1 - b.v1) * T, -b.z1, (b.v1 - b.v0) * T, b.z1 - b.z0, sides, 0.7),
+    );
+  }
   onTop(ctx, b.z1, () =>
-    paintRect(ctx, b.u0 * T - 1, b.v0 * T - 1, (b.u1 - b.u0) * T + 2, (b.v1 - b.v0) * T + 2, top, 1, false),
+    paintRect(ctx, b.u0 * T, b.v0 * T, (b.u1 - b.u0) * T, (b.v1 - b.v0) * T, top, 1),
   );
-  ctx.restore();
-
   ctx.save();
   ctx.lineWidth = 0.7;
   ctx.strokeStyle = 'rgba(255,255,255,0.45)';
   ctx.beginPath();
-  const edge = (a: Pt, c: Pt) => {
+  if (south) {
+    const a = pt(b.u0, b.v1, b.z1);
+    const c = pt(b.u1, b.v1, b.z1);
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(c.x, c.y);
-  };
-  if (south) edge(pt(b.u0, b.v1, b.z1), pt(b.u1, b.v1, b.z1));
-  if (east) edge(pt(b.u1, b.v1, b.z1), pt(b.u1, b.v0, b.z1));
-  if (west) edge(pt(b.u0, b.v1, b.z1), pt(b.u0, b.v0, b.z1));
+  }
+  if (east) {
+    const a = pt(b.u1, b.v1, b.z1);
+    const c = pt(b.u1, b.v0, b.z1);
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(c.x, c.y);
+  }
   ctx.stroke();
   ctx.restore();
 }
@@ -552,17 +468,12 @@ function paintDecor(ctx: Ctx, decor: WallDecorSlice): void {
 
 export function wallPiece(
   kind: WallKind,
-  faces: { south: boolean; east: boolean; west: boolean },
+  faces: { south: boolean; east: boolean },
   variant: number,
-  opts: {
-    window?: boolean;
-    decor?: WallDecorSlice;
-    /** Which outer edges of the building this back-wall tile lies on. */
-    edge?: { north?: boolean; west?: boolean; east?: boolean };
-  } = {},
+  opts: { window?: boolean; decor?: WallDecorSlice } = {},
 ): Piece {
   const decorKey = opts.decor ? `${opts.decor.kind}${opts.decor.index}/${opts.decor.width}:${opts.decor.text?.join('|') ?? ''}` : '';
-  const key = `wall:${JSON.stringify(opts.edge ?? {})}:${kind}:${faces.south ? 's' : ''}${faces.east ? 'e' : ''}${faces.west ? 'w' : ''}:${variant}:${+!!opts.window}:${decorKey}`;
+  const key = `wall:${kind}:${faces.south ? 's' : ''}${faces.east ? 'e' : ''}:${variant}:${+!!opts.window}:${decorKey}`;
 
   if (kind === 'back') {
     const height = 120;
@@ -571,19 +482,7 @@ export function wallPiece(
       height: height + 4,
       draw: (ctx) => {
         const plaster = matte(PALETTE.backWall, variant);
-        // The outer wall is thin and stands on the building's inner edge; the
-        // rest of its tile is outside.
-        const edge = opts.edge ?? {};
-        const thick = 0.22;
-        const shell = {
-          u0: edge.west ? 1 - thick : 0,
-          u1: edge.east ? thick : 1,
-          v0: edge.north ? 1 - thick : 0,
-          v1: 1,
-          z0: 0,
-          z1: height,
-        };
-        box(ctx, shell, PALETTE.backWallCap, plaster, faces);
+        box(ctx, { u0: 0, u1: 1, v0: 0, v1: 1, z0: 0, z1: height }, PALETTE.backWallCap, plaster, faces);
         const finish = () => {
           // Skirting board and crown moulding.
           ctx.fillStyle = rgb(PALETTE.walnut);
@@ -597,14 +496,14 @@ export function wallPiece(
           if (opts.window) paintWindow(ctx, variant * 7 + 3);
           if (opts.decor) paintDecor(ctx, opts.decor);
         };
-        if (faces.south) onFace(ctx, 'south', 1, 0, height, finish);
-        const side = () => {
-          finish();
-          ctx.fillStyle = 'rgba(18,22,34,0.12)';
-          ctx.fillRect(0, -height, T, height);
-        };
-        if (faces.east && seesEast(shell.u1)) onFace(ctx, 'east', shell.u1, 0, height, side);
-        if (faces.west && seesWest(shell.u0)) onFace(ctx, 'west', shell.u0, 0, height, side);
+        if (faces.south) onSouth(ctx, 1, finish);
+        if (faces.east) {
+          onEast(ctx, 1, () => {
+            finish();
+            ctx.fillStyle = 'rgba(18,22,34,0.16)';
+            ctx.fillRect(0, -height, T, height);
+          });
+        }
       },
     };
   }
@@ -638,17 +537,15 @@ export function wallPiece(
           ctx.fillRect(0, -height, T, 2);
           ctx.fillRect(T - 1.5, -height, 1.5, height - 10);
         };
-        if (faces.south) onFace(ctx, 'south', 1, 0, height, pane);
-        if (faces.east && seesEast(1)) onFace(ctx, 'east', 1, 0, height, pane);
-        if (faces.west && seesWest(0)) onFace(ctx, 'west', 0, 0, height, pane);
+        if (faces.south) onSouth(ctx, 1, pane);
+        if (faces.east) onEast(ctx, 1, pane);
       },
     };
   }
 
-  // Interior walls are low cabinet dividers, as in an open-plan office:
-  // panelled doors on the sides that show, a pale laminate top, and along the
-  // run a planted trough, a pot or a row of books, so a divider reads as
-  // furniture rather than as a slab.
+  // Interior walls are low cabinet dividers, as in an open-plan office: a wood
+  // top, panelled doors on the sides that show, and the odd plant or row of
+  // books on top so a long run does not read as a slab.
   const height = 24;
   return {
     key,
@@ -669,47 +566,15 @@ export function wallPiece(
         c.fillStyle = sheen;
         c.fillRect(0, 0, w, h);
       };
-      box(ctx, { u0: 0, u1: 1, v0: 0, v1: 1, z0: 0, z1: height }, matte(PALETTE.partitionTop, variant), doors, faces);
+      box(ctx, { u0: 0, u1: 1, v0: 0, v1: 1, z0: 0, z1: height }, wood(PALETTE.partitionCap, variant * 13, 0, T), doors, faces);
 
-      if (variant % 3 === 0) {
-        planter(ctx, height, variant);
+      if (variant === 0) {
+        smallPlant(ctx, 0.5, 0.5, height);
       } else if (variant === 5) {
         books(ctx, 0.25, 0.75, 0.42, 0.62, height, variant);
-      } else if (variant === 2) {
-        smallPlant(ctx, 0.5, 0.5, height);
       }
     },
   };
-}
-
-/** A sunken trough of greenery along the top of a divider. */
-function planter(ctx: Ctx, z: number, seed: number): void {
-  onTop(ctx, z + 0.2, () => {
-    ctx.fillStyle = '#5b4636';
-    ctx.fillRect(0.1 * T, 0.12 * T, 0.8 * T, 0.76 * T);
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(0.1 * T, 0.12 * T, 0.8 * T, 0.1 * T);
-  });
-  const r = rng(seed * 101 + 7);
-  for (let i = 0; i < 16; i += 1) {
-    const u = 0.16 + r() * 0.68;
-    const v = 0.2 + r() * 0.6;
-    const base = pt(u, v, z);
-    const len = 5 + r() * 6;
-    const angle = -Math.PI / 2 + (r() - 0.5) * 2.2;
-    const tone = PALETTE.leaf[Math.floor(r() * 3)];
-    ctx.save();
-    ctx.translate(base.x, base.y);
-    ctx.rotate(angle);
-    const grad = ctx.createLinearGradient(0, -2, 0, 2);
-    grad.addColorStop(0, rgb(shade(tone, 1.2)));
-    grad.addColorStop(1, rgb(shade(tone, 0.75)));
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(len / 2, 0, len / 2, 2.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
 }
 
 function smallPlant(ctx: Ctx, u: number, v: number, z: number): void {
@@ -829,12 +694,12 @@ export function deskPiece(
       if (edges.e && edges.s) legs.push([s.u1 - 0.06, s.v1 - 0.06]);
       if (edges.e && edges.n) legs.push([s.u1 - 0.06, s.v0 + 0.06]);
       if (edges.w && edges.n) legs.push([s.u0 + 0.06, s.v0 + 0.06]);
-      box(ctx, { u0: s.u0 + 0.04, u1: s.u1 - 0.04, v0: s.v0 + 0.05, v1: s.v0 + 0.1, z0: 4, z1: 16 }, 0x8f96a3, metal(0x8f96a3), { south: true, east: edges.e, west: edges.w });
+      box(ctx, { u0: s.u0 + 0.04, u1: s.u1 - 0.04, v0: s.v0 + 0.05, v1: s.v0 + 0.1, z0: 4, z1: 16 }, 0x8f96a3, metal(0x8f96a3), { south: true, east: edges.e });
       for (const [lu, lv] of legs) {
         box(ctx, { u0: lu - 0.03, u1: lu + 0.03, v0: lv - 0.03, v1: lv + 0.03, z0: 0, z1: 16 }, 0x6b7280, metal(0x8a919c));
       }
       const top = wood(opts.wood, opts.seed, opts.along.index * T, opts.along.length * T);
-      box(ctx, { ...s, z0: 16, z1: 19 }, top, shade(opts.wood, 0.85), { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, z0: 16, z1: 19 }, top, shade(opts.wood, 0.85), { south: edges.s, east: edges.e });
 
       if (opts.accent !== undefined) {
         onTop(ctx, 19.2, () => {
@@ -887,7 +752,6 @@ export function tablePiece(
       box(ctx, { ...span(edges, 0.08), z0: z, z1: z + 3 }, surface, PALETTE.wood, {
         south: edges.s,
         east: edges.e,
-        west: edges.w,
       });
       if (opts.laptop) {
         box(ctx, { u0: 0.3, u1: 0.7, v0: 0.42, v1: 0.7, z0: z + 3, z1: z + 4 }, 0xc9ced8, metal(0xb0b6c2));
@@ -919,7 +783,7 @@ export function counterPiece(edges: Edges, along: Along): Piece {
         c.fillStyle = 'rgba(255,255,255,0.25)';
         c.fillRect(0, 6, w, 1.5);
       };
-      box(ctx, { ...s, z0: 0, z1: 30 }, matte(PALETTE.counterTop, 5), front, { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, z0: 0, z1: 30 }, matte(PALETTE.counterTop, 5), front, { south: edges.s, east: edges.e });
       // Backlit brand strip and the BITE name across the front.
       if (edges.s) {
         onSouth(ctx, s.v1, () => {
@@ -989,7 +853,7 @@ export function shelfPiece(edges: Edges, seed: number, along: Along): Piece {
         if (edges.e) c.fillRect(w - 3, 0, 3, h);
         c.fillRect(0, 0, w, 4);
       };
-      box(ctx, { ...s, z0: 0, z1: height }, wood(shade(PALETTE.shelf, 1.05), seed), front, { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, z0: 0, z1: height }, wood(shade(PALETTE.shelf, 1.05), seed), front, { south: edges.s, east: edges.e });
     },
   };
 }
@@ -1042,9 +906,9 @@ export function sofaPiece(edges: Edges, cushion: boolean): Piece {
           c.fillRect(r() * w, r() * h, 0.7, 0.7);
         }
       };
-      box(ctx, { ...s, v0: 0.06, v1: 0.3, z0: 0, z1: 30 }, fabric, fabric, { south: false, east: edges.e, west: edges.w });
-      box(ctx, { ...s, v0: 0.3, z0: 0, z1: 4 }, 0x5b4636, 0x4a3a2c, { south: edges.s, east: edges.e, west: edges.w });
-      box(ctx, { ...s, v0: 0.3, z0: 4, z1: 14 }, fabric, fabric, { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, v0: 0.06, v1: 0.3, z0: 0, z1: 30 }, fabric, fabric, { south: false, east: edges.e });
+      box(ctx, { ...s, v0: 0.3, z0: 0, z1: 4 }, 0x5b4636, 0x4a3a2c, { south: edges.s, east: edges.e });
+      box(ctx, { ...s, v0: 0.3, z0: 4, z1: 14 }, fabric, fabric, { south: edges.s, east: edges.e });
       // Seat cushion seam.
       onTop(ctx, 14.1, () => {
         ctx.fillStyle = 'rgba(0,0,0,0.1)';
@@ -1133,9 +997,8 @@ export function panelPiece(
       const z1 = opts.screen ? 56 : 62;
       const paint = () => {
         ctx.save();
-        // Seen from the east, face space runs against y, so mirror the index.
-        const fromEast = !along && seesEast(0.25);
-        const index = fromEast ? opts.along.length - 1 - opts.along.index : opts.along.index;
+        // Face space runs the other way along y, so mirror the index there.
+        const index = along ? opts.along.index : opts.along.length - 1 - opts.along.index;
         ctx.beginPath();
         ctx.rect(-1, -80, T + 2, 80);
         ctx.clip();
@@ -1210,9 +1073,8 @@ export function panelPiece(
         }
         ctx.restore();
       };
-      if (along) onSouth(ctx, 0.25, paint, 60);
-      else if (seesEast(0.25)) onEast(ctx, 0.25, paint, 60);
-      else onWest(ctx, 0.25, paint, 60);
+      if (along) onSouth(ctx, 0.25, paint);
+      else onEast(ctx, 0.25, paint);
     },
   };
 }
@@ -1246,7 +1108,7 @@ export function bookcasePiece(edges: Edges, seed: number, along: Along): Piece {
           }
         }
       };
-      box(ctx, { ...s, z0: 0, z1: 76 }, wood(PALETTE.walnut, seed), front, { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, z0: 0, z1: 76 }, wood(PALETTE.walnut, seed), front, { south: edges.s, east: edges.e });
     },
   };
 }
@@ -1282,7 +1144,7 @@ export function coffeePiece(edges: Edges, along: Along): Piece {
     height: 70,
     draw: (ctx) => {
       const s = span(edges, 0.05);
-      box(ctx, { ...s, z0: 0, z1: 26 }, wood(PALETTE.wood, 21, along.index * T, along.length * T), matte(0x2f3442, 4), { south: edges.s, east: edges.e, west: edges.w });
+      box(ctx, { ...s, z0: 0, z1: 26 }, wood(PALETTE.wood, 21, along.index * T, along.length * T), matte(0x2f3442, 4), { south: edges.s, east: edges.e });
       if (along.index === 0) {
         // Espresso machine.
         box(ctx, { u0: 0.18, u1: 0.78, v0: 0.2, v1: 0.6, z0: 26, z1: 54 }, metal(0xb6bcc6), metal(0xd1d5db));
@@ -1656,7 +1518,7 @@ export function chairPiece(
       }[facing];
       // A backrest on the camera's side covers the sitter; one on the far side
       // is covered by them.
-      const backInFront = facing === 'n';
+      const backInFront = facing === 'n' || facing === 'w';
       const mesh: Paint = (c, w, h) => {
         c.fillStyle = '#262b35';
         c.fillRect(0, 0, w, h);
@@ -1674,12 +1536,10 @@ export function chairPiece(
       if (!backInFront) box(ctx, backrest, 0x3a404c, mesh);
       if (occupant) {
         const seat = pt(0.5, 0.5, 15);
-        const k = (pt(0.5, 0.5, 0).y - pt(0.5, 0.5, 36).y) / 36;
         ctx.save();
         ctx.translate(seat.x, seat.y);
-        ctx.scale(k, k);
-        const view: View = facing === 'n' ? 'back' : facing === 's' ? 'front' : 'side';
-        if (facing === 'w') ctx.scale(-1, 1);
+        const view: View = facing === 'n' || facing === 'w' ? 'back' : 'side';
+        if (facing === 's' || facing === 'w') ctx.scale(-1, 1);
         drawPerson(ctx, occupant.look, view, 0, 'sit');
         ctx.restore();
       }
