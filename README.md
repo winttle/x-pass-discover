@@ -30,8 +30,9 @@ This build is the **common platform plus the Sales vertical slice**:
   rules, configurable task forms, answer revisions, submissions snapshots,
   AI conversations with server-side hidden-information control, and behavior
   event logging.
-- A 2.5D (isometric) BITE office in Phaser — windowed back walls, glass
-  meeting rooms, cabinet dividers, procedural furniture and seated colleagues,
+- A 2.5D (isometric) BITE office in Phaser — windowed back walls with a city
+  view, glass meeting rooms, wood/carpet/marble floors with daylight and soft
+  shadows, detailed furniture and seated colleagues, all painted with Canvas 2D,
   all generated from a map definition with no art assets — wired to React
   through an explicit event bridge. The game logic still runs on the flat tile
   grid; only drawing is projected.
@@ -227,7 +228,7 @@ src/
     map.ts                office layout as data (rooms, doors, furniture, NPCs)
     theme.ts              the office palette and floor materials
     iso.ts                isometric projection and draw-order (depth) rule
-    art.ts                procedural 2.5D pieces: walls, furniture, people
+    art.ts                2.5D pieces painted with Canvas 2D: walls, furniture, people
     office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
