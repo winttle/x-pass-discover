@@ -232,6 +232,7 @@ src/
     office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
+    office/office-intro.tsx  first-visit lobby intro (lobby-art.ts paints the pixel-art lobby)
   app/                    routes (student, admin, api)
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
@@ -336,6 +337,7 @@ Things worth trying, because they are where the design decisions show:
 | **AI Buyer Meeting** | Ask "tell me about QuickMart" → you get nothing. Ask "how many facings would a new protein drink get?" → the buyer gives you the number and the discovery meter ticks up. |
 | **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
 | **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
+| **The lobby intro** | The first visit to `/office` opens in the BITE lobby with four short cards (START → enter the office). Replay it from the bar under the office. |
 | **The 2.5D office** | WASD/arrows move relative to the screen (up = towards the back wall; up + right walks straight along a corridor). Walk into the Data Room or up to an NPC, press `E`. |
 | **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
 | **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |

@@ -30,7 +30,8 @@ test('the office boots and its prompt follows the player', async ({ page }) => {
   await signUpAsNewStudent(page, 'Office Visitor');
 
   await page.goto('/office');
-  const canvas = page.locator('canvas');
+  // The game's canvas — the lobby intro paints into a canvas of its own.
+  const canvas = page.getByTestId('office-canvas').locator('canvas');
   await expect(canvas).toBeVisible({ timeout: 30_000 });
 
   // Phaser has to have produced a real drawing surface, not a zero-size one.
@@ -40,6 +41,14 @@ test('the office boots and its prompt follows the player', async ({ page }) => {
   }));
   expect(size.width).toBeGreaterThan(0);
   expect(size.height).toBeGreaterThan(0);
+
+  // A first visit opens on the lobby intro; step through it into the office.
+  const intro = page.getByTestId('office-intro');
+  await expect(intro).toBeVisible();
+  for (let step = 0; step < 4; step += 1) {
+    await page.getByTestId('office-intro-next').click();
+  }
+  await expect(intro).toHaveCount(0);
 
   const prompt = page.getByTestId('office-prompt');
   // The player spawns just outside the reception desk's interaction radius.

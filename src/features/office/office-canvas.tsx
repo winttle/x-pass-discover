@@ -85,6 +85,7 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
   return (
     <div
       ref={containerRef}
+      data-testid="office-canvas"
       className="h-[clamp(420px,calc(100dvh-230px),760px)] w-full overflow-hidden bg-canvas"
     />
   );

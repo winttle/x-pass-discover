@@ -12,6 +12,7 @@ import type { OfficeNpc } from '@/game/office/map';
 import { logClientEvent } from '@/lib/client-api';
 import type { SessionView } from '@/types/session-view';
 import { OfficeCanvas } from './office-canvas';
+import { OfficeIntro, hasSeenIntro, markIntroSeen } from './office-intro';
 
 type Overlay =
   | { kind: 'none' }
@@ -42,6 +43,20 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
   const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' });
   const viewRef = useRef(view);
   viewRef.current = view;
+  // The lobby intro shows once per bootcamp. Decided after mount, since only
+  // the browser knows whether it has been seen.
+  const [introOpen, setIntroOpen] = useState(false);
+  const introOpenRef = useRef(introOpen);
+  introOpenRef.current = introOpen;
+
+  useEffect(() => {
+    if (!hasSeenIntro(initialView)) setIntroOpen(true);
+  }, [initialView]);
+
+  function closeIntro() {
+    markIntroSeen(viewRef.current);
+    setIntroOpen(false);
+  }
 
   useEffect(() => {
     const unsubscribe = bridge.subscribe((event: OfficeEvent) => {
@@ -76,10 +91,12 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
         }
 
         case 'interact_npc':
-          handleNpc(event.npc);
+          // Keys still reach the game behind the intro; it must not act on them.
+          if (!introOpenRef.current) handleNpc(event.npc);
           break;
 
         case 'interact_zone': {
+          if (introOpenRef.current) break;
           const action = event.room.action;
           if (action.kind === 'resources') setOverlay({ kind: 'resources' });
           else if (action.kind === 'notifications') setOverlay({ kind: 'notifications' });
@@ -260,6 +277,8 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
             </div>
           ) : null}
 
+          {introOpen ? <OfficeIntro view={view} onDone={closeIntro} /> : null}
+
           {!booted ? (
             <div className="absolute inset-0 grid place-items-center bg-surface/95">
               <div className="flex items-center gap-2 text-xs text-muted">
@@ -279,7 +298,14 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
             <kbd className="rounded border border-line bg-sunken px-1 py-px font-mono text-[10px] text-strong">
               E
             </kbd>{' '}
-            when prompted.
+            when prompted.{' '}
+            <button
+              type="button"
+              onClick={() => setIntroOpen(true)}
+              className="font-medium text-brand-400 underline-offset-4 hover:underline"
+            >
+              Replay intro
+            </button>
           </p>
           {view ? (
             <Link
