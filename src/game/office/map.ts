@@ -6,6 +6,8 @@
  * which overlay an interaction opens. No business state lives here.
  */
 
+import type { FloorMaterial } from './theme';
+
 export const TILE = 32;
 export const GRID_WIDTH = 46;
 export const GRID_HEIGHT = 30;
@@ -27,7 +29,12 @@ export type OfficeRoom = {
   y: number;
   w: number;
   h: number;
+  /** Minimap fill. */
   color: number;
+  /** What the 2.5D office lays on this room's floor. */
+  floor: FloorMaterial;
+  /** Glass partitions instead of solid ones, so the room stays visible. */
+  glass?: boolean;
   action: ZoneAction;
   /** Tiles carved out of the surrounding wall so the room is reachable. */
   doors: Array<{ x: number; y: number }>;
@@ -67,6 +74,11 @@ export type OfficeProp = {
   monitor?: boolean;
   /** Overrides the kind's default colour; used to highlight the player's desk. */
   accent?: number;
+  /**
+   * Chairs only: shirt colour of a colleague sitting in it. Pure set dressing —
+   * occupants cannot be talked to; talkable people are `NPCS`.
+   */
+  occupant?: number;
 };
 
 export type OfficeNpc = {
@@ -98,6 +110,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Reception',
     x: 1, y: 1, w: 10, h: 7,
     color: 0xe4e9fb,
+    floor: 'stone',
     action: { kind: 'info' },
     doors: [{ x: 5, y: 8 }, { x: 6, y: 8 }],
   },
@@ -106,6 +119,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Marketing Zone',
     x: 13, y: 1, w: 9, h: 7,
     color: 0xfbe3f0,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 17, y: 8 }, { x: 18, y: 8 }],
   },
@@ -114,6 +128,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Sales Zone',
     x: 24, y: 1, w: 9, h: 7,
     color: 0xdde9fd,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 28, y: 8 }, { x: 29, y: 8 }],
   },
@@ -122,6 +137,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Product Zone',
     x: 35, y: 1, w: 10, h: 7,
     color: 0xdef3e4,
+    floor: 'tile',
     action: { kind: 'info' },
     doors: [{ x: 39, y: 8 }, { x: 40, y: 8 }],
   },
@@ -130,6 +146,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Strategy Zone',
     x: 1, y: 12, w: 9, h: 7,
     color: 0xe9e4fb,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 5, y: 11 }, { x: 6, y: 11 }, { x: 5, y: 19 }, { x: 6, y: 19 }],
   },
@@ -138,6 +156,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'HR Zone',
     x: 12, y: 12, w: 9, h: 7,
     color: 0xfceadb,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 16, y: 11 }, { x: 17, y: 11 }, { x: 16, y: 19 }, { x: 17, y: 19 }],
   },
@@ -146,6 +165,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Data Room',
     x: 23, y: 12, w: 9, h: 7,
     color: 0xdaeefa,
+    floor: 'tile',
     action: { kind: 'resources', label: 'Browse Files' },
     doors: [{ x: 27, y: 11 }, { x: 28, y: 11 }, { x: 27, y: 19 }, { x: 28, y: 19 }],
   },
@@ -154,6 +174,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Meeting Room A',
     x: 34, y: 12, w: 5, h: 7,
     color: 0xdcf2ea,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'meeting', label: 'Start Meeting' },
     doors: [{ x: 36, y: 11 }, { x: 36, y: 19 }],
   },
@@ -162,6 +184,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Meeting Room B',
     x: 40, y: 12, w: 5, h: 7,
     color: 0xdcf2ea,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 42, y: 11 }, { x: 42, y: 19 }],
   },
@@ -170,6 +194,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'My Desk',
     x: 1, y: 23, w: 12, h: 6,
     color: 0xdeebfb,
+    floor: 'carpet',
     action: { kind: 'workspace', label: 'Open Workspace' },
     doors: [{ x: 6, y: 22 }, { x: 7, y: 22 }],
   },
@@ -178,6 +203,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Executive Room',
     x: 16, y: 23, w: 12, h: 6,
     color: 0xfaf0da,
+    floor: 'walnut',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 21, y: 22 }, { x: 22, y: 22 }],
   },
@@ -186,6 +213,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Notification Area',
     x: 31, y: 23, w: 14, h: 6,
     color: 0xfbe2e2,
+    floor: 'carpet',
     action: { kind: 'notifications', label: 'Check Messages' },
     doors: [{ x: 37, y: 22 }, { x: 38, y: 22 }],
   },
@@ -211,10 +239,10 @@ export const PROPS: OfficeProp[] = [
   { kind: 'desk', x: 14, y: 5, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 5, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 14, y: 3 },
+  { kind: 'chair', x: 14, y: 3, occupant: 0x2f6fb5 },
   { kind: 'chair', x: 19, y: 3 },
   { kind: 'chair', x: 14, y: 6 },
-  { kind: 'chair', x: 19, y: 6 },
+  { kind: 'chair', x: 19, y: 6, occupant: 0xc1543f },
   { kind: 'board', x: 17, y: 1, w: 2, h: 1 },
 
   // Sales Zone
@@ -222,10 +250,10 @@ export const PROPS: OfficeProp[] = [
   { kind: 'desk', x: 25, y: 5, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 30, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 30, y: 5, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 25, y: 3 },
+  { kind: 'chair', x: 25, y: 3, occupant: 0x3f9b6e },
   { kind: 'chair', x: 30, y: 3 },
   { kind: 'chair', x: 25, y: 6 },
-  { kind: 'chair', x: 30, y: 6 },
+  { kind: 'chair', x: 30, y: 6, occupant: 0x7b6bb8 },
   { kind: 'board', x: 27, y: 1, w: 2, h: 1 },
   { kind: 'plant', x: 32, y: 1, solid: true },
 
@@ -234,7 +262,7 @@ export const PROPS: OfficeProp[] = [
   { kind: 'shelf', x: 41, y: 1, w: 3, h: 1, solid: true },
   { kind: 'desk', x: 36, y: 4, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 41, y: 4, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 36, y: 5 },
+  { kind: 'chair', x: 36, y: 5, occupant: 0xd9a23a },
   { kind: 'chair', x: 41, y: 5 },
   { kind: 'plant', x: 44, y: 7, solid: true },
 
@@ -242,7 +270,7 @@ export const PROPS: OfficeProp[] = [
   { kind: 'rug', x: 2, y: 13, w: 6, h: 5 },
   { kind: 'table', x: 3, y: 14, w: 4, h: 3, solid: true },
   { kind: 'chair', x: 2, y: 15 },
-  { kind: 'chair', x: 7, y: 15 },
+  { kind: 'chair', x: 7, y: 15, occupant: 0x8c5e3c },
   { kind: 'screen', x: 8, y: 12, w: 1, h: 2 },
   { kind: 'plant', x: 1, y: 18, solid: true },
 
@@ -251,8 +279,8 @@ export const PROPS: OfficeProp[] = [
   { kind: 'desk', x: 13, y: 16, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 13, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 16, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 13, y: 14 },
-  { kind: 'chair', x: 19, y: 14 },
+  { kind: 'chair', x: 13, y: 14, occupant: 0x2f8f9b },
+  { kind: 'chair', x: 19, y: 14, occupant: 0x4a5568 },
   { kind: 'plant', x: 12, y: 18, solid: true },
 
   // Data Room

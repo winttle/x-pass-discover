@@ -30,9 +30,11 @@ This build is the **common platform plus the Sales vertical slice**:
   rules, configurable task forms, answer revisions, submissions snapshots,
   AI conversations with server-side hidden-information control, and behavior
   event logging.
-- A 2D BITE office in Phaser — floors, walls with faked height, procedural
-  furniture and characters, all generated from a map definition with no art
-  assets — wired to React through an explicit event bridge.
+- A 2.5D (isometric) BITE office in Phaser — windowed back walls, glass
+  meeting rooms, cabinet dividers, procedural furniture and seated colleagues,
+  all generated from a map definition with no art assets — wired to React
+  through an explicit event bridge. The game logic still runs on the flat tile
+  grid; only drawing is projected.
 
 **Sales vertical slice** — all ten steps, playable:
 
@@ -223,8 +225,10 @@ src/
     seed/run.ts           idempotent content seed
   game/office/
     map.ts                office layout as data (rooms, doors, furniture, NPCs)
-    theme.ts              the office palette — the whole look lives here
-    office-scene.ts       Phaser scene (procedural rendering, no art assets)
+    theme.ts              the office palette and floor materials
+    iso.ts                isometric projection and draw-order (depth) rule
+    art.ts                procedural 2.5D pieces: walls, furniture, people
+    office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
   app/                    routes (student, admin, api)
@@ -321,7 +325,7 @@ Then: **Create an account** (email + display name, **no password** — it is a
 development identity, see §8) → pre-survey → choose departments → **Start
 bootcamp** on Sales → work through the ten steps. Returning students sign in at
 `/login` with the email alone. Sign out from the header on any signed-in page.
-Walk into the 2D office from the workspace sidebar, or go straight to
+Walk into the 2.5D office from the workspace sidebar, or go straight to
 `/office`.
 
 Things worth trying, because they are where the design decisions show:
@@ -331,7 +335,7 @@ Things worth trying, because they are where the design decisions show:
 | **AI Buyer Meeting** | Ask "tell me about QuickMart" → you get nothing. Ask "how many facings would a new protein drink get?" → the buyer gives you the number and the discovery meter ticks up. |
 | **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
 | **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
-| **The 2D office** | WASD/arrows, walk into the Data Room or up to an NPC, press `E`. |
+| **The 2.5D office** | WASD/arrows move relative to the screen (up = towards the back wall; up + right walks straight along a corridor). Walk into the Data Room or up to an NPC, press `E`. |
 | **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
 | **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |
 
@@ -524,8 +528,9 @@ obviously on-topic question still counts as discovery.
 - **Object storage adapter.** `resources.file_url` exists; everything is
   currently inline markdown or table data.
 - **Art assets.** The office is generated geometry — deliberately, so a new room
-  is a data change. Sprite art would replace `office-scene.ts`'s paint methods
-  without touching the map or the bridge.
+  is a data change. Sprite art would replace the pieces in `art.ts` (one
+  isometric tile each, sorted by `iso.ts`) without touching the map or the
+  bridge.
 
 ---
 
