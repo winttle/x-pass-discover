@@ -8,17 +8,14 @@ import {
   ROOMS,
 } from '@/game/office/map';
 
-const SCALE = 4;
+const SCALE = 5;
 
 const hex = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
 
-/** The same isometric projection the office uses, so "up" means the same here. */
-const project = (x: number, y: number) => ({
-  x: (x - y + GRID_HEIGHT) * SCALE,
-  y: ((x + y) * SCALE) / 2,
-});
+/** Plan view: north is up, as it is for the office camera. */
+const project = (x: number, y: number) => ({ x: x * SCALE, y: y * SCALE });
 
-const diamond = (x: number, y: number, w: number, h: number) =>
+const outline = (x: number, y: number, w: number, h: number) =>
   [project(x, y), project(x + w, y), project(x + w, y + h), project(x, y + h)]
     .map((p) => `${p.x},${p.y}`)
     .join(' ');
@@ -38,8 +35,8 @@ export function Minimap({
   player: { x: number; y: number } | null;
   activeRoomKey: string | null;
 }) {
-  const width = (GRID_WIDTH + GRID_HEIGHT) * SCALE;
-  const height = width / 2;
+  const width = GRID_WIDTH * SCALE;
+  const height = GRID_HEIGHT * SCALE;
   const marker = player ? project(player.x + 0.5, player.y + 0.5) : null;
 
   return (
@@ -50,7 +47,7 @@ export function Minimap({
       aria-label="Office minimap"
     >
       <polygon
-        points={diamond(0, 0, GRID_WIDTH, GRID_HEIGHT)}
+        points={outline(0, 0, GRID_WIDTH, GRID_HEIGHT)}
         fill="#2a3242"
         stroke="#ffffff"
         strokeOpacity={0.15}
@@ -59,7 +56,7 @@ export function Minimap({
       {CORRIDORS.map((corridor, index) => (
         <polygon
           key={`c${index}`}
-          points={diamond(corridor.x, corridor.y, corridor.w, corridor.h)}
+          points={outline(corridor.x, corridor.y, corridor.w, corridor.h)}
           fill="#d9b48a"
           fillOpacity={0.55}
         />
@@ -71,7 +68,7 @@ export function Minimap({
         return (
           <g key={room.key}>
             <polygon
-              points={diamond(room.x, room.y, room.w, room.h)}
+              points={outline(room.x, room.y, room.w, room.h)}
               fill={hex(room.color)}
               fillOpacity={isActive ? 1 : 0.78}
               stroke={isActive ? '#60a5fa' : '#1d2433'}
