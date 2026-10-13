@@ -12,6 +12,12 @@ import { expect, type Locator, type Page } from '@playwright/test';
 let counter = 0;
 
 /**
+ * Where signing in lands: the lobby (`/start`) for anyone who has not yet taken
+ * the pre-survey, the welcome page for everyone else.
+ */
+export const SIGNED_IN_URL = /\/(start|welcome)(\?.*)?$/;
+
+/**
  * A fresh account per test. The suite runs in parallel against one in-memory
  * store, so isolation comes from never reusing an address, not from resetting
  * the store between tests.
@@ -29,14 +35,15 @@ export async function signUp(
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Display name').fill(displayName);
   await page.getByRole('button', { name: 'Create account' }).click();
-  await page.waitForURL('**/welcome');
+  // A brand-new account has not taken the pre-survey, so it opens in the lobby.
+  await page.waitForURL('**/start');
 }
 
 export async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByRole('button', { name: 'Enter BITE' }).click();
-  await page.waitForURL('**/welcome');
+  await page.waitForURL(SIGNED_IN_URL);
 }
 
 /**
@@ -63,10 +70,10 @@ export async function ensureSignedIn(
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await Promise.race([
-    page.waitForURL('**/welcome'),
+    page.waitForURL(SIGNED_IN_URL),
     page.getByTestId('auth-error').waitFor({ state: 'visible' }),
   ]);
-  if (page.url().includes('/welcome')) return;
+  if (SIGNED_IN_URL.test(new URL(page.url()).pathname)) return;
   await signIn(page, email);
 }
 

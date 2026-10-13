@@ -1,7 +1,8 @@
 import { drawPerson, type Look } from '@/game/office/art';
 
 /**
- * The BITE lobby, painted once for the office intro.
+ * A company lobby, painted once — the BITE head office for the office intro,
+ * and the X-PASS Discover lobby that greets a new account.
  *
  * A one-point perspective of the ground floor — ceiling lights, the reception
  * desk in front of the logo wall, lifts and security gates, sofas and plants
@@ -34,6 +35,46 @@ const P = (x: number, y: number, z: number): V => ({
 const scaleAt = (z: number) => FOCAL / -z;
 
 const ROOM = { x0: -7, x1: 7, ceiling: 4.6, back: -13, front: -0.5 };
+
+/** What the lobby's signage says: the name behind reception, and the directory. */
+export type LobbySignage = {
+  brand: 'bite' | 'xpass';
+  directoryTitle: [string, string];
+  directory: string[];
+};
+
+const BITE_SIGNAGE: LobbySignage = {
+  brand: 'bite',
+  directoryTitle: ['Toward a wider', 'range of careers'],
+  directory: ['Sales', 'Marketing', 'Product', 'Strategy', 'HR'],
+};
+
+let signage: LobbySignage = BITE_SIGNAGE;
+
+/** The X-PASS mark: two crossed strokes, drawn in a `size`-pixel box at (x, y). */
+function xMark(ctx: Ctx, x: number, y: number, size: number, color: string): void {
+  const k = size / 64;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(k, k);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(22, 22);
+  ctx.lineTo(0, 44);
+  ctx.lineTo(10, 44);
+  ctx.lineTo(27, 27);
+  ctx.lineTo(44, 44);
+  ctx.lineTo(54, 44);
+  ctx.lineTo(32, 22);
+  ctx.lineTo(54, 0);
+  ctx.lineTo(44, 0);
+  ctx.lineTo(27, 17);
+  ctx.lineTo(10, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
 
 function poly(ctx: Ctx, points: V[], fill: string | CanvasGradient | CanvasPattern): void {
   ctx.fillStyle = fill;
@@ -218,22 +259,7 @@ function sideWalls(ctx: Ctx): void {
   onPanel(ctx, P(x0, 3.4, -7.4), P(x0, 3.4, -10.6), P(x0, 0.6, -7.4), 200, 140, () => {
     ctx.fillStyle = '#fbf9f5';
     ctx.fillRect(0, 0, 200, 140);
-    ctx.fillStyle = '#2563eb';
-    ctx.beginPath();
-    ctx.moveTo(40, 30);
-    ctx.lineTo(62, 52);
-    ctx.lineTo(40, 74);
-    ctx.lineTo(50, 74);
-    ctx.lineTo(67, 57);
-    ctx.lineTo(84, 74);
-    ctx.lineTo(94, 74);
-    ctx.lineTo(72, 52);
-    ctx.lineTo(94, 30);
-    ctx.lineTo(84, 30);
-    ctx.lineTo(67, 47);
-    ctx.lineTo(50, 30);
-    ctx.closePath();
-    ctx.fill();
+    xMark(ctx, 40, 30, 64, '#2563eb');
     ctx.font = '700 22px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#1d2433';
@@ -265,13 +291,12 @@ function sideWalls(ctx: Ctx): void {
     ctx.font = '600 12px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#1d2433';
-    ctx.fillText('Toward a wider', 22, 34);
-    ctx.fillText('range of careers', 22, 50);
+    ctx.fillText(signage.directoryTitle[0], 22, 34);
+    ctx.fillText(signage.directoryTitle[1], 22, 50);
     ctx.fillStyle = '#e0a84a';
     ctx.fillRect(22, 60, 18, 3);
-    const floors = ['Sales', 'Marketing', 'Product', 'Strategy', 'HR'];
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
-    floors.forEach((name, i) => {
+    signage.directory.slice(0, 5).forEach((name, i) => {
       ctx.fillStyle = '#1d2433';
       ctx.fillText(`${i + 1}`, 22, 86 + i * 22);
       ctx.fillText(name, 42, 86 + i * 22);
@@ -320,9 +345,9 @@ function glow(ctx: Ctx, x: number, y: number, rx: number, ry: number, color: str
 // ------------------------------------------------------------- furniture
 
 function plant(ctx: Ctx, x: number, z: number, height: number, seed: number): void {
-  const pot = 0.32;
-  box(ctx, x - pot, x + pot, 0, 0.55, z - pot, z + pot, { top: '#5b4636', front: '#f1efea', side: '#d9d5cd' });
-  const base = P(x, 0.55, z);
+  const pot = 0.22;
+  box(ctx, x - pot, x + pot, 0, 0.5, z - pot, z + pot, { top: '#5b4636', front: '#f1efea', side: '#d9d5cd' });
+  const base = P(x, 0.5, z);
   const s = scaleAt(z);
   const r = rng(seed);
   for (let i = 0; i < 26; i += 1) {
@@ -369,13 +394,34 @@ function logoWall(ctx: Ctx): void {
     glow.addColorStop(1, 'rgba(255,190,110,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 300, 185);
-    ctx.font = '800 34px ui-sans-serif, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffd9a0';
-    ctx.fillText('BITE', 150, 80);
-    ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillStyle = '#f2e3c9';
-    ctx.fillText('FOOD & BEVERAGE · HEAD OFFICE', 150, 97);
+    if (signage.brand === 'xpass') {
+      // Measure first so mark, name and word sit centred as one group.
+      const bold = '800 24px ui-sans-serif, system-ui, sans-serif';
+      const light = '600 20px ui-sans-serif, system-ui, sans-serif';
+      ctx.font = bold;
+      const name = ctx.measureText('X-PASS').width;
+      ctx.font = light;
+      const word = ctx.measureText('Discover').width;
+      const mark = 34;
+      const gap = 8;
+      let x = 150 - (mark + gap + name + gap + word) / 2;
+      xMark(ctx, x, 50, mark * 1.18, '#3b82f6');
+      x += mark + gap;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffe2b8';
+      ctx.font = bold;
+      ctx.fillText('X-PASS', x, 72);
+      ctx.font = light;
+      ctx.fillText('Discover', x + name + gap, 72);
+    } else {
+      ctx.font = '800 34px ui-sans-serif, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd9a0';
+      ctx.fillText('BITE', 150, 80);
+      ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+      ctx.fillStyle = '#f2e3c9';
+      ctx.fillText('FOOD & BEVERAGE · HEAD OFFICE', 150, 97);
+    }
     // Strip light along the top of the wall.
     ctx.fillStyle = '#ffd9a0';
     ctx.fillRect(0, 0, 300, 3);
@@ -489,7 +535,8 @@ function receptionist(ctx: Ctx): void {
 }
 
 /** Paints the whole lobby into `ctx`, which must be `LOBBY_W` × `LOBBY_H`. */
-export function paintLobby(ctx: Ctx): void {
+export function paintLobby(ctx: Ctx, sign: LobbySignage = BITE_SIGNAGE): void {
+  signage = sign;
   ctx.clearRect(0, 0, LOBBY_W, LOBBY_H);
   ceiling(ctx);
   backWall(ctx);

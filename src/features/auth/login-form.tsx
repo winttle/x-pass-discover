@@ -39,7 +39,7 @@ export function LoginForm({ initialEmail = '' }: { initialEmail?: string }) {
         setPending(false);
         return;
       }
-      router.push('/welcome');
+      router.push('/start');
       router.refresh();
     } catch {
       setError({ message: 'Sign-in failed. Check your connection and try again.' });

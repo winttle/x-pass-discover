@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { SessionView } from '@/types/session-view';
-import { LOBBY_H, LOBBY_W, paintLobby } from './lobby-art';
+import { Highlight, IntroCard, LobbyBrand, LobbyCanvas } from '@/features/lobby/intro-card';
 
 type Step = {
   title: ReactNode;
@@ -10,10 +10,6 @@ type Step = {
   body?: ReactNode;
   action: string;
 };
-
-const Highlight = ({ children }: { children: ReactNode }) => (
-  <span className="text-brand-600">{children}</span>
-);
 
 function stepsFor(view: SessionView | null): Step[] {
   const currentStep = view?.steps.find((s) => s.key === view.session.currentStepKey);
@@ -98,17 +94,11 @@ export function OfficeIntro({
   view: SessionView | null;
   onDone: () => void;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const actionRef = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(0);
   const steps = stepsFor(view);
   const step = steps[index];
   const last = index === steps.length - 1;
-
-  useEffect(() => {
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) paintLobby(ctx);
-  }, []);
 
   useEffect(() => {
     actionRef.current?.focus();
@@ -122,82 +112,24 @@ export function OfficeIntro({
       aria-modal="true"
       aria-label="Bootcamp intro"
     >
-      <canvas
-        ref={canvasRef}
-        width={LOBBY_W}
-        height={LOBBY_H}
-        aria-hidden
-        className="h-full w-full object-cover [image-rendering:pixelated]"
-      />
-
-      <div className="absolute left-5 top-4 flex items-center gap-2 text-sm font-bold text-white drop-shadow">
-        <span className="grid size-6 place-items-center rounded-md bg-brand-600 text-xs">X</span>
-        X-PASS Discover
+      <LobbyCanvas />
+      <div className="absolute left-5 top-4">
+        <LobbyBrand />
       </div>
-
       <div className="absolute inset-x-0 top-[5%] flex justify-center px-4">
-        <div
-          key={index}
-          className="w-full max-w-[460px] animate-pop rounded-xl border-[3px] border-[#1d2433] bg-[#fbfaf7] px-6 pb-5 pt-3.5 text-center shadow-[6px_6px_0_rgba(15,23,41,0.35)]"
-        >
-          <div className="flex items-center justify-between text-[11px] font-semibold tracking-wider text-muted">
-            <span>
-              INTRO&nbsp;&nbsp;{String(index + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}
-            </span>
-            {!last ? (
-              <button
-                type="button"
-                onClick={onDone}
-                className="text-[11px] font-medium text-subtle underline-offset-4 hover:text-strong hover:underline"
-                data-testid="office-intro-skip"
-              >
-                Skip
-              </button>
-            ) : null}
-          </div>
-
-          <div className="mx-auto mt-2 flex w-40 items-center" aria-hidden>
-            {steps.map((_, i) => (
-              <span key={i} className="flex flex-1 items-center last:flex-none">
-                <span
-                  className={`size-2.5 shrink-0 rounded-full ${
-                    i <= index ? 'bg-brand-600' : 'bg-line-strong'
-                  } ${i === index ? 'ring-4 ring-brand-100' : ''}`}
-                />
-                {i < steps.length - 1 ? (
-                  <span className={`h-0.5 flex-1 ${i < index ? 'bg-brand-600' : 'bg-line-strong'}`} />
-                ) : null}
-              </span>
-            ))}
-          </div>
-
-          <h2 className="mt-4 text-xl font-bold tracking-tight text-strong sm:text-2xl">{step.title}</h2>
-          <p className="mt-1.5 text-sm font-medium text-body">{step.subtitle}</p>
-          {step.body ? (
-            <div className="mx-auto mt-3 max-w-[380px] text-xs leading-relaxed text-muted">{step.body}</div>
-          ) : null}
-
-          <div className="mt-5 flex items-center justify-center gap-3">
-            {index > 0 ? (
-              <button
-                type="button"
-                onClick={() => setIndex((i) => i - 1)}
-                className="rounded-lg px-3 py-2.5 text-xs font-medium text-muted hover:text-strong"
-              >
-                Back
-              </button>
-            ) : null}
-            <button
-              ref={actionRef}
-              type="button"
-              onClick={() => (last ? onDone() : setIndex((i) => i + 1))}
-              className="min-w-[220px] rounded-lg border-2 border-[#1d4ed8] bg-brand-600 px-6 py-2.5 text-sm font-bold uppercase tracking-wider text-white shadow-[0_3px_0_#1e3a8a] transition-transform hover:bg-brand-700 active:translate-y-[2px] active:shadow-[0_1px_0_#1e3a8a]"
-              data-testid="office-intro-next"
-            >
-              {step.action}
-            </button>
-          </div>
-        </div>
+        <IntroCard
+          index={index}
+          total={steps.length}
+          title={step.title}
+          subtitle={step.subtitle}
+          body={step.body}
+          action={step.action}
+          onAction={() => (last ? onDone() : setIndex((i) => i + 1))}
+          onBack={index > 0 ? () => setIndex((i) => i - 1) : undefined}
+          onSkip={last ? undefined : onDone}
+          actionRef={actionRef}
+          testIdPrefix="office-intro"
+        />
       </div>
     </div>
   );
