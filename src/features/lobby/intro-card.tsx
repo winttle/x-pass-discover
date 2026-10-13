@@ -4,9 +4,9 @@ import { useEffect, useRef, type ReactNode, type Ref } from 'react';
 import { LOBBY_H, LOBBY_W, paintLobby, type LobbySignage } from './lobby-art';
 
 /** The pixel-art lobby, filling its parent. */
-export function LobbyCanvas({ signage }: { signage?: LobbySignage }) {
+export function LobbyCanvas({ signage }: { signage: LobbySignage }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const signageKey = JSON.stringify(signage ?? null);
+  const signageKey = JSON.stringify(signage);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');

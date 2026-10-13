@@ -232,7 +232,6 @@ src/
     office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
-    office/office-intro.tsx  first-visit lobby intro of the BITE office
     lobby/                the pixel-art lobby (lobby-art.ts) and the /start onboarding screen
   app/                    routes (student, admin, api)
 scripts/
@@ -339,7 +338,6 @@ Things worth trying, because they are where the design decisions show:
 | **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
 | **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
 | **Day one** | A new account (or a sign-in before the pre-survey is done) opens on `/start`, the X-PASS lobby: INTRO 01/04, **START** begins the pre-survey. After the survey, sign-in goes to the welcome page. |
-| **The lobby intro** | The first visit to `/office` opens in the BITE lobby with four short cards (START → enter the office). Replay it from the bar under the office. |
 | **The 2.5D office** | WASD/arrows move relative to the screen (up = towards the back wall; up + right walks straight along a corridor). Walk into the Data Room or up to an NPC, press `E`. |
 | **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
 | **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |

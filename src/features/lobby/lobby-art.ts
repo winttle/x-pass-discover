@@ -1,8 +1,7 @@
 import { drawPerson, type Look } from '@/game/office/art';
 
 /**
- * A company lobby, painted once — the BITE head office for the office intro,
- * and the X-PASS Discover lobby that greets a new account.
+ * The X-PASS Discover lobby that greets a new account on `/start`, painted once.
  *
  * A one-point perspective of the ground floor — ceiling lights, the reception
  * desk in front of the logo wall, lifts and security gates, sofas and plants
@@ -38,18 +37,11 @@ const ROOM = { x0: -7, x1: 7, ceiling: 4.6, back: -13, front: -0.5 };
 
 /** What the lobby's signage says: the name behind reception, and the directory. */
 export type LobbySignage = {
-  brand: 'bite' | 'xpass';
   directoryTitle: [string, string];
   directory: string[];
 };
 
-const BITE_SIGNAGE: LobbySignage = {
-  brand: 'bite',
-  directoryTitle: ['Toward a wider', 'range of careers'],
-  directory: ['Sales', 'Marketing', 'Product', 'Strategy', 'HR'],
-};
-
-let signage: LobbySignage = BITE_SIGNAGE;
+let signage: LobbySignage = { directoryTitle: ['', ''], directory: [] };
 
 /** The X-PASS mark: two crossed strokes, drawn in a `size`-pixel box at (x, y). */
 function xMark(ctx: Ctx, x: number, y: number, size: number, color: string): void {
@@ -394,34 +386,24 @@ function logoWall(ctx: Ctx): void {
     glow.addColorStop(1, 'rgba(255,190,110,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 300, 185);
-    if (signage.brand === 'xpass') {
-      // Measure first so mark, name and word sit centred as one group.
-      const bold = '800 24px ui-sans-serif, system-ui, sans-serif';
-      const light = '600 20px ui-sans-serif, system-ui, sans-serif';
-      ctx.font = bold;
-      const name = ctx.measureText('X-PASS').width;
-      ctx.font = light;
-      const word = ctx.measureText('Discover').width;
-      const mark = 34;
-      const gap = 8;
-      let x = 150 - (mark + gap + name + gap + word) / 2;
-      xMark(ctx, x, 50, mark * 1.18, '#3b82f6');
-      x += mark + gap;
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#ffe2b8';
-      ctx.font = bold;
-      ctx.fillText('X-PASS', x, 72);
-      ctx.font = light;
-      ctx.fillText('Discover', x + name + gap, 72);
-    } else {
-      ctx.font = '800 34px ui-sans-serif, system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#ffd9a0';
-      ctx.fillText('BITE', 150, 80);
-      ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
-      ctx.fillStyle = '#f2e3c9';
-      ctx.fillText('FOOD & BEVERAGE · HEAD OFFICE', 150, 97);
-    }
+    // Measure first so mark, name and word sit centred as one group.
+    const bold = '800 24px ui-sans-serif, system-ui, sans-serif';
+    const light = '600 20px ui-sans-serif, system-ui, sans-serif';
+    ctx.font = bold;
+    const name = ctx.measureText('X-PASS').width;
+    ctx.font = light;
+    const word = ctx.measureText('Discover').width;
+    const mark = 34;
+    const gap = 8;
+    let x = 150 - (mark + gap + name + gap + word) / 2;
+    xMark(ctx, x, 50, mark * 1.18, '#3b82f6');
+    x += mark + gap;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffe2b8';
+    ctx.font = bold;
+    ctx.fillText('X-PASS', x, 72);
+    ctx.font = light;
+    ctx.fillText('Discover', x + name + gap, 72);
     // Strip light along the top of the wall.
     ctx.fillStyle = '#ffd9a0';
     ctx.fillRect(0, 0, 300, 3);
@@ -535,7 +517,7 @@ function receptionist(ctx: Ctx): void {
 }
 
 /** Paints the whole lobby into `ctx`, which must be `LOBBY_W` × `LOBBY_H`. */
-export function paintLobby(ctx: Ctx, sign: LobbySignage = BITE_SIGNAGE): void {
+export function paintLobby(ctx: Ctx, sign: LobbySignage): void {
   signage = sign;
   ctx.clearRect(0, 0, LOBBY_W, LOBBY_H);
   ceiling(ctx);

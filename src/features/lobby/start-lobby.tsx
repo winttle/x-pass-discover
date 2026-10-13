@@ -32,7 +32,6 @@ export function StartLobby({ directory, account }: { directory: string[]; accoun
     >
       <LobbyCanvas
         signage={{
-          brand: 'xpass',
           directoryTitle: ['Toward Broader', 'Career Possibilities'],
           directory,
         }}
