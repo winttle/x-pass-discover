@@ -3,9 +3,9 @@ import { drawPerson, type Look } from '@/game/office/art';
 /**
  * The office behind the pre-survey: a warm, lived-in workroom — a motto
  * poster and binder shelves on the left, a city window on the right,
- * colleagues at their desks, and a new hire at a desk in the foreground. It
- * is painted small and shown scaled up with pixelated rendering, like the
- * lobby, so the two screens read as one place.
+ * colleagues at their desks, and a new hire at a desk in the foreground.
+ * Coordinates are in a fixed `SURVEY_W` × `SURVEY_H` frame; the caller scales
+ * the context so the picture is painted at full screen resolution.
  */
 
 export const SURVEY_W = 576;
@@ -135,7 +135,7 @@ function window(ctx: Ctx, x: number, y: number, w: number, h: number): void {
   ctx.stroke();
 }
 
-/** Paints the survey room into `ctx`, which must be `SURVEY_W` × `SURVEY_H`. */
+/** Paints the survey room into `ctx`, already scaled to a `SURVEY_W` × `SURVEY_H` frame. */
 export function paintSurveyRoom(ctx: Ctx): void {
   const W = SURVEY_W;
   ctx.clearRect(0, 0, W, SURVEY_H);
