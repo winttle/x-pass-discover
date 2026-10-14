@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PRE_SURVEY_QUESTIONS, type PreSurveyQuestion } from '@/content/pre-survey';
+import { useCrispCanvas } from '@/lib/use-crisp-canvas';
 import { SURVEY_H, SURVEY_W, paintSurveyRoom } from './survey-art';
 
 type Answers = Record<string, unknown>;
@@ -47,38 +48,7 @@ export function SurveyScreen({
   const last = index === total - 1;
   const canContinue = isAnswered(question, value);
 
-  useEffect(() => {
-    // Paint at the size the picture is actually shown (it is cropped to cover
-    // its area) times the screen's pixel density, so it stays sharp at any
-    // window size. Repaint when the area changes size.
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    let frame = 0;
-    const paint = () => {
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const shown = Math.max(canvas.clientWidth / SURVEY_W, canvas.clientHeight / SURVEY_H);
-      const scale = Math.min(4, Math.max(1, shown * (window.devicePixelRatio || 1)));
-      const width = Math.round(SURVEY_W * scale);
-      const height = Math.round(SURVEY_H * scale);
-      if (canvas.width === width && canvas.height === height) return;
-      canvas.width = width;
-      canvas.height = height;
-      ctx.setTransform(width / SURVEY_W, 0, 0, height / SURVEY_H, 0, 0);
-      paintSurveyRoom(ctx);
-    };
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(paint);
-    };
-    paint();
-    const observer = new ResizeObserver(schedule);
-    observer.observe(canvas);
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, []);
+  useCrispCanvas(canvasRef, SURVEY_W, SURVEY_H, paintSurveyRoom, []);
 
   const setValue = (key: string, next: unknown) =>
     setAnswers((prev) => ({ ...prev, [key]: next }));

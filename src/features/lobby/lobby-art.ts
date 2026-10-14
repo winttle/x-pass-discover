@@ -1,14 +1,14 @@
 import { drawPerson, type Look } from '@/game/office/art';
 
 /**
- * The X-PASS Discover lobby that greets a new account on `/start`, painted once.
+ * The X-PASS Discover lobby that greets a new account on `/start`.
  *
  * A one-point perspective of the ground floor — ceiling lights, the reception
  * desk in front of the logo wall, lifts and security gates, sofas and plants
  * on a polished floor that mirrors the lights — seen from just behind the new
- * hire on their first morning. It is drawn small (`LOBBY_W` × `LOBBY_H`) and
- * shown scaled up with `image-rendering: pixelated`, which gives it the
- * chunky pixel-art finish of the reference art.
+ * hire on their first morning. It is laid out in a fixed `LOBBY_W` × `LOBBY_H`
+ * frame; the caller scales the context so it is painted at full screen
+ * resolution.
  *
  * Everything is placed in metres: x to the right, y up, z towards the viewer
  * (the camera is at z = 0 looking down −z), and projected by `P`.
@@ -516,7 +516,7 @@ function receptionist(ctx: Ctx): void {
   ctx.restore();
 }
 
-/** Paints the whole lobby into `ctx`, which must be `LOBBY_W` × `LOBBY_H`. */
+/** Paints the whole lobby into `ctx`, already scaled to a `LOBBY_W` × `LOBBY_H` frame. */
 export function paintLobby(ctx: Ctx, sign: LobbySignage): void {
   signage = sign;
   ctx.clearRect(0, 0, LOBBY_W, LOBBY_H);

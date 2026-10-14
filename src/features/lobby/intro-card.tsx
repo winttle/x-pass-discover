@@ -1,19 +1,16 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode, type Ref } from 'react';
+import { useRef, type ReactNode, type Ref } from 'react';
+import { useCrispCanvas } from '@/lib/use-crisp-canvas';
 import { LOBBY_H, LOBBY_W, paintLobby, type LobbySignage } from './lobby-art';
 
-/** The pixel-art lobby, filling its parent. */
+/** The lobby, filling its parent, painted at screen resolution. */
 export function LobbyCanvas({ signage }: { signage: LobbySignage }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const signageKey = JSON.stringify(signage);
 
-  useEffect(() => {
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) paintLobby(ctx, signage);
-    // Repaint only when what the signs say changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signageKey]);
+  // Repaint only when the size or what the signs say changes.
+  useCrispCanvas(canvasRef, LOBBY_W, LOBBY_H, (ctx) => paintLobby(ctx, signage), [signageKey]);
 
   return (
     <canvas
@@ -21,7 +18,7 @@ export function LobbyCanvas({ signage }: { signage: LobbySignage }) {
       width={LOBBY_W}
       height={LOBBY_H}
       aria-hidden
-      className="absolute inset-0 h-full w-full object-cover [image-rendering:pixelated]"
+      className="absolute inset-0 h-full w-full object-cover"
     />
   );
 }

@@ -232,8 +232,8 @@ src/
     office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
-    lobby/                the pixel-art lobby (lobby-art.ts) and the /start onboarding screen
-    survey/               the one-question-per-screen pre-survey over a pixel-art office
+    lobby/                the illustrated lobby (lobby-art.ts) and the /start onboarding screen
+    survey/               the one-question-per-screen pre-survey over an illustrated office
   app/                    routes (student, admin, api)
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
