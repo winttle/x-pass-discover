@@ -234,6 +234,7 @@ src/
   features/               auth, departments, survey, workspace, office, ai, resources
     lobby/                the illustrated lobby (lobby-art.ts) and the /start onboarding screen
     survey/               the one-question-per-screen pre-survey over an illustrated office
+  i18n/                   languages (en / ja / ko): config, dictionaries, server getT(), client useT()
   app/                    routes (student, admin, api)
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
@@ -535,6 +536,23 @@ obviously on-topic question still counts as discovery.
   is a data change. Sprite art would replace the pieces in `art.ts` (one
   isometric tile each, sorted by `iso.ts`) without touching the map or the
   bridge.
+
+### Languages
+
+The interface can be shown in English, Japanese or Korean. The choice is made
+from the globe menu (next to the account name, and on the sign-in pages), kept
+in the `xpass-locale` cookie, and defaults to the browser's language.
+
+- Strings live in `src/i18n/messages/{en,ja,ko}.ts`. English is the source;
+  the other two are type-checked against it, so a missing key fails the build.
+- Server components call `await getT()`, client components `useT()`;
+  `{name}` placeholders are filled from the second argument.
+- Pre-survey questions carry their own `{ en, ja, ko }` text in
+  `src/content/pre-survey.ts`.
+- Translated so far: sign-in / sign-up, the lobby, the pre-survey, the welcome
+  page, the shared header and the office (HUD, room signs, prompts). Still
+  English: the landing page, departments, workspace, report, admin and the
+  scenario content itself (case material, personas).
 
 ---
 

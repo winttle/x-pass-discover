@@ -38,10 +38,12 @@ const ROOM = { x0: -7, x1: 7, ceiling: 4.6, back: -13, front: -0.5 };
 /** What the lobby's signage says: the name behind reception, and the directory. */
 export type LobbySignage = {
   directoryTitle: [string, string];
+  /** The two lines under the X-PASS mark on the left-hand panel. */
+  panel: [string, string];
   directory: string[];
 };
 
-let signage: LobbySignage = { directoryTitle: ['', ''], directory: [] };
+let signage: LobbySignage = { directoryTitle: ['', ''], panel: ['', ''], directory: [] };
 
 /** The X-PASS mark: two crossed strokes, drawn in a `size`-pixel box at (x, y). */
 function xMark(ctx: Ctx, x: number, y: number, size: number, color: string): void {
@@ -260,8 +262,8 @@ function sideWalls(ctx: Ctx): void {
     ctx.fillText('Discover', 100, 72);
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.fillStyle = '#3c4759';
-    ctx.fillText("Today's experience", 40, 100);
-    ctx.fillText("becomes tomorrow's possibility.", 40, 114);
+    ctx.fillText(signage.panel[0], 40, 100);
+    ctx.fillText(signage.panel[1], 40, 114);
     ctx.fillStyle = '#e0a84a';
     ctx.fillRect(40, 124, 24, 3);
   });

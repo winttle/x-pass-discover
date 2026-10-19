@@ -19,7 +19,7 @@ export default async function StartPage() {
 
   return (
     <StartLobby
-      directory={DEPARTMENTS.map((department) => department.name)}
+      departments={DEPARTMENTS.map((department) => department.slug)}
       account={<AccountMenu />}
     />
   );

@@ -3,15 +3,19 @@ import type { ReactNode } from 'react';
 import { Logo } from '@/components/branding';
 import { Badge } from '@/components/ui';
 import { MEDIA } from '@/content/media';
+import { LanguageSwitcher } from '@/i18n/client';
+import { getT } from '@/i18n/server';
 
 /**
  * The two-column frame shared by sign-in and sign-up, so the two screens read
  * as two doors into the same building rather than two different products.
  */
-export function AuthLayout({ children }: { children: ReactNode }) {
+export async function AuthLayout({ children }: { children: ReactNode }) {
+  const t = await getT();
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="flex flex-col justify-center px-6 py-12 sm:px-12">
+      <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12">
+        <LanguageSwitcher className="absolute right-6 top-6" />
         <div className="mx-auto w-full max-w-sm">{children}</div>
       </div>
 
@@ -40,18 +44,17 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         />
         <div className="absolute inset-x-0 bottom-0 p-10">
           <Badge tone="brand" dot className="bg-white/95">
-            Welcome to BITE
+            {t('auth.aside.badge')}
           </Badge>
           <p className="mt-4 max-w-md text-2xl font-bold leading-snug tracking-tight text-white">
-            Step into the company.
+            {t('auth.aside.line1')}
             <br />
-            Do the work.
+            {t('auth.aside.line2')}
             <br />
-            Discover your fit.
+            {t('auth.aside.line3')}
           </p>
           <p className="mt-3 max-w-sm text-xs leading-relaxed text-white/80">
-            Five departments, one company. You will read the real material, meet the
-            people who decide, and defend a commercial call.
+            {t('auth.aside.body')}
           </p>
         </div>
         <div className="absolute left-10 top-10">

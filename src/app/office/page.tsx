@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { RuntimeBadges } from '@/components/branding';
 import { getRepository } from '@/db/repository';
+import { getT } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { runtimeModeSummary } from '@/lib/env';
 import { loadSessionView } from '@/services/scenario/session-service';
@@ -38,13 +39,14 @@ export default async function OfficePage({
   }
 
   const runtime = runtimeModeSummary();
+  const t = await getT();
 
   return (
     <AppShell
-      title="BITE Office"
-      subtitle={view ? view.department.projectTitle : 'Visitor mode'}
+      title={t('office.title')}
+      subtitle={view ? view.department.projectTitle : t('office.visitorMode')}
       backHref={view ? `/workspace/${view.session.id}` : '/departments'}
-      backLabel={view ? 'Workspace' : 'Departments'}
+      backLabel={view ? t('office.backWorkspace') : t('office.backDepartments')}
       wide
       right={
         <RuntimeBadges

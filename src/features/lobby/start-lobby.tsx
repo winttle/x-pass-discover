@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useT } from '@/i18n/client';
+import type { MessageKey } from '@/i18n/messages/en';
 import { Highlight, IntroCard, LobbyBrand, LobbyCanvas } from './intro-card';
 
 /**
@@ -9,8 +11,9 @@ import { Highlight, IntroCard, LobbyBrand, LobbyCanvas } from './intro-card';
  * lobby, the pre-survey, choosing departments, then the first bootcamp — and
  * START moves them on to the second of those.
  */
-export function StartLobby({ directory, account }: { directory: string[]; account: ReactNode }) {
+export function StartLobby({ departments, account }: { departments: string[]; account: ReactNode }) {
   const router = useRouter();
+  const t = useT();
   const actionRef = useRef<HTMLButtonElement>(null);
   const [leaving, setLeaving] = useState(false);
 
@@ -28,12 +31,13 @@ export function StartLobby({ directory, account }: { directory: string[]; accoun
     <main
       className="fixed inset-0 overflow-hidden bg-[#1d2433]"
       data-testid="start-lobby"
-      aria-label="X-PASS Discover lobby"
+      aria-label={t('lobby.aria')}
     >
       <LobbyCanvas
         signage={{
-          directoryTitle: ['Toward Broader', 'Career Possibilities'],
-          directory,
+          directoryTitle: [t('lobby.directory.line1'), t('lobby.directory.line2')],
+          panel: [t('lobby.panel.line1'), t('lobby.panel.line2')],
+          directory: departments.map((slug) => t(`dept.${slug}` as MessageKey)),
         }}
       />
 
@@ -52,11 +56,13 @@ export function StartLobby({ directory, account }: { directory: string[]; accoun
           total={4}
           title={
             <>
-              Your <Highlight>Bootcamp</Highlight> Starts Now.
+              {t('lobby.title.before')}
+              <Highlight>{t('lobby.title.highlight')}</Highlight>
+              {t('lobby.title.after')}
             </>
           }
-          subtitle="Are You Ready?"
-          action="Start"
+          subtitle={t('lobby.subtitle')}
+          action={t('lobby.start')}
           onAction={start}
           actionRef={actionRef}
           testIdPrefix="start-lobby"

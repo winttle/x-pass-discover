@@ -135,8 +135,8 @@ function window(ctx: Ctx, x: number, y: number, w: number, h: number): void {
   ctx.stroke();
 }
 
-/** Paints the survey room into `ctx`, already scaled to a `SURVEY_W` × `SURVEY_H` frame. */
-export function paintSurveyRoom(ctx: Ctx): void {
+/** Paints the survey room into `ctx`, already scaled to a `SURVEY_W` × `SURVEY_H` frame; `poster` is the motto on the wall. */
+export function paintSurveyRoom(ctx: Ctx, poster: string[]): void {
   const W = SURVEY_W;
   ctx.clearRect(0, 0, W, SURVEY_H);
 
@@ -162,11 +162,8 @@ export function paintSurveyRoom(ctx: Ctx): void {
   // Left: the motto poster, a clock, binder shelves and a coffee machine.
   rect(ctx, 54, 28, 74, 92, '#3a3f4b');
   rect(ctx, 57, 31, 68, 86, '#fbfaf6');
-  text(ctx, 'Good', 63, 48, 10, '#1d2433');
-  text(ctx, 'Experiences', 63, 61, 10, '#1d2433');
-  text(ctx, 'Shape', 63, 74, 10, '#1d2433');
-  text(ctx, 'Better', 63, 87, 10, '#1d2433');
-  text(ctx, 'Careers.', 63, 100, 10, '#1d2433');
+  // The motto, one line per entry (translated by the caller).
+  poster.slice(0, 5).forEach((line, i) => text(ctx, line, 63, 48 + i * 13, 10, '#1d2433'));
   ctx.strokeStyle = '#2563eb';
   ctx.lineWidth = 3;
   ctx.beginPath();

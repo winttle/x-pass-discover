@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, type ReactNode, type Ref } from 'react';
+import { useT } from '@/i18n/client';
 import { useCrispCanvas } from '@/lib/use-crisp-canvas';
 import { LOBBY_H, LOBBY_W, paintLobby, type LobbySignage } from './lobby-art';
 
@@ -62,6 +63,7 @@ export function IntroCard({
   actionRef?: Ref<HTMLButtonElement>;
   testIdPrefix: string;
 }) {
+  const t = useT();
   return (
     <div
       key={index}
@@ -69,7 +71,7 @@ export function IntroCard({
     >
       <div className="relative flex items-center justify-center text-[11px] font-semibold tracking-wider text-muted">
         <span>
-          INTRO&nbsp;&nbsp;{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          {t('lobby.intro')}&nbsp;&nbsp;{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </span>
         {onSkip ? (
           <button
@@ -78,7 +80,7 @@ export function IntroCard({
             className="absolute right-0 text-[11px] font-medium text-subtle underline-offset-4 hover:text-strong hover:underline"
             data-testid={`${testIdPrefix}-skip`}
           >
-            Skip
+            {t('common.skip')}
           </button>
         ) : null}
       </div>
@@ -111,7 +113,7 @@ export function IntroCard({
             onClick={onBack}
             className="rounded-lg px-3 py-2.5 text-xs font-medium text-muted hover:text-strong"
           >
-            Back
+            {t('common.back')}
           </button>
         ) : null}
         <button

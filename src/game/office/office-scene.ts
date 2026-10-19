@@ -63,6 +63,7 @@ import {
 } from './art';
 import { FLOORS, PALETTE, type FloorMaterial } from './theme';
 import type { OfficeBridge } from './bridge';
+import { ENGLISH_LABELS, type OfficeLabels } from './labels';
 
 const PLAYER_SPEED = 215;
 const NPC_INTERACT_RADIUS = 60;
@@ -123,9 +124,12 @@ export class OfficeScene extends Phaser.Scene {
   private wasMoving = false;
   private lastReportedTile = { x: -1, y: -1 };
 
-  constructor(bridge: OfficeBridge) {
+  private labels: OfficeLabels;
+
+  constructor(bridge: OfficeBridge, labels: OfficeLabels = ENGLISH_LABELS) {
     super('office');
     this.bridge = bridge;
+    this.labels = labels;
   }
 
   /**
@@ -767,7 +771,7 @@ export class OfficeScene extends Phaser.Scene {
       const lift = room.y <= 1 ? 92 : 58;
       const container = this.add.container(anchor.x, anchor.y - lift).setDepth(DEPTH_SIGNS);
 
-      const name = this.add.text(30, 7, room.name, {
+      const name = this.add.text(30, 7, this.labels.room(room), {
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         fontSize: '12px',
         color: PALETTE.signInk,
@@ -777,7 +781,7 @@ export class OfficeScene extends Phaser.Scene {
       const hint =
         room.action.kind !== 'info'
           ? this.add
-              .text(30, 23, `▸ ${room.action.label}`, {
+              .text(30, 23, `▸ ${this.labels.action(room)}`, {
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                 fontSize: '10px',
                 color: PALETTE.labelHint,
@@ -930,7 +934,7 @@ export class OfficeScene extends Phaser.Scene {
     this.avatarBody = this.personImage(this.personTexture('player', this.playerLook(), 'down', 0));
 
     const label = this.add
-      .text(0, 7, 'You', {
+      .text(0, 7, this.labels.you, {
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         fontSize: '10px',
         color: '#ffffff',
@@ -1009,7 +1013,7 @@ export class OfficeScene extends Phaser.Scene {
     if (this.speechFor !== npc.key) {
       this.speechFor = npc.key;
       this.speechName.setText(npc.name);
-      this.speechRole.setText(npc.role);
+      this.speechRole.setText(this.labels.role(npc));
       const width = Math.max(this.speechName.width, this.speechRole.width) + 20;
       const height = 40;
       const g = this.speechBg;
@@ -1120,15 +1124,15 @@ export class OfficeScene extends Phaser.Scene {
     this.nearbyNpc = nearest;
 
     const action = nearest
-      ? nearest.prompt
+      ? this.labels.talk
       : room && room.action.kind !== 'info'
-        ? room.action.label
+        ? this.labels.action(room)
         : null;
     const target = nearest ? nearest.name : null;
     const prompt = action
       ? target
-        ? `Press E to ${action} — ${target}`
-        : `Press E — ${action}`
+        ? this.labels.promptTarget(action, target)
+        : this.labels.promptZone(action)
       : null;
 
     if (nearest) {

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { PRE_SURVEY_QUESTIONS, type PreSurveyQuestion } from '@/content/pre-survey';
+import { PRE_SURVEY_QUESTIONS, localize, type PreSurveyQuestion } from '@/content/pre-survey';
+import { useLocale, useT } from '@/i18n/client';
 import { useCrispCanvas } from '@/lib/use-crisp-canvas';
 import { SURVEY_H, SURVEY_W, paintSurveyRoom } from './survey-art';
 
@@ -36,6 +37,8 @@ export function SurveyScreen({
   account: ReactNode;
 }) {
   const router = useRouter();
+  const t = useT();
+  const locale = useLocale();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [answers, setAnswers] = useState<Answers>(initialAnswers);
   const [index, setIndex] = useState(() => firstOpenIndex(initialAnswers));
@@ -48,7 +51,8 @@ export function SurveyScreen({
   const last = index === total - 1;
   const canContinue = isAnswered(question, value);
 
-  useCrispCanvas(canvasRef, SURVEY_W, SURVEY_H, paintSurveyRoom, []);
+  const poster = [1, 2, 3, 4, 5].map((n) => t(`survey.poster.${n}` as 'survey.poster.1'));
+  useCrispCanvas(canvasRef, SURVEY_W, SURVEY_H, (ctx) => paintSurveyRoom(ctx, poster), [poster.join('|')]);
 
   const setValue = (key: string, next: unknown) =>
     setAnswers((prev) => ({ ...prev, [key]: next }));
@@ -63,13 +67,13 @@ export function SurveyScreen({
         body: JSON.stringify({ answers }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'Could not save');
+      if (!response.ok) throw new Error(data.error ?? t('survey.saveFailed'));
       router.push('/departments');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not save');
+      setError(cause instanceof Error ? cause.message : t('survey.saveFailed'));
       setPending(false);
     }
-  }, [answers, router]);
+  }, [answers, router, t]);
 
   const next = useCallback(() => {
     if (!canContinue || pending) return;
@@ -128,10 +132,10 @@ export function SurveyScreen({
                 </span>
                 <div className="min-w-0">
                   <h1 id="survey-title" className="text-2xl font-bold tracking-tight text-strong">
-                    Pre-Survey
+                    {t('survey.title')}
                   </h1>
                   <p className="mt-0.5 text-xs text-muted">
-                    Tell us about your current interests and work preferences before the experience.
+                    {t('survey.lead')}
                   </p>
                 </div>
               </div>
@@ -145,7 +149,7 @@ export function SurveyScreen({
                   aria-valuemin={1}
                   aria-valuemax={total}
                   aria-valuenow={index + 1}
-                  aria-label="Survey progress"
+                  aria-label={t('survey.progress')}
                 >
                   <div
                     className="h-full rounded-full bg-brand-600 transition-all duration-300"
@@ -163,7 +167,7 @@ export function SurveyScreen({
             >
               <p className="flex gap-2 text-base font-semibold leading-snug text-strong" id={`q-${question.key}`}>
                 <span className="shrink-0 font-bold text-brand-600">Q.</span>
-                <span>{question.prompt}</span>
+                <span>{localize(question.prompt, locale)}</span>
               </p>
 
               {question.kind === 'scale' ? (
@@ -188,12 +192,10 @@ export function SurveyScreen({
                       );
                     })}
                   </div>
-                  {question.low || question.high ? (
-                    <div className="mt-2 flex justify-between text-[11px] text-muted">
-                      <span>{question.low}</span>
-                      <span>{question.high}</span>
-                    </div>
-                  ) : null}
+                  <div className="mt-2 flex justify-between gap-4 text-[11px] text-muted">
+                    <span>{question.low ? localize(question.low, locale) : t('survey.low')}</span>
+                    <span className="text-right">{question.high ? localize(question.high, locale) : t('survey.high')}</span>
+                  </div>
                 </div>
               ) : (
                 <textarea
@@ -201,7 +203,7 @@ export function SurveyScreen({
                   aria-labelledby={`q-${question.key}`}
                   className="mt-4 w-full resize-none rounded-lg border border-line-strong bg-surface px-3 py-2.5 text-sm text-strong outline-none transition-colors placeholder:text-subtle focus:border-brand-500"
                   value={typeof value === 'string' ? value : ''}
-                  placeholder={question.placeholder}
+                  placeholder={question.placeholder ? localize(question.placeholder, locale) : undefined}
                   onChange={(e) => setValue(question.key, e.target.value)}
                   autoFocus
                 />
@@ -220,7 +222,7 @@ export function SurveyScreen({
                 onClick={() => router.push('/departments')}
                 className="text-xs font-medium text-subtle underline-offset-4 hover:text-strong hover:underline"
               >
-                Skip for now
+                {t('survey.skip')}
               </button>
               <div className="flex gap-3">
                 <button
@@ -230,7 +232,7 @@ export function SurveyScreen({
                   className="h-11 min-w-[110px] rounded-lg border border-line-strong bg-sunken px-5 text-sm font-semibold text-body transition-colors hover:bg-line disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="survey-back"
                 >
-                  Back
+                  {t('common.back')}
                 </button>
                 <button
                   type="button"
@@ -239,7 +241,7 @@ export function SurveyScreen({
                   className="inline-flex h-11 min-w-[130px] items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white shadow-md shadow-brand-600/25 transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="survey-next"
                 >
-                  {pending ? 'Saving…' : last ? 'Submit' : 'Next'}
+                  {pending ? t('survey.saving') : last ? t('survey.submit') : t('common.next')}
                   {!pending ? <span aria-hidden>›</span> : null}
                 </button>
               </div>
@@ -253,10 +255,11 @@ export function SurveyScreen({
 }
 
 function TopBar({ account }: { account: ReactNode }) {
+  const t = useT();
   const links = [
-    { href: '/welcome', label: 'Home', icon: 'M3 9.5 10 4l7 5.5V17H3z' },
-    { href: '/departments', label: 'Programs', icon: 'M5 3h10v14H5zM8 7h4M8 10h4M8 13h2' },
-    { href: '/report', label: 'My Reports', icon: 'M4 16V9M10 16V4M16 16v-5' },
+    { href: '/welcome', label: t('survey.nav.home'), icon: 'M3 9.5 10 4l7 5.5V17H3z' },
+    { href: '/departments', label: t('survey.nav.programs'), icon: 'M5 3h10v14H5zM8 7h4M8 10h4M8 13h2' },
+    { href: '/report', label: t('survey.nav.reports'), icon: 'M4 16V9M10 16V4M16 16v-5' },
   ];
   return (
     <header className="relative z-10 flex h-12 shrink-0 items-center justify-between gap-4 bg-[#1d2433]/95 px-4 text-white shadow-md sm:px-5">
@@ -286,11 +289,12 @@ function TopBar({ account }: { account: ReactNode }) {
 }
 
 function SideNav() {
+  const t = useT();
   const items = [
-    { href: '/welcome', label: 'Home', active: false },
-    { href: '/pre-survey', label: 'Pre-Survey', active: true },
-    { href: '/departments', label: 'Job Simulations', active: false },
-    { href: '/report', label: 'Results', active: false },
+    { href: '/welcome', label: t('survey.side.home'), active: false },
+    { href: '/pre-survey', label: t('survey.side.survey'), active: true },
+    { href: '/departments', label: t('survey.side.simulations'), active: false },
+    { href: '/report', label: t('survey.side.results'), active: false },
   ];
   return (
     <aside className="relative z-10 hidden w-48 shrink-0 flex-col justify-between bg-[#1d2433] py-4 text-white md:flex">
@@ -310,9 +314,9 @@ function SideNav() {
       </nav>
       <div className="px-4 text-[11px] leading-relaxed text-white/70">
         <p>
-          Different Experiences
+          {t('survey.side.tagline1')}
           <br />
-          Reveal More of Who You Are
+          {t('survey.side.tagline2')}
         </p>
         <p className="mt-2 font-bold text-white">X-PASS Discover</p>
       </div>
@@ -322,12 +326,13 @@ function SideNav() {
 
 /** Day one: intro done, the survey now, job simulations and the report to come. */
 function Stepper() {
-  const steps = ['INTRO', 'Survey', 'Job Simulations', 'Report'];
+  const t = useT();
+  const steps = [t('survey.step.intro'), t('survey.step.survey'), t('survey.step.simulations'), t('survey.step.report')];
   const current = 1;
   return (
     <ol
       className="flex w-full max-w-[520px] items-center rounded-xl border border-white/60 bg-surface/90 px-4 py-2.5 shadow-float backdrop-blur-sm"
-      aria-label="Your first day"
+      aria-label={t('survey.stepper')}
     >
       {steps.map((label, i) => {
         const done = i < current;

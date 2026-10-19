@@ -7,6 +7,7 @@ import {
   NPCS,
   ROOMS,
 } from '@/game/office/map';
+import { useT } from '@/i18n/client';
 
 const SCALE = 4;
 
@@ -38,6 +39,7 @@ export function Minimap({
   player: { x: number; y: number } | null;
   activeRoomKey: string | null;
 }) {
+  const t = useT();
   const width = (GRID_WIDTH + GRID_HEIGHT) * SCALE;
   const height = width / 2;
   const marker = player ? project(player.x + 0.5, player.y + 0.5) : null;
@@ -47,7 +49,7 @@ export function Minimap({
       viewBox={`-4 -4 ${width + 8} ${height + 8}`}
       className="h-auto w-full"
       role="img"
-      aria-label="Office minimap"
+      aria-label={t('office.minimap')}
     >
       <polygon
         points={diamond(0, 0, GRID_WIDTH, GRID_HEIGHT)}
