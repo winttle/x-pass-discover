@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { AccountMenu } from '@/features/auth/account-menu';
+import { getT } from '@/i18n/server';
 import { Logo } from './branding';
 
 /**
@@ -26,6 +27,7 @@ export async function AppShell({
   backLabel?: string;
   wide?: boolean;
 }) {
+  const t = await getT();
   const container = wide ? 'max-w-[1680px]' : 'max-w-7xl';
   return (
     <div className="min-h-dvh">
@@ -49,7 +51,7 @@ export async function AppShell({
               href={backHref}
               className="shrink-0 rounded-lg border border-line px-2.5 py-1.5 text-[11px] text-body transition-colors hover:border-line-strong hover:bg-sunken hover:text-strong"
             >
-              ← {backLabel ?? 'Back'}
+              {t('common.backTo', { label: backLabel ?? t('common.backDefault') })}
             </Link>
           ) : null}
           <AccountMenu />

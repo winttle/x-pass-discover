@@ -30,9 +30,12 @@ This build is the **common platform plus the Sales vertical slice**:
   rules, configurable task forms, answer revisions, submissions snapshots,
   AI conversations with server-side hidden-information control, and behavior
   event logging.
-- A 2D BITE office in Phaser — floors, walls with faked height, procedural
-  furniture and characters, all generated from a map definition with no art
-  assets — wired to React through an explicit event bridge.
+- A 2.5D (isometric) BITE office in Phaser — windowed back walls with a city
+  view, glass meeting rooms, wood/carpet/marble floors with daylight and soft
+  shadows, detailed furniture and seated colleagues, all painted with Canvas 2D,
+  all generated from a map definition with no art assets — wired to React
+  through an explicit event bridge. The game logic still runs on the flat tile
+  grid; only drawing is projected.
 
 **Sales vertical slice** — all ten steps, playable:
 
@@ -223,10 +226,15 @@ src/
     seed/run.ts           idempotent content seed
   game/office/
     map.ts                office layout as data (rooms, doors, furniture, NPCs)
-    theme.ts              the office palette — the whole look lives here
-    office-scene.ts       Phaser scene (procedural rendering, no art assets)
+    theme.ts              the office palette and floor materials
+    iso.ts                isometric projection and draw-order (depth) rule
+    art.ts                2.5D pieces painted with Canvas 2D: walls, furniture, people
+    office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
+    lobby/                the illustrated lobby (lobby-art.ts) and the /start onboarding screen
+    survey/               the one-question-per-screen pre-survey over an illustrated office
+  i18n/                   languages (en / ja / ko): config, dictionaries, server getT(), client useT()
   app/                    routes (student, admin, api)
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
@@ -318,10 +326,10 @@ That is the whole setup. No database, no API key, no `.env`.
 > needs network access once. After that it works offline.
 
 Then: **Create an account** (email + display name, **no password** — it is a
-development identity, see §8) → pre-survey → choose departments → **Start
+development identity, see §8) → the X-PASS lobby (**START**) → pre-survey → choose departments → **Start
 bootcamp** on Sales → work through the ten steps. Returning students sign in at
 `/login` with the email alone. Sign out from the header on any signed-in page.
-Walk into the 2D office from the workspace sidebar, or go straight to
+Walk into the 2.5D office from the workspace sidebar, or go straight to
 `/office`.
 
 Things worth trying, because they are where the design decisions show:
@@ -331,7 +339,8 @@ Things worth trying, because they are where the design decisions show:
 | **AI Buyer Meeting** | Ask "tell me about QuickMart" → you get nothing. Ask "how many facings would a new protein drink get?" → the buyer gives you the number and the discovery meter ticks up. |
 | **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
 | **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
-| **The 2D office** | WASD/arrows, walk into the Data Room or up to an NPC, press `E`. |
+| **Day one** | A new account (or a sign-in before the pre-survey is done) opens on `/start`, the X-PASS lobby: INTRO 01/04, **START** begins the pre-survey — one question per screen, keys 1–5 answer, Enter moves on. Questions live in `src/content/pre-survey.ts`. After the survey, sign-in goes to the welcome page. |
+| **The 2.5D office** | WASD/arrows move relative to the screen (up = towards the back wall; up + right walks straight along a corridor). Walk into the Data Room or up to an NPC, press `E`. |
 | **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
 | **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |
 
@@ -524,8 +533,26 @@ obviously on-topic question still counts as discovery.
 - **Object storage adapter.** `resources.file_url` exists; everything is
   currently inline markdown or table data.
 - **Art assets.** The office is generated geometry — deliberately, so a new room
-  is a data change. Sprite art would replace `office-scene.ts`'s paint methods
-  without touching the map or the bridge.
+  is a data change. Sprite art would replace the pieces in `art.ts` (one
+  isometric tile each, sorted by `iso.ts`) without touching the map or the
+  bridge.
+
+### Languages
+
+The interface can be shown in English, Japanese or Korean. The choice is made
+from the globe menu (next to the account name, and on the sign-in pages), kept
+in the `xpass-locale` cookie, and defaults to the browser's language.
+
+- Strings live in `src/i18n/messages/{en,ja,ko}.ts`. English is the source;
+  the other two are type-checked against it, so a missing key fails the build.
+- Server components call `await getT()`, client components `useT()`;
+  `{name}` placeholders are filled from the second argument.
+- Pre-survey questions carry their own `{ en, ja, ko }` text in
+  `src/content/pre-survey.ts`.
+- Translated so far: sign-in / sign-up, the lobby, the pre-survey, the welcome
+  page, the shared header and the office (HUD, room signs, prompts). Still
+  English: the landing page, departments, workspace, report, admin and the
+  scenario content itself (case material, personas).
 
 ---
 

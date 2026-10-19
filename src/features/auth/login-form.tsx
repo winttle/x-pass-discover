@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Card, Field, inputClass } from '@/components/ui';
 import { Logo } from '@/components/branding';
+import { useT } from '@/i18n/client';
 
 /**
  * Development identity, not authentication. There is no password: this exists
@@ -19,6 +20,7 @@ import { Logo } from '@/components/branding';
  */
 export function LoginForm({ initialEmail = '' }: { initialEmail?: string }) {
   const router = useRouter();
+  const t = useT();
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
   const [pending, setPending] = useState(false);
@@ -35,14 +37,20 @@ export function LoginForm({ initialEmail = '' }: { initialEmail?: string }) {
       });
       const data = await response.json();
       if (!response.ok) {
-        setError({ message: data.error ?? 'Sign-in failed', code: data.code });
+        setError({
+          message:
+            data.code === 'account_not_found'
+              ? t('auth.login.notFound')
+              : (data.error ?? t('auth.login.failed')),
+          code: data.code,
+        });
         setPending(false);
         return;
       }
-      router.push('/welcome');
+      router.push('/start');
       router.refresh();
     } catch {
-      setError({ message: 'Sign-in failed. Check your connection and try again.' });
+      setError({ message: t('auth.login.offline') });
       setPending(false);
     }
   }
@@ -51,20 +59,20 @@ export function LoginForm({ initialEmail = '' }: { initialEmail?: string }) {
     <Card className="p-6">
       <Logo />
 
-      <h1 className="mt-6 text-lg font-semibold text-strong">Sign in to BITE</h1>
+      <h1 className="mt-6 text-lg font-semibold text-strong">{t('auth.login.title')}</h1>
       <p className="mt-1 text-xs leading-relaxed text-muted">
-        Enter the email you signed up with. No password is collected or stored.
+        {t('auth.login.lead')}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <Field label="Email" required>
+        <Field label={t('auth.email')} required>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             autoComplete="email"
           />
         </Field>
@@ -80,24 +88,24 @@ export function LoginForm({ initialEmail = '' }: { initialEmail?: string }) {
                 href={`/signup?email=${encodeURIComponent(email)}`}
                 className="mt-1.5 inline-block font-medium underline underline-offset-2"
               >
-                Create an account with this email →
+                {t('auth.login.createInstead')}
               </Link>
             ) : null}
           </div>
         ) : null}
 
         <Button type="submit" loading={pending} className="w-full">
-          {pending ? 'Signing in…' : 'Enter BITE'}
+          {pending ? t('auth.login.pending') : t('auth.login.submit')}
         </Button>
       </form>
 
       <p className="mt-5 border-t border-line pt-4 text-xs text-muted">
-        First time here?{' '}
+        {t('auth.login.firstTime')}{' '}
         <Link
           href="/signup"
           className="font-medium text-brand-600 underline-offset-2 hover:underline"
         >
-          Create an account
+          {t('auth.login.createLink')}
         </Link>
       </p>
     </Card>

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useT } from '@/i18n/client';
 
 /**
  * Signing out is a state change, so it is a POST rather than a link — a link
@@ -9,6 +10,7 @@ import { useState } from 'react';
  */
 export function SignOutButton() {
   const router = useRouter();
+  const t = useT();
   const [pending, setPending] = useState(false);
 
   async function signOut() {
@@ -32,7 +34,7 @@ export function SignOutButton() {
       data-testid="sign-out"
       className="shrink-0 rounded-lg border border-line px-2.5 py-1.5 text-[11px] text-body transition-colors hover:border-line-strong hover:bg-sunken hover:text-strong disabled:opacity-40"
     >
-      {pending ? 'Signing out…' : 'Sign out'}
+      {pending ? t('common.signingOut') : t('common.signOut')}
     </button>
   );
 }

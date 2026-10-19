@@ -2,15 +2,16 @@
 
 import { useEffect, useRef } from 'react';
 import type { OfficeBridge } from '@/game/office/bridge';
+import type { OfficeLabels } from '@/game/office/labels';
 
 /**
  * Mounts the Phaser game.
  *
  * Phaser is browser-only, so it is imported dynamically inside the effect and
  * never reaches the server bundle. The scene receives the bridge and reports
- * interactions back through it.
+ * interactions back through it. Changing `labels` (the language) restarts it.
  */
-export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
+export function OfficeCanvas({ bridge, labels }: { bridge: OfficeBridge; labels: OfficeLabels }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
             fixedStep: false,
           },
         },
-        scene: [new OfficeScene(bridge)],
+        scene: [new OfficeScene(bridge, labels)],
       });
 
       // Debug handle for driving the office from devtools or an automated
@@ -80,11 +81,12 @@ export function OfficeCanvas({ bridge }: { bridge: OfficeBridge }) {
       game = null;
       delete (window as unknown as { __xpassGame?: unknown }).__xpassGame;
     };
-  }, [bridge]);
+  }, [bridge, labels]);
 
   return (
     <div
       ref={containerRef}
+      data-testid="office-canvas"
       className="h-[clamp(420px,calc(100dvh-230px),760px)] w-full overflow-hidden bg-canvas"
     />
   );

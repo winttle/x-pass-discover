@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button, Card, Field, inputClass } from '@/components/ui';
 import { Logo } from '@/components/branding';
+import { useT } from '@/i18n/client';
 
 /**
  * Account creation. The counterpart to `LoginForm`, and the only place the
@@ -18,6 +19,7 @@ import { Logo } from '@/components/branding';
  */
 export function SignupForm({ initialEmail = '' }: { initialEmail?: string }) {
   const router = useRouter();
+  const t = useT();
   const [email, setEmail] = useState(initialEmail);
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
@@ -35,14 +37,20 @@ export function SignupForm({ initialEmail = '' }: { initialEmail?: string }) {
       });
       const data = await response.json();
       if (!response.ok) {
-        setError({ message: data.error ?? 'Sign-up failed', code: data.code });
+        setError({
+          message:
+            data.code === 'email_taken'
+              ? t('auth.signup.taken')
+              : (data.error ?? t('auth.signup.failed')),
+          code: data.code,
+        });
         setPending(false);
         return;
       }
-      router.push('/welcome');
+      router.push('/start');
       router.refresh();
     } catch {
-      setError({ message: 'Sign-up failed. Check your connection and try again.' });
+      setError({ message: t('auth.signup.offline') });
       setPending(false);
     }
   }
@@ -51,25 +59,24 @@ export function SignupForm({ initialEmail = '' }: { initialEmail?: string }) {
     <Card className="p-6">
       <Logo />
 
-      <h1 className="mt-6 text-lg font-semibold text-strong">Create your BITE account</h1>
+      <h1 className="mt-6 text-lg font-semibold text-strong">{t('auth.signup.title')}</h1>
       <p className="mt-1 text-xs leading-relaxed text-muted">
-        No password is collected or stored. Your email identifies the account; the
-        display name is how BITE will address you.
+        {t('auth.signup.lead')}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <Field label="Email" required>
+        <Field label={t('auth.email')} required>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             autoComplete="email"
           />
         </Field>
-        <Field label="Display name" required>
+        <Field label={t('auth.displayName')} required>
           <input
             type="text"
             required
@@ -77,7 +84,7 @@ export function SignupForm({ initialEmail = '' }: { initialEmail?: string }) {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className={inputClass}
-            placeholder="How BITE should address you"
+            placeholder={t('auth.displayNamePlaceholder')}
             autoComplete="name"
           />
         </Field>
@@ -93,24 +100,24 @@ export function SignupForm({ initialEmail = '' }: { initialEmail?: string }) {
                 href={`/login?email=${encodeURIComponent(email)}`}
                 className="mt-1.5 inline-block font-medium underline underline-offset-2"
               >
-                Sign in with this email instead →
+                {t('auth.signup.signInInstead')}
               </Link>
             ) : null}
           </div>
         ) : null}
 
         <Button type="submit" loading={pending} className="w-full">
-          {pending ? 'Creating…' : 'Create account'}
+          {pending ? t('auth.signup.pending') : t('auth.signup.submit')}
         </Button>
       </form>
 
       <p className="mt-5 border-t border-line pt-4 text-xs text-muted">
-        Already have an account?{' '}
+        {t('auth.signup.haveAccount')}{' '}
         <Link
           href="/login"
           className="font-medium text-brand-600 underline-offset-2 hover:underline"
         >
-          Sign in
+          {t('common.signIn')}
         </Link>
       </p>
     </Card>

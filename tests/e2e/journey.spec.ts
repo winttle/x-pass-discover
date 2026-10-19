@@ -26,7 +26,10 @@ test.describe('the student journey', () => {
   }) => {
     await signUp(page, { email: uniqueEmail(), displayName: 'Mina Okada' });
 
-    await expect(page.getByText('Signed in as Mina Okada')).toBeVisible();
+    // Day one opens in the lobby; START is the way into the pre-survey.
+    await expect(page.getByTestId('account-menu')).toContainText('Mina Okada');
+    await page.getByTestId('start-lobby-next').click();
+    await page.waitForURL('**/pre-survey');
 
     await completePreSurvey(page, { interest_sales: 5, interest_marketing: 2 });
     await startBootcamp(page, 'sales');

@@ -13,16 +13,16 @@ test('a new student creates an account, and comes back to the same one', async (
   const email = uniqueEmail();
 
   await signUp(page, { email, displayName: 'Haruka Sato' });
-  await expect(page.getByText('Signed in as Haruka Sato')).toBeVisible();
+  await expect(page.getByTestId('account-menu')).toContainText('Haruka Sato');
 
   await page.getByTestId('sign-out').click();
   await page.waitForURL(/\/$/);
 
   await signIn(page, email);
   await expect(
-    page.getByText('Signed in as Haruka Sato'),
+    page.getByTestId('account-menu'),
     'signing back in should reach the same account, name and all',
-  ).toBeVisible();
+  ).toContainText('Haruka Sato');
 });
 
 test('signing up with an email that already has an account is refused', async ({
@@ -47,10 +47,11 @@ test('signing up with an email that already has an account is refused', async ({
   await error.getByRole('link', { name: /Sign in with this email/ }).click();
   await page.waitForURL('**/login**');
   await page.getByRole('button', { name: 'Enter BITE' }).click();
-  await page.waitForURL('**/welcome');
+  // Still before the pre-survey, so sign-in opens in the lobby.
+  await page.waitForURL('**/start');
 
   // The original account is reached, and its display name was not overwritten.
-  await expect(page.getByText('Signed in as First Owner')).toBeVisible();
+  await expect(page.getByTestId('account-menu')).toContainText('First Owner');
 });
 
 test('signing in with an unknown email offers sign-up instead of inventing an account', async ({

@@ -12,6 +12,12 @@ import { expect, type Locator, type Page } from '@playwright/test';
 let counter = 0;
 
 /**
+ * Where signing in lands: the lobby (`/start`) for anyone who has not yet taken
+ * the pre-survey, the welcome page for everyone else.
+ */
+export const SIGNED_IN_URL = /\/(start|welcome)(\?.*)?$/;
+
+/**
  * A fresh account per test. The suite runs in parallel against one in-memory
  * store, so isolation comes from never reusing an address, not from resetting
  * the store between tests.
@@ -29,14 +35,15 @@ export async function signUp(
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Display name').fill(displayName);
   await page.getByRole('button', { name: 'Create account' }).click();
-  await page.waitForURL('**/welcome');
+  // A brand-new account has not taken the pre-survey, so it opens in the lobby.
+  await page.waitForURL('**/start');
 }
 
 export async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByRole('button', { name: 'Enter BITE' }).click();
-  await page.waitForURL('**/welcome');
+  await page.waitForURL(SIGNED_IN_URL);
 }
 
 /**
@@ -63,10 +70,10 @@ export async function ensureSignedIn(
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await Promise.race([
-    page.waitForURL('**/welcome'),
+    page.waitForURL(SIGNED_IN_URL),
     page.getByTestId('auth-error').waitFor({ state: 'visible' }),
   ]);
-  if (page.url().includes('/welcome')) return;
+  if (SIGNED_IN_URL.test(new URL(page.url()).pathname)) return;
   await signIn(page, email);
 }
 
@@ -85,17 +92,28 @@ export async function completePreSurvey(
   scores: Record<string, number> = {},
 ): Promise<void> {
   await page.goto('/pre-survey');
-  const rows = page.locator('[data-interest-key]');
-  for (let i = 0; i < (await rows.count()); i += 1) {
-    const row = rows.nth(i);
-    const key = await row.getAttribute('data-interest-key');
-    const score = (key && scores[key]) ?? 4;
-    await row.getByRole('button', { name: String(score), exact: true }).click();
+  // One question per screen, in whatever order and number the content
+  // declares: answer what is shown, then move on until the survey submits.
+  for (let guard = 0; guard < 200; guard += 1) {
+    const question = page.locator('[data-question-key]');
+    await question.waitFor();
+    const key = (await question.getAttribute('data-question-key')) ?? '';
+    const kind = await question.getAttribute('data-question-kind');
+    if (kind === 'scale') {
+      await question
+        .getByRole('button', { name: String(scores[key] ?? 4), exact: true })
+        .click();
+    } else {
+      await question
+        .locator('textarea')
+        .fill('I think I like work where I have to defend a decision with evidence.');
+    }
+    const next = page.getByTestId('survey-next');
+    const submits = (await next.textContent())?.includes('Submit');
+    await next.click();
+    if (submits) break;
+    await expect(question).not.toHaveAttribute('data-question-key', key);
   }
-  await page
-    .getByLabel('What kind of work do you think suits you, and why?')
-    .fill('I think I like work where I have to defend a decision with evidence.');
-  await page.getByRole('button', { name: 'Save and continue' }).click();
   await page.waitForURL('**/departments');
 }
 
