@@ -53,6 +53,15 @@ test('the departments, the workspace and the scenario follow the language', asyn
     'true',
   );
 
+  // A finished step points the student onward instead of leaving them there.
+  const next = page.getByTestId('next-step');
+  await expect(next).toContainText('次は「オンボーディング');
+  await next.getByRole('button', { name: '次のステップへ進む →' }).click();
+  await expect(page.locator('[data-step-key="onboarding"]')).toHaveAttribute(
+    'aria-current',
+    'step',
+  );
+
   // And back to English, same session, same progress.
   await page.getByTestId('language-switcher').selectOption('en');
   await expect(page.locator('[data-step-key="sales-training"]')).toContainText('Sales Training');
