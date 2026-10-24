@@ -1,3 +1,4 @@
+import { getLocale } from '@/i18n/server';
 import { withUser } from '@/lib/api';
 import { loadSessionView } from '@/services/scenario/session-service';
 
@@ -6,5 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   const { sessionId } = await params;
-  return withUser(async (user) => ({ view: await loadSessionView(sessionId, user.id) }));
+  return withUser(async (user) => ({
+    view: await loadSessionView(sessionId, user.id, await getLocale()),
+  }));
 }

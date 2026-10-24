@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge, Button } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import type { TaskField } from '@/types/scenario';
 import { FieldInput } from './field-input';
 
@@ -22,6 +23,7 @@ export function RepeatableGroup({
   onChange: (next: Row[]) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const minRows = field.minRows ?? 1;
   const maxRows = field.maxRows ?? 20;
   const rows: Row[] = Array.isArray(value) ? (value as Row[]) : [];
@@ -60,7 +62,7 @@ export function RepeatableGroup({
                 onClick={() => onChange(padded.filter((_, i) => i !== index))}
                 className="text-[11px] text-muted transition-colors hover:text-danger-400 disabled:opacity-40"
               >
-                Remove
+                {t('field.remove')}
               </button>
             ) : null}
           </div>
@@ -81,10 +83,10 @@ export function RepeatableGroup({
                     {sub.required ? <span className="ml-1 text-danger-400">*</span> : null}
                   </span>
                   {sub.epistemicKind === 'fact' ? (
-                    <Badge tone="success">Evidence</Badge>
+                    <Badge tone="success">{t('field.evidence')}</Badge>
                   ) : null}
                   {sub.epistemicKind === 'hypothesis' ? (
-                    <Badge tone="warn">Hypothesis</Badge>
+                    <Badge tone="warn">{t('field.hypothesis')}</Badge>
                   ) : null}
                 </div>
                 <FieldInput
@@ -110,7 +112,7 @@ export function RepeatableGroup({
           className="w-full"
           data-testid="add-row"
         >
-          + Add another
+          {t('field.addRow')}
         </Button>
       ) : null}
     </div>

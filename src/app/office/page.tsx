@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { RuntimeBadges } from '@/components/branding';
 import { getRepository } from '@/db/repository';
-import { getT } from '@/i18n/server';
+import { getLocale, getT } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { runtimeModeSummary } from '@/lib/env';
 import { loadSessionView } from '@/services/scenario/session-service';
@@ -32,7 +32,7 @@ export default async function OfficePage({
   let view: SessionView | null = null;
   if (target) {
     try {
-      view = await loadSessionView(target.id, user.id);
+      view = await loadSessionView(target.id, user.id, await getLocale());
     } catch {
       view = null;
     }

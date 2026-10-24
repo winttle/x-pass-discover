@@ -16,6 +16,9 @@ export function format(template: string, vars?: Vars): string {
   );
 }
 
+/** True when `key` names a message, for keys built from content (a guardrail key, say). */
+export const isMessageKey = (key: string): key is MessageKey => key in en;
+
 export function translator(messages: Messages): Translate {
   return (key, vars) => format(messages[key] ?? en[key] ?? key, vars);
 }

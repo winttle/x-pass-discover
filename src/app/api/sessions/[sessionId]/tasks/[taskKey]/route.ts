@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getLocale } from '@/i18n/server';
 import { parseBody, withUser } from '@/lib/api';
 import { requireOwnedSession } from '@/services/scenario/session-service';
 import { saveTaskAnswer } from '@/services/scenario/task-service';
@@ -21,6 +22,7 @@ export async function POST(
       taskKey,
       value: body.value,
       status: body.status,
+      locale: await getLocale(),
     });
   });
 }

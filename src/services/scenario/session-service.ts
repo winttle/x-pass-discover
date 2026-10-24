@@ -1,13 +1,16 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
-import { getDepartment } from '@/content/departments';
+import { getDepartment, getLocalizedDepartment } from '@/content/departments';
 import { MEDIA } from '@/content/media';
 import {
   getPublishedScenario,
   getScenarioVersion,
-  listResources,
+  listLocalizedResources,
+  localizedScenario,
 } from '@/content/registry';
 import { listPublicPersonas } from '@/content/personas.server';
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config';
+import { DICTIONARIES, translator } from '@/i18n/translate';
 import { env, runtimeModeSummary } from '@/lib/env';
 import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
@@ -143,12 +146,20 @@ function buildTaskView(
   };
 }
 
+/**
+ * The client view of a session, in the student's language. Progress is
+ * evaluated on the pinned scenario; only the words the student reads are
+ * translated, so the language can never change what a step requires.
+ */
 export function buildSessionView(
   session: ProjectSession,
-  scenario: ScenarioVersionDefinition,
+  pinned: ScenarioVersionDefinition,
   state: EngineState,
+  locale: Locale = DEFAULT_LOCALE,
 ): SessionView {
-  const department = getDepartment(session.departmentSlug);
+  const scenario = localizedScenario(pinned, locale);
+  const t = translator(DICTIONARIES[locale]);
+  const department = getLocalizedDepartment(session.departmentSlug, locale);
 
   const steps: StepView[] = [...scenario.steps]
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -174,7 +185,7 @@ export function buildSessionView(
         officeZoneKey: step.officeZoneKey ?? null,
         status,
         unlocked,
-        lockedReason: unlocked ? null : describeLock(step.unlockRule, scenario),
+        lockedReason: unlocked ? null : describeLock(step.unlockRule, scenario, t),
         resourceKeys: step.resourceKeys ?? [],
         eventPayload: step.eventPayload ?? null,
         media: step.media ?? null,
@@ -202,8 +213,8 @@ export function buildSessionView(
       coverImage: department?.coverImage ?? MEDIA.companyOffice.src,
     },
     steps,
-    resources: listResources(session.scenarioKey),
-    personas: listPublicPersonas(session.scenarioKey),
+    resources: listLocalizedResources(session.scenarioKey, locale),
+    personas: listPublicPersonas(session.scenarioKey, locale),
     progress: {
       completedSteps: steps.filter((s) => s.status === 'completed').length,
       totalSteps: steps.length,
@@ -216,11 +227,12 @@ export function buildSessionView(
 export async function loadSessionView(
   sessionId: string,
   userId: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<SessionView> {
   const session = await requireOwnedSession(sessionId, userId);
   const scenario = getScenarioForSession(session);
   const state = await loadEngineState(sessionId);
-  return buildSessionView(session, scenario, state);
+  return buildSessionView(session, scenario, state, locale);
 }
 
 // --------------------------------------------------------------- progression

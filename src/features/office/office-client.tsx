@@ -48,6 +48,12 @@ export function OfficeClient({ initialView }: { initialView: SessionView | null 
     [t],
   );
   const [view, setView] = useState<SessionView | null>(initialView);
+  // Switching language re-renders the page on the server; take the re-worded view.
+  const [renderedView, setRenderedView] = useState(initialView);
+  if (initialView !== renderedView) {
+    setRenderedView(initialView);
+    setView(initialView);
+  }
   const [prompt, setPrompt] = useState<{
     text: string;
     action: string;

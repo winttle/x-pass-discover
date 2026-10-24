@@ -13,6 +13,7 @@ import type {
   TaskAnswer,
 } from '@/types/runtime';
 import type { TaskStatus } from '@/types/session-view';
+import type { Translate } from '@/i18n/translate';
 import { resolvePrefillTemplate } from '@/lib/prefill';
 
 /**
@@ -206,35 +207,41 @@ export function isUnlocked(
 export function describeLock(
   rule: UnlockRule,
   scenario: ScenarioVersionDefinition,
+  t: Translate,
 ): string {
   switch (rule.type) {
     case 'always':
       return '';
     case 'step_completed': {
       const step = scenario.steps.find((s) => s.key === rule.stepKey);
-      return `Complete “${step?.title ?? rule.stepKey}” first.`;
+      return t('lock.step', { step: step?.title ?? rule.stepKey });
     }
-    case 'task_submitted':
-      return `Submit “${rule.taskKey}” first.`;
+    case 'task_submitted': {
+      const task = scenario.steps
+        .flatMap((s) => s.tasks)
+        .find((candidate) => candidate.key === rule.taskKey);
+      return t('lock.task', { task: task?.title ?? rule.taskKey });
+    }
     case 'conversation_completed': {
       const step = rule.stepKey
         ? scenario.steps.find((s) => s.key === rule.stepKey)
         : null;
       return step
-        ? `Finish the conversation in “${step.title}” first.`
-        : 'Finish the required conversation first.';
+        ? t('lock.conversationIn', { step: step.title })
+        : t('lock.conversation');
     }
+    // Several rules can describe the same thing (three conversations in one
+    // step, say): each sentence is said once.
     case 'all':
-      return rule.rules.map((r) => describeLock(r, scenario)).filter(Boolean).join(' ');
+      return unique(rule.rules.map((r) => describeLock(r, scenario, t))).join(' ');
     case 'any':
-      return rule.rules
-        .map((r) => describeLock(r, scenario))
-        .filter(Boolean)
-        .join(' or ');
+      return unique(rule.rules.map((r) => describeLock(r, scenario, t))).join(t('lock.or'));
     default:
-      return 'Not available yet.';
+      return t('lock.default');
   }
 }
+
+const unique = (parts: string[]) => Array.from(new Set(parts.filter(Boolean)));
 
 // -------------------------------------------------------------------- prefill
 

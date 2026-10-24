@@ -239,6 +239,7 @@ src/
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
   verify-disclosure.ts    checks the hidden-fact matcher against real phrasings
+  verify-i18n.ts          checks every scenario translation covers its English
 tests/e2e/
   journey.spec.ts         the whole bootcamp, driven off the step rail
   hidden-information.spec.ts  nothing server-only reaches the browser
@@ -413,10 +414,11 @@ pretending data was stored.
 ### Verification
 
 ```bash
-npm run verify            # typecheck + lint + office map + disclosure + Postgres
+npm run verify            # typecheck + lint + office map + translations + disclosure + Postgres
 npm run db:verify         # migration + seed + every Drizzle query on embedded PG
 npm run verify:disclosure # hidden-fact matcher against realistic phrasings
 npm run verify:office     # floor plan: every room, door and NPC still reachable
+npm run verify:i18n       # every translated scenario covers its English source
 
 npm run test:e2e:install  # one-off: fetch the Chromium build Playwright expects
 npm run test:e2e          # the browser suite (builds and serves the app itself)
@@ -549,10 +551,24 @@ in the `xpass-locale` cookie, and defaults to the browser's language.
   `{name}` placeholders are filled from the second argument.
 - Pre-survey questions carry their own `{ en, ja, ko }` text in
   `src/content/pre-survey.ts`.
+- Scenario content (departments, steps, tasks, fields, the Data Room, what
+  the student reads of a persona) is translated by **overlay**: files such as
+  `src/content/sales/scenario.i18n.ts` mirror the English by key (step key,
+  task key, field key, option value, resource key) and are applied by
+  `src/content/localize.ts` only when a view is built for the student. The
+  English stays what the seed writes, what a session pins and what the engine
+  evaluates, so switching language mid-bootcamp changes the words and nothing
+  else. Figures in a translation are read from the same constants as the
+  English. `npm run verify:i18n` fails on any string an overlay leaves out, any
+  key it names that no longer exists, and any placeholder it drops.
+- A scenario with no overlay is shown in English and reported (not failed) by
+  `verify:i18n`. Persona names stay as written, matching the office.
 - Translated so far: sign-in / sign-up, the lobby, the pre-survey, the welcome
-  page, the shared header and the office (HUD, room signs, prompts). Still
-  English: the landing page, departments, workspace, report, admin and the
-  scenario content itself (case material, personas).
+  page, the shared header, the office (HUD, room signs, prompts), the
+  departments page and the whole workspace, and the Sales scenario in Japanese.
+  Still English: the landing page, report and admin; the Sales scenario in
+  Korean (the Korean interface around it is translated); mock-mode AI replies,
+  which are canned English (OpenAI mode answers in the student's language).
 
 ---
 

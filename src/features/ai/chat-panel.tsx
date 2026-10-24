@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Badge, Button, Card, CardHeader, inputClass, Spinner } from '@/components/ui';
 import { useToast } from '@/components/toast';
 import { Portrait } from '@/components/media';
+import { useT } from '@/i18n/client';
 import { conversationAction } from '@/lib/client-api';
 import type { ConversationView, PublicPersona } from '@/types/ai';
 import type { SessionView } from '@/types/session-view';
@@ -40,6 +41,7 @@ export function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const discoveredRef = useRef(0);
   const toast = useToast();
+  const t = useT();
 
   useEffect(() => {
     let cancelled = false;
@@ -51,13 +53,15 @@ export function ChatPanel({
       })
       .catch((cause: unknown) =>
         setError(
-          cause instanceof Error ? cause.message : 'Could not open the conversation',
+          cause instanceof Error ? cause.message : t('chat.openFailed'),
         ),
       );
     return () => {
       cancelled = true;
     };
-  }, [sessionId, persona.key, stepKey]);
+    // `t` changes with the language: re-reading the conversation then brings
+    // its fact labels across too. Opening is idempotent.
+  }, [sessionId, persona.key, stepKey, t]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -72,7 +76,10 @@ export function ChatPanel({
       const labels = next.messages.at(-1)?.revealedFactLabels ?? [];
       toast.push({
         tone: 'success',
-        title: gained === 1 ? 'You uncovered something' : `You uncovered ${gained} things`,
+        title:
+          gained === 1
+            ? t('chat.uncoveredOne')
+            : t('chat.uncoveredMany', { count: gained }),
         description: labels.join(' · ') || undefined,
       });
     }
@@ -95,7 +102,7 @@ export function ChatPanel({
       });
       applyConversation(data.conversation);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not send the message');
+      setError(cause instanceof Error ? cause.message : t('chat.sendFailed'));
       setDraft(message);
     } finally {
       setSending(false);
@@ -113,9 +120,13 @@ export function ChatPanel({
       });
       setConversation(data.conversation);
       if (data.view) onSessionUpdate(data.view);
-      toast.push({ tone: 'info', title: 'Conversation ended', description: 'Your transcript is preserved.' });
+      toast.push({
+        tone: 'info',
+        title: t('chat.endedToast'),
+        description: t('chat.transcriptKept'),
+      });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not end the conversation');
+      setError(cause instanceof Error ? cause.message : t('chat.endFailed'));
     } finally {
       setEnding(false);
     }
@@ -142,11 +153,11 @@ export function ChatPanel({
           <div className="flex items-center gap-1.5">
             {ended ? (
               <Badge tone="muted" dot>
-                Ended
+                {t('chat.ended')}
               </Badge>
             ) : (
               <Badge tone="success" dot>
-                Live
+                {t('chat.live')}
               </Badge>
             )}
           </div>
@@ -168,7 +179,7 @@ export function ChatPanel({
         <div ref={scrollRef} className="h-full space-y-3 overflow-y-auto px-5 py-4">
         {!conversation ? (
           <div className="flex items-center gap-2 text-xs text-muted">
-            <Spinner /> Connecting…
+            <Spinner /> {t('chat.connecting')}
           </div>
         ) : null}
 
@@ -235,7 +246,7 @@ export function ChatPanel({
       <div className="border-t border-line bg-surface px-5 py-3">
         {ended ? (
           <p className="text-xs text-muted">
-            This conversation has ended. Your transcript is preserved.
+            {t('chat.endedNote')}
           </p>
         ) : (
           <>
@@ -246,7 +257,7 @@ export function ChatPanel({
                 className={inputClass}
                 value={draft}
                 disabled={readOnly || sending}
-                placeholder="Ask a question that could change your proposal…"
+                placeholder={t('chat.placeholder')}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -261,7 +272,7 @@ export function ChatPanel({
                 className="self-stretch"
                 data-testid="chat-send"
               >
-                Send
+                {t('chat.send')}
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -273,10 +284,12 @@ export function ChatPanel({
                 <kbd className="rounded border border-line bg-sunken px-1 py-px font-mono text-[9px]">
                   ↵
                 </kbd>{' '}
-                to send
+                {t('chat.toSend')}
                 {remaining > 0
-                  ? ` · ${remaining} more question${remaining === 1 ? '' : 's'} before you can end this`
-                  : ' · you can end this whenever you are ready'}
+                  ? remaining === 1
+                    ? t('chat.remainingOne')
+                    : t('chat.remainingMany', { count: remaining })
+                  : t('chat.canEnd')}
               </p>
               <Button
                 variant="secondary"
@@ -286,7 +299,7 @@ export function ChatPanel({
                 loading={ending}
                 data-testid="chat-end"
               >
-                End meeting
+                {t('chat.end')}
               </Button>
             </div>
           </>
@@ -318,11 +331,12 @@ function Avatar({
 
 /** Shows what the student has earned by asking well — never a score. */
 function DiscoveryMeter({ found, total }: { found: number; total: number }) {
+  const t = useT();
   return (
     <div data-testid="discovery-meter" data-found={found} data-total={total}>
       <div className="flex items-center justify-between text-[10px]">
         <span className="font-medium uppercase tracking-wider text-muted">
-          Specifics uncovered
+          {t('chat.uncovered')}
         </span>
         <span className="font-mono text-body">
           {found}/{total}

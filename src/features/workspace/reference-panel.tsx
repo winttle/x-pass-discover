@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Card, CardHeader } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import type { ScenarioStepMedia } from '@/types/scenario';
 
 /**
@@ -12,9 +13,10 @@ import type { ScenarioStepMedia } from '@/types/scenario';
  * disagree with the Data Room or the calculators.
  */
 export function ReferencePanel({ media }: { media: ScenarioStepMedia }) {
+  const t = useT();
   return (
     <Card>
-      <CardHeader title="Reference" subtitle={media.title} />
+      <CardHeader title={t('reference.title')} subtitle={media.title} />
       <div className="relative h-40 border-b border-line bg-sunken">
         <Image
           src={media.src}

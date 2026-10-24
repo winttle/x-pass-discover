@@ -2,19 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import type { StepView } from '@/types/session-view';
-
-const STEP_TYPE_LABEL: Record<string, string> = {
-  training: 'Training',
-  briefing: 'Briefing',
-  research: 'Research',
-  analysis: 'Analysis',
-  ai_interaction: 'Meeting',
-  decision: 'Decision',
-  unexpected_event: 'Event',
-  revision: 'Revision',
-  final_submission: 'Handover',
-};
 
 /**
  * The step list reads as a timeline rather than a menu: the scenario is a
@@ -30,8 +19,9 @@ export function StepRail({
   activeStepKey: string;
   onSelect: (stepKey: string) => void;
 }) {
+  const t = useT();
   return (
-    <nav className="relative py-1" aria-label="Bootcamp steps">
+    <nav className="relative py-1" aria-label={t('stepRail.label')}>
       {steps.map((step, index) => {
         const isActive = step.key === activeStepKey;
         const locked = !step.unlocked;
@@ -90,11 +80,11 @@ export function StepRail({
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-medium uppercase tracking-wider text-muted">
-                    {STEP_TYPE_LABEL[step.stepType] ?? step.stepType}
+                    {t(`stepType.${step.stepType}`)}
                   </span>
                   {step.estimatedMinutes ? (
                     <span className="text-[10px] text-subtle">
-                      · {step.estimatedMinutes} min
+                      {t('stepRail.minutes', { minutes: step.estimatedMinutes })}
                     </span>
                   ) : null}
                 </span>
@@ -113,6 +103,7 @@ export function StepRail({
 }
 
 export function ProgressRing({ steps }: { steps: StepView[] }) {
+  const t = useT();
   const done = steps.filter((s) => s.status === 'completed').length;
   const total = steps.length || 1;
   const pct = Math.round((done / total) * 100);
@@ -151,9 +142,9 @@ export function ProgressRing({ steps }: { steps: StepView[] }) {
         </span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium text-strong">Bootcamp progress</p>
+        <p className="text-xs font-medium text-strong">{t('progress.title')}</p>
         <p className="mt-0.5 text-[11px] text-muted">
-          {done} of {steps.length} steps complete
+          {t('progress.steps', { done, total: steps.length })}
         </p>
       </div>
     </div>
@@ -165,6 +156,7 @@ export function ProgressRing({ steps }: { steps: StepView[] }) {
  * engine expires a session yet, so this informs rather than enforces.
  */
 export function DeadlineCountdown({ deadlineAt }: { deadlineAt: string }) {
+  const t = useT();
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
@@ -181,7 +173,7 @@ export function DeadlineCountdown({ deadlineAt }: { deadlineAt: string }) {
   if (remaining <= 0) {
     return (
       <Badge tone="danger" dot>
-        Deadline passed
+        {t('deadline.passed')}
       </Badge>
     );
   }
@@ -192,7 +184,7 @@ export function DeadlineCountdown({ deadlineAt }: { deadlineAt: string }) {
 
   return (
     <Badge tone={tone} dot title={new Date(deadlineAt).toLocaleString()}>
-      {hours}h {String(minutes).padStart(2, '0')}m left
+      {t('deadline.left', { hours, minutes: String(minutes).padStart(2, '0') })}
     </Badge>
   );
 }
