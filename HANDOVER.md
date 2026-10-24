@@ -65,7 +65,7 @@ test "$(git rev-parse HEAD)" = "$(git rev-parse winttle/main)" && echo "main OK"
 
 ## 1. このプロダクトは何か
 
-**X-PASS Discover** — 学生が架空のF&B企業 **BITE** に「出社」して、2Dオフィスを
+**X-PASS Discover** — 学生が架空のF&B企業 **BITE** に「出社」して、2.5D（アイソメトリック）オフィスを
 歩き、5部門から3つ選び、実務をこなし、AI社員と話し、新情報が出たら判断を
 見直し、最後に **LIKE（好き）と SKILL FIT（向いている）を分けた**
 キャリアレポートを受け取る、という Web アプリです。

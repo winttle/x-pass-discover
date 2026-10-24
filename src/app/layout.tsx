@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ToastProvider } from '@/components/toast';
+import { I18nProvider } from '@/i18n/client';
+import { getLocale } from '@/i18n/server';
 import './globals.css';
 
 const inter = Inter({
@@ -21,13 +23,16 @@ export const metadata: Metadata = {
     'A 2D virtual-company career exploration platform. Join BITE, do real business work, and discover what fits.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${mono.variable}`}>
       <body className="font-sans antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <I18nProvider locale={locale}>
+          <ToastProvider>{children}</ToastProvider>
+        </I18nProvider>
       </body>
     </html>
   );

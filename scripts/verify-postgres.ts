@@ -31,6 +31,36 @@ async function main() {
   await client.waitReady;
   const db = drizzle(client, { schema });
 
+  // Before the migration, this database is exactly what a deployment looks
+  // like when DATABASE_URL is set and `db:migrate` was never run. The app has
+  // to recognise that and say so, rather than forwarding PostgreSQL's
+  // `relation "users" does not exist` to whoever is testing the deployment.
+  console.log('\n=== an un-migrated database is recognised as such ===');
+  const { isMissingSchemaError } = await import('@/lib/errors');
+  let missingSchema: unknown = null;
+  try {
+    await new DrizzleRepository(db as never).findUserByEmail('nobody@example.com');
+  } catch (error) {
+    missingSchema = error;
+  }
+  check('a query against an empty database fails', missingSchema !== null);
+  check('and is recognised as a missing schema', isMissingSchemaError(missingSchema));
+  check('a genuine fault is not mistaken for one', !isMissingSchemaError(new Error('boom')));
+
+  // The whole path, from the error PostgreSQL actually raised to the response
+  // the browser actually receives.
+  const { faultResponse } = await import('@/lib/api');
+  const response = faultResponse(missingSchema, 'Sign-up failed. Please try again.');
+  const body = (await response.json()) as { error: string; code?: string };
+  check('the API answers 503, not a 400 that looks like bad input', response.status === 503);
+  check('with a code the client can branch on', body.code === 'setup_required', body.code);
+  check('and an instruction rather than a driver message', body.error.includes('db:migrate'));
+  check(
+    'the driver message is not forwarded to the browser',
+    !body.error.includes('does not exist'),
+    body.error,
+  );
+
   console.log('\n=== applying generated migration ===');
   const dir = path.join(ROOT, 'drizzle');
   const file = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()[0];
@@ -49,11 +79,36 @@ async function main() {
   );
   check('projects.product_id is NULLABLE', nullable.rows[0].is_nullable === 'YES');
 
-  console.log('\n=== seeding scenario content ===');
   // Point the global repository at this database before services load it.
   const repo = new DrizzleRepository(db as never);
   (globalThis as { __xPassRepository?: unknown }).__xPassRepository = repo;
 
+  // Migrated but not seeded is the other half-finished deployment: sign-up
+  // works, so nothing looks wrong until a student presses "Start bootcamp".
+  console.log('\n=== a migrated-but-unseeded database says what is missing ===');
+  const { SetupRequiredError } = await import('@/lib/errors');
+  let unseeded: unknown = null;
+  try {
+    await repo.createSession({
+      userId: '00000000-0000-0000-0000-000000000000',
+      departmentSlug: 'sales',
+      projectKey: 'sales',
+      scenarioKey: 'sales-quickmart',
+      scenarioVersion: 1,
+      deadlineHours: 24,
+      initialStepKey: 'sales-training',
+    });
+  } catch (error) {
+    unseeded = error;
+  }
+  check('starting a bootcamp fails before the seed', unseeded !== null);
+  check('and says so as a setup problem', unseeded instanceof SetupRequiredError);
+  const unseededResponse = faultResponse(unseeded, 'Could not start the bootcamp.');
+  const unseededBody = (await unseededResponse.json()) as { error: string; code?: string };
+  check('answered as 503 setup_required', unseededResponse.status === 503 && unseededBody.code === 'setup_required');
+  check('naming the command that fixes it', unseededBody.error.includes('db:seed'), unseededBody.error);
+
+  console.log('\n=== seeding scenario content ===');
   const { seed } = await import('@/db/seed/run');
   await seed(db as never);
 
@@ -81,9 +136,18 @@ async function main() {
 
   console.log('\n=== exercising DrizzleRepository through the real services ===');
   const user = await repo.createUser({ email: 'pg@example.com', displayName: 'PG Student' });
-  check('createUser', Boolean(user.id));
+  check('createUser creates', Boolean(user?.id));
+  if (!user) throw new Error('createUser returned null on a fresh email');
   check('findUserByEmail round-trips', (await repo.findUserByEmail('pg@example.com'))?.id === user.id);
-  check('createUser is idempotent on email', (await repo.createUser({ email: 'pg@example.com', displayName: 'PG Student' })).id === user.id);
+  // A taken address comes back as null rather than a second account or an
+  // overwritten name — the sign-up form depends on being able to tell.
+  const duplicate = await repo.createUser({
+    email: 'PG@Example.com',
+    displayName: 'Someone Else',
+  });
+  check('createUser refuses an email that already has an account', duplicate === null);
+  check('the existing account is untouched', (await repo.getUser(user.id))?.displayName === 'PG Student');
+  check('and there is still only one of it', (await counts('users')) === 1);
 
   await repo.savePreSurvey(user.id, { interest_sales: 5 });
   check('pre-survey upsert', (await repo.getPreSurvey(user.id))?.answers.interest_sales === 5);
@@ -156,6 +220,7 @@ async function main() {
   console.log('\n=== session listing / isolation ===');
   check('listSessionsForUser', (await repo.listSessionsForUser(user.id)).length === 1);
   const other = await repo.createUser({ email: 'other-pg@example.com', displayName: 'Other' });
+  if (!other) throw new Error('createUser returned null on a fresh email');
   check('other user has no sessions', (await repo.listSessionsForUser(other.id)).length === 0);
 
   await client.close();

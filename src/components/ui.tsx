@@ -9,7 +9,8 @@ export function Card({
   className,
   accent,
   interactive,
-}: {
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
   className?: string;
   /** Hex colour for a thin top accent bar. */
@@ -18,6 +19,7 @@ export function Card({
 }) {
   return (
     <div
+      {...rest}
       className={cn(
         'relative overflow-hidden rounded-2xl border border-line bg-surface shadow-card',
         // Never translate a card on hover: it shifts the buttons inside it out

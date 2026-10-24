@@ -2,7 +2,12 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 import { ZodError, type ZodType } from 'zod';
 import { UnauthenticatedError, requireUser } from '@/lib/auth/session';
-import { ScenarioRuleError } from '@/lib/errors';
+import {
+  MISSING_SCHEMA_MESSAGE,
+  ScenarioRuleError,
+  SetupRequiredError,
+  isMissingSchemaError,
+} from '@/lib/errors';
 import { SessionAccessError } from '@/services/scenario/session-service';
 import type { User } from '@/types/runtime';
 
@@ -14,8 +19,15 @@ import type { User } from '@/types/runtime';
  * parsed through a Zod schema before it reaches a service.
  */
 
-export function jsonError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status });
+/**
+ * `code` is for the cases a form needs to react to rather than just print —
+ * offering a link to the sign-up page when the address is unknown, say. The
+ * message stays the thing a human reads.
+ */
+export function jsonError(message: string, status: number, code?: string) {
+  return NextResponse.json(code ? { error: message, code } : { error: message }, {
+    status,
+  });
 }
 
 export async function withUser<T>(
@@ -40,10 +52,31 @@ export async function withUser<T>(
       console.warn('[api] rejected:', error.message);
       return jsonError(error.message, 400);
     }
-    const message = error instanceof Error ? error.message : 'Unexpected error';
-    console.error('[api]', message, error);
-    return jsonError(message, 400);
+    return faultResponse(error, 'Something went wrong. Please try again.');
   }
+}
+
+/**
+ * The response for an error that is NOT one of the engine's deliberate
+ * rejections — in other words, a fault.
+ *
+ * A fault's own message is for the log, not for the person: a driver's
+ * `relation "users" does not exist` tells a student nothing and tells an
+ * attacker a little. The one exception is a database with no schema, because
+ * there the message IS the fix and the only person who can ever see it is
+ * whoever deployed it.
+ */
+export function faultResponse(error: unknown, fallback: string) {
+  if (isMissingSchemaError(error)) {
+    console.error('[api] database schema missing — run the migration:', error);
+    return jsonError(MISSING_SCHEMA_MESSAGE, 503, 'setup_required');
+  }
+  if (error instanceof SetupRequiredError) {
+    console.error('[api] setup required:', error.message);
+    return jsonError(error.message, 503, 'setup_required');
+  }
+  console.error('[api]', error);
+  return jsonError(fallback, 500);
 }
 
 export async function parseBody<T>(

@@ -156,7 +156,13 @@ export function DynamicForm({
 
           if (field.type === 'repeatable_group') {
             return (
-              <div key={field.key}>
+              <div
+                key={field.key}
+                data-field-scope="task"
+                data-field-key={field.key}
+                data-field-type={field.type}
+                data-field-required={field.required ? 'true' : 'false'}
+              >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="text-xs font-medium text-strong">
                     {field.label}
@@ -179,7 +185,13 @@ export function DynamicForm({
           }
 
           return (
-            <div key={field.key}>
+            <div
+              key={field.key}
+              data-field-scope="task"
+              data-field-key={field.key}
+              data-field-type={field.type}
+              data-field-required={field.required ? 'true' : 'false'}
+            >
               <Field
                 label={field.label}
                 helpText={field.helpText}
@@ -238,14 +250,14 @@ export function DynamicForm({
                     : 'Not saved yet'}
           </span>
           {missing.length > 0 ? (
-            <span className="text-warn-400">
+            <span className="text-warn-400" data-testid="missing-required" data-count={missing.length}>
               · {missing.length} required field{missing.length === 1 ? '' : 's'} left
             </span>
           ) : null}
         </p>
         <div className="flex items-center gap-2">
           {task.status === 'complete' ? <Badge tone="success">Complete</Badge> : null}
-          <Button onClick={submit} loading={submitting}>
+          <Button onClick={submit} loading={submitting} data-testid="task-submit">
             {submitting
               ? 'Submitting…'
               : task.submittedAt

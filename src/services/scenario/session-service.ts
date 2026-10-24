@@ -132,13 +132,12 @@ function buildTaskView(
     updatedAt: answer?.updatedAt ?? null,
     submittedAt: answer?.submittedAt ?? null,
     prefill: resolveTaskPrefill(task, state),
+    minStudentMessages,
     conversation: conversation
       ? {
           id: conversation.id,
           status: conversation.status,
           studentMessageCount: sentCount,
-          minStudentMessages,
-          canEnd: sentCount >= minStudentMessages,
         }
       : null,
   };

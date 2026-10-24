@@ -62,7 +62,15 @@ export interface XPassRepository {
   // --- identity -----------------------------------------------------------
   findUserByEmail(email: string): Promise<User | null>;
   getUser(id: string): Promise<User | null>;
-  createUser(input: { email: string; displayName: string }): Promise<User>;
+  /**
+   * Creates the account, or returns `null` if that email already has one.
+   *
+   * Null rather than a thrown error because "this email is taken" is an
+   * ordinary outcome of the sign-up form, not a fault. The check is part of
+   * the write rather than a read before it, so two simultaneous sign-ups
+   * cannot both decide the address is free.
+   */
+  createUser(input: { email: string; displayName: string }): Promise<User | null>;
 
   // --- onboarding ---------------------------------------------------------
   savePreSurvey(userId: string, answers: Record<string, unknown>): Promise<PreSurvey>;
