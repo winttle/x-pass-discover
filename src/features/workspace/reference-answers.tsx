@@ -1,7 +1,9 @@
 'use client';
 
 import { Badge, Card, CardHeader } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import type { AnswerValue } from '@/types/runtime';
+import type { TaskField } from '@/types/scenario';
 import type { StepView, TaskView } from '@/types/session-view';
 
 /**
@@ -18,6 +20,7 @@ export function ReferenceAnswers({
   steps: StepView[];
   taskKeys: string[];
 }) {
+  const t = useT();
   if (taskKeys.length === 0) return null;
 
   const tasks = taskKeys
@@ -36,12 +39,17 @@ export function ReferenceAnswers({
   return (
     <Card>
       <CardHeader
-        title="Your earlier work"
-        subtitle="Preserved, not overwritten"
+        title={t('earlier.title')}
+        subtitle={t('earlier.subtitle')}
       />
       <div className="divide-y divide-line">
         {tasks.map(({ step, task }) => (
-          <details key={task.key} className="group">
+          <details
+            key={task.key}
+            data-reference-task-key={task.key}
+            data-reference-version={task.version}
+            className="group"
+          >
             <summary className="flex cursor-pointer items-center justify-between gap-2 px-5 py-3 text-xs hover:bg-sunken">
               <span className="min-w-0">
                 <span className="block font-medium text-strong">{task.title}</span>
@@ -64,14 +72,15 @@ export function ReferenceAnswers({
 }
 
 function AnswerPreview({ task }: { task: TaskView }) {
+  const t = useT();
   const value = task.value ?? {};
-  const labelByKey = new Map(task.fields.map((f) => [f.key, f.label] as const));
+  const fieldByKey = new Map(task.fields.map((f) => [f.key, f] as const));
 
   const entries = Object.entries(value).filter(
     ([, v]) => v !== null && v !== undefined && v !== '',
   );
   if (entries.length === 0) {
-    return <p className="text-[11px] text-muted">Nothing recorded yet.</p>;
+    return <p className="text-[11px] text-muted">{t('earlier.empty')}</p>;
   }
 
   return (
@@ -79,10 +88,10 @@ function AnswerPreview({ task }: { task: TaskView }) {
       {entries.map(([key, raw]) => (
         <div key={key}>
           <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-            {labelByKey.get(key) ?? key}
+            {fieldByKey.get(key)?.label ?? key}
           </dt>
           <dd className="mt-0.5 whitespace-pre-wrap text-[11px] leading-relaxed text-body">
-            {formatValue(raw)}
+            {formatValue(raw, fieldByKey.get(key))}
           </dd>
         </div>
       ))}
@@ -90,19 +99,27 @@ function AnswerPreview({ task }: { task: TaskView }) {
   );
 }
 
-function formatValue(raw: unknown): string {
+/** Shows chosen options and row fields by their labels, not their stored keys. */
+function formatValue(raw: unknown, field?: TaskField): string {
   if (Array.isArray(raw)) {
     return raw
       .map((row, index) => {
         if (row && typeof row === 'object') {
           const parts = Object.entries(row as AnswerValue)
             .filter(([, v]) => v !== null && v !== undefined && v !== '')
-            .map(([k, v]) => `${k}: ${String(v)}`);
+            .map(([k, v]) => {
+              const sub = field?.fields?.find((f) => f.key === k);
+              return `${sub?.label ?? k}: ${optionLabel(sub, v)}`;
+            });
           return `${index + 1}. ${parts.join(' · ')}`;
         }
-        return `${index + 1}. ${String(row)}`;
+        return `${index + 1}. ${optionLabel(field, row)}`;
       })
       .join('\n');
   }
-  return String(raw);
+  return optionLabel(field, raw);
+}
+
+function optionLabel(field: TaskField | undefined, value: unknown): string {
+  return field?.options?.find((o) => o.value === value)?.label ?? String(value);
 }

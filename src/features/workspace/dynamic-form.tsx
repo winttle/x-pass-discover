@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, Button, Field } from '@/components/ui';
 import { useToast } from '@/components/toast';
+import { useT } from '@/i18n/client';
 import { logClientEvent, saveTask } from '@/lib/client-api';
 import { evaluateGuardrails, type GuardrailWarning } from '@/services/scenario/guardrails';
 import type { AnswerValue } from '@/types/runtime';
@@ -29,7 +30,8 @@ export function DynamicForm({
   task,
   resources,
   onSessionUpdate,
-  submitLabel = 'Submit',
+  submitLabel,
+  resubmitLabel,
 }: {
   sessionId: string;
   stepKey: string;
@@ -37,7 +39,9 @@ export function DynamicForm({
   resources: ResourceDefinition[];
   onSessionUpdate: (view: SessionView) => void;
   submitLabel?: string;
+  resubmitLabel?: string;
 }) {
+  const t = useT();
   const [value, setValue] = useState<AnswerValue>(task.value ?? {});
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [serverWarnings, setServerWarnings] = useState<GuardrailWarning[]>([]);
@@ -77,11 +81,11 @@ export function DynamicForm({
           setSaveState('saved');
         } catch (cause) {
           setSaveState('error');
-          setError(cause instanceof Error ? cause.message : 'Autosave failed');
+          setError(cause instanceof Error ? cause.message : t('form.autosaveFailed'));
         }
       }, AUTOSAVE_DELAY_MS);
     },
-    [persist],
+    [persist, t],
   );
 
   useEffect(() => () => {
@@ -120,16 +124,19 @@ export function DynamicForm({
       if (violations.length > 0) {
         toast.push({
           tone: 'warn',
-          title: 'Submitted, with guardrail warnings',
-          description: `${violations.length} condition${violations.length === 1 ? ' is' : 's are'} outside BITE's guardrails. Your answer was recorded as written.`,
+          title: t('form.submittedWithWarnings'),
+          description:
+            violations.length === 1
+              ? t('form.violationsOne')
+              : t('form.violationsMany', { count: violations.length }),
         });
       } else {
-        toast.push({ tone: 'success', title: `${task.title} submitted` });
+        toast.push({ tone: 'success', title: t('form.submittedTitle', { title: task.title }) });
       }
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : 'Could not submit';
+      const message = cause instanceof Error ? cause.message : t('form.submitFailed');
       setError(message);
-      toast.push({ tone: 'danger', title: 'Could not submit', description: message });
+      toast.push({ tone: 'danger', title: t('form.submitFailed'), description: message });
     } finally {
       setSubmitting(false);
     }
@@ -156,14 +163,20 @@ export function DynamicForm({
 
           if (field.type === 'repeatable_group') {
             return (
-              <div key={field.key}>
+              <div
+                key={field.key}
+                data-field-scope="task"
+                data-field-key={field.key}
+                data-field-type={field.type}
+                data-field-required={field.required ? 'true' : 'false'}
+              >
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="text-xs font-medium text-strong">
                     {field.label}
                     {field.required ? <span className="ml-1 text-danger-400">*</span> : null}
                   </span>
                   {field.minRows ? (
-                    <Badge tone="muted">min {field.minRows}</Badge>
+                    <Badge tone="muted">{t('form.minRows', { count: field.minRows })}</Badge>
                   ) : null}
                 </div>
                 {field.helpText ? (
@@ -179,12 +192,22 @@ export function DynamicForm({
           }
 
           return (
-            <div key={field.key}>
+            <div
+              key={field.key}
+              data-field-scope="task"
+              data-field-key={field.key}
+              data-field-type={field.type}
+              data-field-required={field.required ? 'true' : 'false'}
+            >
               <Field
                 label={field.label}
                 helpText={field.helpText}
                 required={field.required}
                 epistemic={field.epistemicKind}
+                epistemicLabels={{
+                  fact: t('field.evidence'),
+                  hypothesis: t('field.hypothesis'),
+                }}
               >
                 <FieldInput
                   field={field}
@@ -228,37 +251,42 @@ export function DynamicForm({
               }`}
             />
             {saveState === 'saving'
-              ? 'Saving…'
+              ? t('form.saving')
               : saveState === 'saved'
-                ? `Draft saved · v${task.version}`
+                ? t('form.draftSaved', { version: task.version })
                 : saveState === 'error'
-                  ? 'Autosave failed'
+                  ? t('form.autosaveFailed')
                   : task.updatedAt
-                    ? `Last saved ${new Date(task.updatedAt).toLocaleTimeString()}`
-                    : 'Not saved yet'}
+                    ? t('form.lastSaved', {
+                        time: new Date(task.updatedAt).toLocaleTimeString(),
+                      })
+                    : t('form.notSaved')}
           </span>
           {missing.length > 0 ? (
-            <span className="text-warn-400">
-              · {missing.length} required field{missing.length === 1 ? '' : 's'} left
+            <span className="text-warn-400" data-testid="missing-required" data-count={missing.length}>
+              {missing.length === 1
+                ? t('form.missingOne')
+                : t('form.missingMany', { count: missing.length })}
             </span>
           ) : null}
         </p>
         <div className="flex items-center gap-2">
-          {task.status === 'complete' ? <Badge tone="success">Complete</Badge> : null}
-          <Button onClick={submit} loading={submitting}>
+          {task.status === 'complete' ? (
+            <Badge tone="success">{t('task.status.complete')}</Badge>
+          ) : null}
+          <Button onClick={submit} loading={submitting} data-testid="task-submit">
             {submitting
-              ? 'Submitting…'
+              ? t('form.submitting')
               : task.submittedAt
-                ? `Resubmit ${submitLabel.toLowerCase()}`
-                : submitLabel}
+                ? (resubmitLabel ?? t('task.resubmit'))
+                : (submitLabel ?? t('task.submit'))}
           </Button>
         </div>
       </div>
 
       {warnings.some((w) => w.severity === 'violation') ? (
         <p className="text-[11px] leading-relaxed text-muted">
-          You can still submit this. BITE will flag it, and the choice is recorded —
-          guardrail warnings do not silently correct your answer.
+          {t('form.violationNote')}
         </p>
       ) : null}
     </div>

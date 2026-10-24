@@ -1,8 +1,9 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
-import { getPersona } from '@/content/personas.server';
+import { getPersona, localizePersona } from '@/content/personas.server';
 import { findTask, getStep } from '@/content/registry';
 import { BITE_PROTEIN_DRINK } from '@/content/company';
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config';
 import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import { evaluateGuardrails, hasViolations } from '@/services/scenario/guardrails';
@@ -126,6 +127,7 @@ export async function openConversation(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const persona = requirePersona(session, personaKey);
@@ -141,7 +143,9 @@ export async function openConversation(
     await repo.appendMessage({
       conversationId: conversation.id,
       role: 'persona',
-      content: persona.openingMessage,
+      // Stored in the language the conversation was opened in: it is part of
+      // the transcript, and the persona carries on in the student's language.
+      content: localizePersona(session.scenarioKey, persona, locale).openingMessage,
       metadata: { opening: true },
     });
     await logEvent({
@@ -154,7 +158,7 @@ export async function openConversation(
     });
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
 }
 
 export async function sendStudentMessage(
@@ -162,6 +166,7 @@ export async function sendStudentMessage(
   personaKey: string,
   stepKey: string,
   message: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const persona = requirePersona(session, personaKey);
@@ -251,13 +256,36 @@ export async function sendStudentMessage(
     }
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
+}
+
+/**
+ * How many questions this step's conversation task requires before it may be
+ * ended. Read from the scenario definition, which is the same place the
+ * completion rule reads it from — so the two can never disagree.
+ */
+function minStudentMessagesFor(
+  session: ProjectSession,
+  personaKey: string,
+  stepKey: string,
+): number {
+  const scenario = getScenarioForSession(session);
+  const step = getStep(scenario, stepKey);
+  const task = step?.tasks.find(
+    (candidate) =>
+      candidate.completion.type === 'conversation_ended' &&
+      candidate.completion.personaKey === personaKey,
+  );
+  return task?.completion.type === 'conversation_ended'
+    ? (task.completion.minStudentMessages ?? 0)
+    : 0;
 }
 
 export async function endConversation(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const conversation = await repo.getOrCreateConversation({
@@ -267,6 +295,21 @@ export async function endConversation(
   });
 
   if (conversation.status !== 'ended') {
+    // Ending a conversation is irreversible, and a conversation ended below the
+    // minimum can never satisfy its task — the step would be sealed with no way
+    // back. The UI keeps the button disabled; this makes the state
+    // unreachable rather than merely hard to reach.
+    const required = minStudentMessagesFor(session, personaKey, stepKey);
+    if (required > 0) {
+      const messages = await repo.listMessages(conversation.id);
+      const sent = messages.filter((message) => message.role === 'student').length;
+      if (sent < required) {
+        throw new ScenarioRuleError(
+          `Ask at least ${required} question${required === 1 ? '' : 's'} before ending this conversation — ${sent} so far.`,
+        );
+      }
+    }
+
     await repo.updateConversation(conversation.id, {
       status: 'ended',
       endedAt: new Date().toISOString(),
@@ -288,16 +331,21 @@ export async function endConversation(
     await syncProgress(session, scenario, state);
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
 }
 
 export async function buildConversationView(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
-  const persona = requirePersona(session, personaKey);
+  const persona = localizePersona(
+    session.scenarioKey,
+    requirePersona(session, personaKey),
+    locale,
+  );
   const conversation = await repo.getOrCreateConversation({
     sessionId: session.id,
     personaKey,

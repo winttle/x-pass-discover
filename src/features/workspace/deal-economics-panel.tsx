@@ -2,6 +2,7 @@
 
 import { Badge, Card, CardHeader } from '@/components/ui';
 import { BITE_UNIT_ECONOMICS } from '@/content/company';
+import { useT } from '@/i18n/client';
 import { computeDealEconomics } from '@/services/scenario/calculators';
 import type { AnswerValue } from '@/types/runtime';
 
@@ -15,6 +16,7 @@ const yen = (n: number | null) =>
  * no "optimal" highlight. The student decides.
  */
 export function DealEconomicsPanel({ value }: { value: AnswerValue }) {
+  const t = useT();
   const pilotDays = 28;
   const economics = computeDealEconomics({
     wholesalePriceYen: value.wholesale_price_yen as number | null,
@@ -27,35 +29,39 @@ export function DealEconomicsPanel({ value }: { value: AnswerValue }) {
 
   const rows: Array<[string, string, string?]> = [
     [
-      'Retail margin (amount)',
+      t('economics.marginAmount'),
       yen(economics.retailMarginAmountYen),
-      'Retail price − wholesale price',
+      t('economics.marginAmountFormula'),
     ],
     [
-      'Retail margin (rate)',
+      t('economics.marginRate'),
       economics.retailMarginRate === null
         ? '—'
         : `${(economics.retailMarginRate * 100).toFixed(1)}%`,
-      '(Retail − wholesale) ÷ retail',
+      t('economics.marginRateFormula'),
     ],
     [
-      'BITE contribution before extra promo',
+      t('economics.contributionBefore'),
       yen(economics.biteUnitContributionBeforeExtraYen),
-      `Wholesale − ¥${BITE_UNIT_ECONOMICS.manufacturingCostYen} mfg − ¥${BITE_UNIT_ECONOMICS.coldLogisticsYen} cold − ¥${BITE_UNIT_ECONOMICS.basePromotionYen} base promo`,
+      t('economics.contributionBeforeFormula', {
+        mfg: BITE_UNIT_ECONOMICS.manufacturingCostYen,
+        cold: BITE_UNIT_ECONOMICS.coldLogisticsYen,
+        promo: BITE_UNIT_ECONOMICS.basePromotionYen,
+      }),
     ],
     [
-      'BITE contribution after extra promo',
+      t('economics.contributionAfter'),
       yen(economics.biteUnitContributionYen),
-      'Extra promotion is not free — it comes out of contribution',
+      t('economics.contributionAfterNote'),
     ],
   ];
 
   return (
     <Card>
       <CardHeader
-        title="Deal economics"
-        subtitle="Calculated from your inputs — it does not decide for you"
-        right={<Badge tone="muted">live</Badge>}
+        title={t('economics.title')}
+        subtitle={t('economics.subtitle')}
+        right={<Badge tone="muted">{t('economics.live')}</Badge>}
       />
       <dl className="divide-y divide-line">
         {rows.map(([label, display, formula]) => (
@@ -74,15 +80,17 @@ export function DealEconomicsPanel({ value }: { value: AnswerValue }) {
       {economics.expectedPilotUnits !== null ? (
         <div className="border-t border-line px-5 py-3">
           <p className="text-[11px] text-muted">
-            At your target rate across {String(value.store_count ?? '—')} stores for{' '}
-            {pilotDays} days:{' '}
+            {t('economics.projection', {
+              stores: String(value.store_count ?? '—'),
+              days: pilotDays,
+            })}{' '}
             <span className="font-mono text-strong">
-              {economics.expectedPilotUnits.toLocaleString()} units
+              {t('economics.units', { units: economics.expectedPilotUnits.toLocaleString() })}
             </span>
             {economics.expectedBiteContributionYen !== null ? (
               <>
                 {' '}
-                → BITE contribution{' '}
+                {t('economics.contribution')}{' '}
                 <span className="font-mono text-strong">
                   {yen(economics.expectedBiteContributionYen)}
                 </span>
@@ -90,8 +98,7 @@ export function DealEconomicsPanel({ value }: { value: AnswerValue }) {
             ) : null}
           </p>
           <p className="mt-1 text-[10px] text-muted">
-            A 4-week illustration. Your own pilot length may differ — state it in your
-            proposal.
+            {t('economics.illustration')}
           </p>
         </div>
       ) : null}

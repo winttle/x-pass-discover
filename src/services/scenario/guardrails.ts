@@ -15,8 +15,14 @@ export type GuardrailSeverity = 'violation' | 'advisory';
 export type GuardrailWarning = {
   key: string;
   severity: GuardrailSeverity;
+  /** English, as stored in a submission snapshot. */
   title: string;
   message: string;
+  /**
+   * The figures in the message, so the UI can say the same thing in the
+   * student's language (`guardrail.<key>.message` in the dictionaries).
+   */
+  vars?: Record<string, string>;
   fieldKeys: string[];
 };
 
@@ -43,6 +49,7 @@ const CHECKS: Record<string, GuardrailCheck> = {
       message: `This condition is outside BITE’s current guardrail. The minimum wholesale price is ${yen(
         g.minWholesalePriceYen,
       )}; you have proposed ${yen(wholesale)}.`,
+      vars: { min: yen(g.minWholesalePriceYen), value: yen(wholesale) },
       fieldKeys: ['wholesale_price_yen'],
     };
   },
@@ -64,6 +71,10 @@ const CHECKS: Record<string, GuardrailCheck> = {
       message: `At this wholesale price BITE’s contribution before extra promotion is ${yen(
         biteUnitContributionBeforeExtraYen,
       )}, under the ${yen(g.minUnitContributionYen)} floor.`,
+      vars: {
+        value: yen(biteUnitContributionBeforeExtraYen),
+        min: yen(g.minUnitContributionYen),
+      },
       fieldKeys: ['wholesale_price_yen'],
     };
   },
@@ -78,6 +89,7 @@ const CHECKS: Record<string, GuardrailCheck> = {
       message: `BITE can support at most ${yen(
         g.maxExtraPromotionYen,
       )}/unit of extra promotion. You have proposed ${yen(extra)}/unit.`,
+      vars: { max: yen(g.maxExtraPromotionYen), value: yen(extra) },
       fieldKeys: ['extra_promotion_yen'],
     };
   },
@@ -90,6 +102,10 @@ const CHECKS: Record<string, GuardrailCheck> = {
       severity: 'violation',
       title: 'Below the minimum production run',
       message: `BITE’s minimum production run is ${g.minProductionRunUnits.toLocaleString()} units. You have proposed ${quantity.toLocaleString()}.`,
+      vars: {
+        min: g.minProductionRunUnits.toLocaleString(),
+        value: quantity.toLocaleString(),
+      },
       fieldKeys: ['initial_quantity'],
     };
   },
@@ -102,6 +118,7 @@ const CHECKS: Record<string, GuardrailCheck> = {
       severity: 'violation',
       title: 'Payment terms exceed BITE’s limit',
       message: `BITE can accept up to ${g.maxPaymentTermDays} days. You have agreed ${days} days.`,
+      vars: { max: String(g.maxPaymentTermDays), value: String(days) },
       fieldKeys: ['payment_terms_days'],
     };
   },
@@ -121,6 +138,7 @@ const CHECKS: Record<string, GuardrailCheck> = {
       message: `QuickMart targets a retail margin of 35% or more. This structure gives them ${(
         retailMarginRate * 100
       ).toFixed(1)}%.`,
+      vars: { target: '35%', value: `${(retailMarginRate * 100).toFixed(1)}%` },
       fieldKeys: ['wholesale_price_yen', 'retail_price_yen'],
     };
   },
@@ -135,6 +153,7 @@ const CHECKS: Record<string, GuardrailCheck> = {
       message: `QuickMart’s stated target is a retail price of ¥300 or lower. You have proposed ${yen(
         retail,
       )}.`,
+      vars: { max: yen(300), value: yen(retail) },
       fieldKeys: ['retail_price_yen'],
     };
   },

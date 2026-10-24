@@ -30,13 +30,19 @@ export type TaskView = {
   submittedAt: string | null;
   /** Resolved `prefillTemplate` values for fields the student has not filled. */
   prefill: Record<string, string>;
-  /** For `ai_conversation` tasks. */
+  /**
+   * How many questions an `ai_conversation` task requires before it can be
+   * ended, straight from the scenario definition. It lives here rather than on
+   * `conversation` below because that is null until the student opens the
+   * conversation — and a minimum that only appears afterwards is a minimum the
+   * UI cannot enforce on the first render. 0 for every other kind of task.
+   */
+  minStudentMessages: number;
+  /** Live conversation state. Null until the student opens one. */
   conversation: {
     id: string;
     status: 'open' | 'ended';
     studentMessageCount: number;
-    minStudentMessages: number;
-    canEnd: boolean;
   } | null;
 };
 

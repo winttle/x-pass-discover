@@ -1,6 +1,7 @@
 import 'server-only';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
+import { SetupRequiredError } from '@/lib/errors';
 import { env } from '@/lib/env';
 import * as schema from './schema';
 
@@ -21,7 +22,7 @@ export function getDb(): Database | null {
 export function requireDb(): Database {
   const db = getDb();
   if (!db) {
-    throw new Error(
+    throw new SetupRequiredError(
       'DATABASE_URL is not configured. Set it to use Neon persistence.',
     );
   }

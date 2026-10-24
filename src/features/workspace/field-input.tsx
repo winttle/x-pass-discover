@@ -2,6 +2,7 @@
 
 import { Badge, Field, inputClass } from '@/components/ui';
 import type { TaskField } from '@/types/scenario';
+import { useT } from '@/i18n/client';
 import type { ResourceDefinition } from '@/types/resource';
 
 export type EvidenceOption = { value: string; label: string; group: string };
@@ -21,6 +22,7 @@ export function FieldInput({
   placeholderFromPrefill?: string;
   evidenceOptions?: EvidenceOption[];
 }) {
+  const t = useT();
   const common = { disabled, className: inputClass };
 
   switch (field.type) {
@@ -56,7 +58,7 @@ export function FieldInput({
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
         >
-          <option value="">— select —</option>
+          <option value="">{t('field.selectPlaceholder')}</option>
           {(field.options ?? []).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -76,6 +78,8 @@ export function FieldInput({
                 key={option.value}
                 type="button"
                 disabled={disabled}
+                data-option-value={option.value}
+                aria-pressed={active}
                 onClick={() =>
                   onChange(
                     active
@@ -103,7 +107,7 @@ export function FieldInput({
       if (options.length === 0) {
         return (
           <p className="rounded-lg border border-dashed border-line px-3 py-3 text-xs text-muted">
-            Nothing to link yet — open resources and talk to people first.
+            {t('field.noEvidence')}
           </p>
         );
       }
@@ -125,6 +129,8 @@ export function FieldInput({
                         key={option.value}
                         type="button"
                         disabled={disabled}
+                        data-option-value={option.value}
+                        aria-pressed={active}
                         onClick={() =>
                           onChange(
                             active
@@ -173,9 +179,10 @@ export function PrefillHint({
   onApply: () => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="mt-1.5 flex items-start gap-2 rounded-lg border border-line bg-sunken px-2.5 py-2">
-      <Badge tone="muted">From your earlier work</Badge>
+      <Badge tone="muted">{t('field.fromEarlier')}</Badge>
       <p className="min-w-0 flex-1 whitespace-pre-wrap text-[11px] leading-relaxed text-muted">
         {prefill}
       </p>
@@ -185,7 +192,7 @@ export function PrefillHint({
         disabled={disabled}
         className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-[10px] text-body transition-colors hover:border-brand-500 hover:text-strong disabled:opacity-40"
       >
-        Use
+        {t('field.use')}
       </button>
     </div>
   );

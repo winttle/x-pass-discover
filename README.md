@@ -30,9 +30,12 @@ This build is the **common platform plus the Sales vertical slice**:
   rules, configurable task forms, answer revisions, submissions snapshots,
   AI conversations with server-side hidden-information control, and behavior
   event logging.
-- A 2D BITE office in Phaser — floors, walls with faked height, procedural
-  furniture and characters, all generated from a map definition with no art
-  assets — wired to React through an explicit event bridge.
+- A 2.5D (isometric) BITE office in Phaser — windowed back walls with a city
+  view, glass meeting rooms, wood/carpet/marble floors with daylight and soft
+  shadows, detailed furniture and seated colleagues, all painted with Canvas 2D,
+  all generated from a map definition with no art assets — wired to React
+  through an explicit event bridge. The game logic still runs on the flat tile
+  grid; only drawing is projected.
 
 **Sales vertical slice** — all ten steps, playable:
 
@@ -50,6 +53,10 @@ rules from the implementation pack.
   resources, AI personas, events.
 - Career report page that shows the LIKE/SKILL FIT split honestly — SKILL FIT
   reads `NE` (Not Enough Evidence) because the evaluator is not built yet.
+- A Playwright suite that walks the whole bootcamp in a real browser and pins
+  the rules the product rests on: no server-only persona data in any payload,
+  guardrails that warn without correcting, and earlier work preserved rather
+  than overwritten. See §6.
 
 ---
 
@@ -219,14 +226,31 @@ src/
     seed/run.ts           idempotent content seed
   game/office/
     map.ts                office layout as data (rooms, doors, furniture, NPCs)
-    theme.ts              the office palette — the whole look lives here
-    office-scene.ts       Phaser scene (procedural rendering, no art assets)
+    theme.ts              the office palette and floor materials
+    iso.ts                isometric projection and draw-order (depth) rule
+    art.ts                2.5D pieces painted with Canvas 2D: walls, furniture, people
+    office-scene.ts       Phaser scene: logic on the grid, drawing projected
     bridge.ts             Phaser → React events
   features/               auth, departments, survey, workspace, office, ai, resources
+    lobby/                the illustrated lobby (lobby-art.ts) and the /start onboarding screen
+    survey/               the one-question-per-screen pre-survey over an illustrated office
+  i18n/                   languages (en / ja / ko): config, dictionaries, server getT(), client useT()
   app/                    routes (student, admin, api)
 scripts/
   verify-postgres.ts      runs the migration + seed + repository on embedded PG
   verify-disclosure.ts    checks the hidden-fact matcher against real phrasings
+  verify-i18n.ts          checks every scenario translation covers its English
+tests/e2e/
+  journey.spec.ts         the whole bootcamp, driven off the step rail
+  hidden-information.spec.ts  nothing server-only reaches the browser
+  conversation.spec.ts    a meeting cannot be ended before it is held
+  guardrails.spec.ts      warnings do not block, and do not correct
+  revision.spec.ts        earlier work is preserved, not overwritten
+  identity.spec.ts        sign-up, sign-in and sign-out, and their refusals
+  admin.spec.ts           admin is closed in production; it withholds content
+  office.spec.ts          Phaser boots and its prompt tracks proximity
+  helpers/                flow helpers and the generic form filler
+  fixtures/               derives the server-only strings the leak spec uses
 drizzle/                  generated migration SQL
 ```
 
@@ -291,7 +315,7 @@ Requires **Node 20+**. Nothing else.
 
 ```bash
 git clone -b claude/intelligent-planck-39vf7c \
-  https://github.com/winttle/x-pass-discover.git
+  https://github.com/x-pass-gcsc/x-pass-discover.git
 cd x-pass-discover
 npm install          # ~25s
 npm run dev          # http://localhost:3000
@@ -302,12 +326,12 @@ That is the whole setup. No database, no API key, no `.env`.
 > The first `npm run dev` fetches the Inter and JetBrains Mono webfonts, so it
 > needs network access once. After that it works offline.
 
-Then: sign in (email + display name, **no password** — it is a development
-identity, see §8) → pre-survey → choose departments → **Start bootcamp** on
-Sales → work through the ten steps. There is no separate sign-up screen: an
-email the store has not seen creates the account, a known one resumes it, so any
-address works on a fresh checkout. Walk into the 2D office from the workspace
-sidebar, or go straight to `/office`.
+Then: **Create an account** (email + display name, **no password** — it is a
+development identity, see §8) → the X-PASS lobby (**START**) → pre-survey → choose departments → **Start
+bootcamp** on Sales → work through the ten steps. Returning students sign in at
+`/login` with the email alone. Sign out from the header on any signed-in page.
+Walk into the 2.5D office from the workspace sidebar, or go straight to
+`/office`.
 
 Things worth trying, because they are where the design decisions show:
 
@@ -316,7 +340,8 @@ Things worth trying, because they are where the design decisions show:
 | **AI Buyer Meeting** | Ask "tell me about QuickMart" → you get nothing. Ask "how many facings would a new protein drink get?" → the buyer gives you the number and the discovery meter ticks up. |
 | **Initial Sales Proposal** | Set the wholesale price to ¥150. You get a guardrail warning — and you can still submit it. |
 | **Unexpected Event → Negotiation** | Proposal v1 sits read-only beside the revision form. Nothing is overwritten. |
-| **The 2D office** | WASD/arrows, walk into the Data Room or up to an NPC, press `E`. |
+| **Day one** | A new account (or a sign-in before the pre-survey is done) opens on `/start`, the X-PASS lobby: INTRO 01/04, **START** begins the pre-survey — one question per screen, keys 1–5 answer, Enter moves on. Questions live in `src/content/pre-survey.ts`. After the survey, sign-in goes to the welcome page. |
+| **The 2.5D office** | WASD/arrows move relative to the screen (up = towards the back wall; up + right walks straight along a corridor). Walk into the Data Room or up to an NPC, press `E`. |
 | **`/admin/events`** | The ordered behaviour log for your own session — raw rows, no scores. |
 | **`/admin/ai-personas`** | Disclosure rules and trigger topics are shown; hidden fact content is not, anywhere. |
 
@@ -345,8 +370,10 @@ The header badge switches from *Mock AI* to *OpenAI*.
 The app is a standard Next.js App Router project, so any Node host works;
 Vercel needs no configuration file.
 
-1. Import `winttle/x-pass-discover` in Vercel and pick the branch to deploy
-   (Settings → Git → Production Branch).
+1. Import `x-pass-gcsc/x-pass-discover` in Vercel and set **Settings → Git →
+   Production Branch** to `main`. The repository's default branch is
+   `claude/intelligent-planck-39vf7c`, which is where work lands; `main` carries
+   the same application code and is the branch to deploy.
 2. Set environment variables:
 
    | Variable | Needed? | Why |
@@ -357,13 +384,24 @@ Vercel needs no configuration file.
    | `X_PASS_ADMIN_EMAILS` | Optional | `/admin` is **closed** in production unless an email is allow-listed |
    | `NEXT_PUBLIC_APP_URL` | Optional | Your deployment URL |
 
-3. With `DATABASE_URL` set, run the migration and seed once against that
-   database before the first real session:
+3. **With `DATABASE_URL` set, run the migration and seed once against that
+   database before the first real session.** A fresh Neon database is empty —
+   setting the connection string does not create the tables:
 
    ```bash
-   DATABASE_URL='postgres://…' npm run db:migrate
-   DATABASE_URL='postgres://…' npm run db:seed
+   DATABASE_URL='postgres://…' npm run db:setup   # migrate, then seed
    ```
+
+   Skip it and the deployment looks healthy until the first write. Both halves
+   fail with the instruction rather than a driver error — *“This deployment's
+   database has no tables yet…”* if the migration is missing, *“Scenario content
+   is not seeded…”* if only the seed is. Running `db:setup` fixes either; it is
+   idempotent, so re-running it against a database that is already set up is
+   safe.
+
+   Run it from a checkout of this repository — the seed is a TypeScript script
+   that mirrors the content registry into the tables, so pasting the migration
+   SQL into a database console gets you only half of it.
 
 **Demo mode.** A serverless filesystem is read-only and per-instance, so the
 local file store cannot be used in production. A production build with no
@@ -376,11 +414,18 @@ pretending data was stored.
 ### Verification
 
 ```bash
-npm run verify            # typecheck + lint + office map + disclosure + Postgres
+npm run verify            # typecheck + lint + office map + translations + disclosure + Postgres
 npm run db:verify         # migration + seed + every Drizzle query on embedded PG
 npm run verify:disclosure # hidden-fact matcher against realistic phrasings
 npm run verify:office     # floor plan: every room, door and NPC still reachable
+npm run verify:i18n       # every translated scenario covers its English source
+
+npm run test:e2e:install  # one-off: fetch the Chromium build Playwright expects
+npm run test:e2e          # the browser suite (builds and serves the app itself)
 ```
+
+`npm run verify` is the fast gate and stays credential-free; `npm run test:e2e`
+is the slow one. Both run in CI (`.github/workflows/ci.yml`) as separate jobs.
 
 `npm run db:verify` boots an embedded PostgreSQL (PGlite), applies the generated
 migration, runs the seed twice (idempotency), and drives `DrizzleRepository`
@@ -390,6 +435,37 @@ a Neon account.
 `npm run verify:office` matters because office furniture is solid: moving a desk
 can quietly wall off a room or trap an NPC. It flood-fills the real collision
 grid and fails if any room, door or NPC becomes unreachable.
+
+### The browser suite
+
+`npm run test:e2e` runs Playwright against a **production build** that it starts
+itself. That is deliberate: `next start` sets `NODE_ENV=production`, which is
+what makes the app choose `memory` persistence — the exact adapter a
+credential-less deployment gets. Running against `next dev` would exercise the
+file store instead and quietly skip the demo-mode path. It also means every run
+starts from an empty store. `DATABASE_URL` and `OPENAI_API_KEY` are blanked for
+the suite, so a developer's `.env` can neither point the tests at a real
+database nor turn them into billable API calls.
+
+Three things make it maintainable rather than a wall of selectors:
+
+- **It addresses `data-*` hooks, never copy.** Rewording a label does not fail
+  a test. `data-field-key` / `data-field-type` / `data-task-kind` /
+  `data-step-key` are the contract.
+- **The walkthrough is driven off the step rail, not a list of the ten Sales
+  steps.** `completeCurrentStep` reads `data-task-kind` and fills whatever is
+  there, and `fillTask` fills from `data-field-type`. The engine is supposed to
+  know nothing about Sales; so does the test that drives it. Authoring
+  Marketing or HR should make `journey.spec.ts` longer, not broken — and if it
+  does break, that is the architecture claim failing, which is worth knowing.
+- **The leak spec derives its forbidden strings from the real content files.**
+  A global setup runs `tests/e2e/fixtures/dump-server-secrets.ts` under
+  `tsx --conditions=react-server` and writes out every system prompt,
+  conversation rule and disclosure rule. A new persona or hidden fact is
+  covered the day it is written, with no test to remember to update.
+
+Point `E2E_BASE_URL` at a running instance (a preview deployment, say) to skip
+the build and test that instead.
 
 ---
 
@@ -435,13 +511,21 @@ obviously on-topic question still counts as discovery.
 
 - **Authentication.** `src/lib/auth/session.ts` is a signed-cookie *development
   identity* with no password. The architecture docs prefer Auth.js; this keeps
-  the same three-function seam (`signIn` / `signOut` / `getCurrentUser`) so
+  the same narrow seam (`signUp` / `signIn` / `signOut` / `getCurrentUser`) so
   swapping in Auth.js means reimplementing that one file. **Not production
-  auth.** There is consequently no registration step to speak of — no password,
-  no email verification, no recovery, and no way to prove the person typing an
-  address owns it. Sign-in and sign-up are one action by design, and should stay
-  one action after Auth.js lands; what Auth.js adds is the proof, not a second
-  screen.
+  auth**: no password, no email verification, no recovery, and no way to prove
+  the person typing an address owns it. Anyone can sign in as any registered
+  address.
+
+  Sign-up and sign-in are separate screens, and `/login` says plainly when an
+  address has no account. That is an enumeration oracle, and it is an honest
+  one here — with no password, an attacker does not need to enumerate anything,
+  they can simply sign in. It is also the only way to stop a typo from silently
+  creating a second, empty account and making a student's work look lost.
+  **When Auth.js lands, that trade expires**: once there is a credential worth
+  guessing, both screens must answer identically to an unauthenticated caller.
+  That is a change to `signIn`/`signUp` and the two routes that call them,
+  nothing downstream.
 - **Evaluation / SKILL FIT.** Tables and the `NE` concept exist; no evidence
   extraction or rating pipeline. The report shows `NE` rather than a number.
 - **Post-survey.** Table exists, no UI.
@@ -451,8 +535,40 @@ obviously on-topic question still counts as discovery.
 - **Object storage adapter.** `resources.file_url` exists; everything is
   currently inline markdown or table data.
 - **Art assets.** The office is generated geometry — deliberately, so a new room
-  is a data change. Sprite art would replace `office-scene.ts`'s paint methods
-  without touching the map or the bridge.
+  is a data change. Sprite art would replace the pieces in `art.ts` (one
+  isometric tile each, sorted by `iso.ts`) without touching the map or the
+  bridge.
+
+### Languages
+
+The interface can be shown in English, Japanese or Korean. The choice is made
+from the globe menu (next to the account name, and on the sign-in pages), kept
+in the `xpass-locale` cookie, and defaults to the browser's language.
+
+- Strings live in `src/i18n/messages/{en,ja,ko}.ts`. English is the source;
+  the other two are type-checked against it, so a missing key fails the build.
+- Server components call `await getT()`, client components `useT()`;
+  `{name}` placeholders are filled from the second argument.
+- Pre-survey questions carry their own `{ en, ja, ko }` text in
+  `src/content/pre-survey.ts`.
+- Scenario content (departments, steps, tasks, fields, the Data Room, what
+  the student reads of a persona) is translated by **overlay**: files such as
+  `src/content/sales/scenario.i18n.ts` mirror the English by key (step key,
+  task key, field key, option value, resource key) and are applied by
+  `src/content/localize.ts` only when a view is built for the student. The
+  English stays what the seed writes, what a session pins and what the engine
+  evaluates, so switching language mid-bootcamp changes the words and nothing
+  else. Figures in a translation are read from the same constants as the
+  English. `npm run verify:i18n` fails on any string an overlay leaves out, any
+  key it names that no longer exists, and any placeholder it drops.
+- A scenario with no overlay is shown in English and reported (not failed) by
+  `verify:i18n`. Persona names stay as written, matching the office.
+- Translated so far: sign-in / sign-up, the lobby, the pre-survey, the welcome
+  page, the shared header, the office (HUD, room signs, prompts), the
+  departments page and the whole workspace, and the Sales scenario in Japanese.
+  Still English: the landing page, report and admin; the Sales scenario in
+  Korean (the Korean interface around it is translated); mock-mode AI replies,
+  which are canned English (OpenAI mode answers in the student's language).
 
 ---
 
@@ -467,9 +583,10 @@ obviously on-topic question still counts as discovery.
 - The follow-up detection that distinguishes `ai_followup_asked` from
   `ai_message_sent` is a word-overlap heuristic. Fine as evidence, not as a
   measure.
-- No automated test runner is wired up. The verification scripts under
-  `scripts/` plus `npm run verify` cover the critical invariants; a proper
-  Vitest/Playwright suite in CI is the natural next step.
+- There is no unit-test runner. `npm run verify` and the Playwright suite cover
+  the critical invariants end to end; a Vitest layer for the pure functions
+  (`engine.ts`, `calculators.ts`, `guardrails.ts`, `stable-json.ts`) would make
+  failures point at a line instead of a page.
 - `next` carries a transitive build-time `postcss` advisory that is only fixed
   in Next 16 (a breaking major). Deferred deliberately.
 - The office renders ~1M pixels per frame. That is nothing for a GPU, but in a
@@ -482,8 +599,10 @@ obviously on-topic question still counts as discovery.
 ## 10. Recommended next phase
 
 1. **Play it end to end as a real student** and fix what that exposes. The
-   architecture has been exercised by automation, not by someone trying to do
-   the job.
+   browser suite now walks the whole bootcamp on every run, and writing it
+   already surfaced one dead end (a meeting that could be ended before it was
+   held, sealing the step). But automation only finds what it is told to look
+   at. Nobody has yet sat down and tried to do the job.
 2. **Implement HR as the second scenario.** It is the stress test that matters:
    conditional content, multiple candidate personas, repeated scorecard rows,
    several interview transcripts, and an executive pressure event. Writing it

@@ -6,6 +6,8 @@
  * which overlay an interaction opens. No business state lives here.
  */
 
+import type { FloorMaterial } from './theme';
+
 export const TILE = 32;
 export const GRID_WIDTH = 46;
 export const GRID_HEIGHT = 30;
@@ -27,7 +29,12 @@ export type OfficeRoom = {
   y: number;
   w: number;
   h: number;
+  /** Minimap fill. */
   color: number;
+  /** What the 2.5D office lays on this room's floor. */
+  floor: FloorMaterial;
+  /** Glass partitions instead of solid ones, so the room stays visible. */
+  glass?: boolean;
   action: ZoneAction;
   /** Tiles carved out of the surrounding wall so the room is reachable. */
   doors: Array<{ x: number; y: number }>;
@@ -54,7 +61,16 @@ export type OfficePropKind =
   | 'plant'
   | 'rug'
   | 'board'
-  | 'screen';
+  | 'screen'
+  | 'bookcase'
+  | 'cabinet'
+  | 'coffee'
+  | 'water'
+  | 'coatrack'
+  | 'boxes'
+  | 'lamp'
+  | 'printer'
+  | 'coffeetable';
 
 export type OfficeProp = {
   kind: OfficePropKind;
@@ -67,6 +83,25 @@ export type OfficeProp = {
   monitor?: boolean;
   /** Overrides the kind's default colour; used to highlight the player's desk. */
   accent?: number;
+  /**
+   * Chairs only: shirt colour of a colleague sitting in it. Pure set dressing —
+   * occupants cannot be talked to; talkable people are `NPCS`.
+   */
+  occupant?: number;
+  /** Boards and screens: what is written on them, a title then its points. */
+  lines?: string[];
+};
+
+/**
+ * Things hung on the building's back walls (row 0 or column 0). A decoration
+ * spans `w` wall tiles starting at (x, y) and replaces those tiles' windows.
+ */
+export type WallDecor = {
+  x: number;
+  y: number;
+  w: number;
+  kind: 'motto' | 'frame' | 'clock' | 'notice';
+  text?: string[];
 };
 
 export type OfficeNpc = {
@@ -98,6 +133,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Reception',
     x: 1, y: 1, w: 10, h: 7,
     color: 0xe4e9fb,
+    floor: 'stone',
     action: { kind: 'info' },
     doors: [{ x: 5, y: 8 }, { x: 6, y: 8 }],
   },
@@ -106,6 +142,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Marketing Zone',
     x: 13, y: 1, w: 9, h: 7,
     color: 0xfbe3f0,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 17, y: 8 }, { x: 18, y: 8 }],
   },
@@ -114,6 +151,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Sales Zone',
     x: 24, y: 1, w: 9, h: 7,
     color: 0xdde9fd,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 28, y: 8 }, { x: 29, y: 8 }],
   },
@@ -122,6 +160,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Product Zone',
     x: 35, y: 1, w: 10, h: 7,
     color: 0xdef3e4,
+    floor: 'tile',
     action: { kind: 'info' },
     doors: [{ x: 39, y: 8 }, { x: 40, y: 8 }],
   },
@@ -130,6 +169,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Strategy Zone',
     x: 1, y: 12, w: 9, h: 7,
     color: 0xe9e4fb,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 5, y: 11 }, { x: 6, y: 11 }, { x: 5, y: 19 }, { x: 6, y: 19 }],
   },
@@ -138,6 +179,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'HR Zone',
     x: 12, y: 12, w: 9, h: 7,
     color: 0xfceadb,
+    floor: 'carpet',
     action: { kind: 'info' },
     doors: [{ x: 16, y: 11 }, { x: 17, y: 11 }, { x: 16, y: 19 }, { x: 17, y: 19 }],
   },
@@ -146,6 +188,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Data Room',
     x: 23, y: 12, w: 9, h: 7,
     color: 0xdaeefa,
+    floor: 'tile',
     action: { kind: 'resources', label: 'Browse Files' },
     doors: [{ x: 27, y: 11 }, { x: 28, y: 11 }, { x: 27, y: 19 }, { x: 28, y: 19 }],
   },
@@ -154,6 +197,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Meeting Room A',
     x: 34, y: 12, w: 5, h: 7,
     color: 0xdcf2ea,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'meeting', label: 'Start Meeting' },
     doors: [{ x: 36, y: 11 }, { x: 36, y: 19 }],
   },
@@ -162,6 +207,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Meeting Room B',
     x: 40, y: 12, w: 5, h: 7,
     color: 0xdcf2ea,
+    floor: 'wood',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 42, y: 11 }, { x: 42, y: 19 }],
   },
@@ -170,6 +217,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'My Desk',
     x: 1, y: 23, w: 12, h: 6,
     color: 0xdeebfb,
+    floor: 'carpet',
     action: { kind: 'workspace', label: 'Open Workspace' },
     doors: [{ x: 6, y: 22 }, { x: 7, y: 22 }],
   },
@@ -178,6 +226,8 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Executive Room',
     x: 16, y: 23, w: 12, h: 6,
     color: 0xfaf0da,
+    floor: 'walnut',
+    glass: true,
     action: { kind: 'info' },
     doors: [{ x: 21, y: 22 }, { x: 22, y: 22 }],
   },
@@ -186,6 +236,7 @@ export const ROOMS: OfficeRoom[] = [
     name: 'Notification Area',
     x: 31, y: 23, w: 14, h: 6,
     color: 0xfbe2e2,
+    floor: 'carpet',
     action: { kind: 'notifications', label: 'Check Messages' },
     doors: [{ x: 37, y: 22 }, { x: 38, y: 22 }],
   },
@@ -204,56 +255,73 @@ export const PROPS: OfficeProp[] = [
   { kind: 'sofa', x: 2, y: 6, w: 3, h: 1, solid: true },
   { kind: 'plant', x: 9, y: 1, solid: true },
   { kind: 'plant', x: 9, y: 6, solid: true },
-  { kind: 'board', x: 1, y: 1, w: 1, h: 1 },
+  { kind: 'board', x: 1, y: 1, w: 1, h: 1, lines: ['Welcome', 'to BITE'] },
+
+  { kind: 'water', x: 1, y: 3, solid: true },
+  { kind: 'coatrack', x: 1, y: 5, solid: true },
 
   // Marketing Zone
   { kind: 'desk', x: 14, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 14, y: 5, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 5, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 14, y: 3 },
+  { kind: 'chair', x: 14, y: 3, occupant: 0x2f6fb5 },
   { kind: 'chair', x: 19, y: 3 },
   { kind: 'chair', x: 14, y: 6 },
-  { kind: 'chair', x: 19, y: 6 },
-  { kind: 'board', x: 17, y: 1, w: 2, h: 1 },
+  { kind: 'chair', x: 19, y: 6, occupant: 0xc1543f },
+  { kind: 'board', x: 17, y: 1, w: 2, h: 1, lines: ['Campaign Plan', 'Target analysis', 'Positioning', 'Channel strategy'] },
+
+  { kind: 'cabinet', x: 21, y: 1, solid: true },
+  { kind: 'printer', x: 21, y: 4, solid: true },
 
   // Sales Zone
   { kind: 'desk', x: 25, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 25, y: 5, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 30, y: 2, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 30, y: 5, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 25, y: 3 },
+  { kind: 'chair', x: 25, y: 3, occupant: 0x3f9b6e },
   { kind: 'chair', x: 30, y: 3 },
   { kind: 'chair', x: 25, y: 6 },
-  { kind: 'chair', x: 30, y: 6 },
-  { kind: 'board', x: 27, y: 1, w: 2, h: 1 },
+  { kind: 'chair', x: 30, y: 6, occupant: 0x7b6bb8 },
+  { kind: 'board', x: 27, y: 1, w: 2, h: 1, lines: ['Q3 Pipeline', 'QuickMart', 'Convenience', 'Gyms'] },
   { kind: 'plant', x: 32, y: 1, solid: true },
+
+  { kind: 'cabinet', x: 24, y: 7, solid: true },
+  { kind: 'water', x: 32, y: 7, solid: true },
 
   // Product Zone
   { kind: 'shelf', x: 36, y: 1, w: 3, h: 1, solid: true },
   { kind: 'shelf', x: 41, y: 1, w: 3, h: 1, solid: true },
   { kind: 'desk', x: 36, y: 4, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 41, y: 4, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 36, y: 5 },
+  { kind: 'chair', x: 36, y: 5, occupant: 0xd9a23a },
   { kind: 'chair', x: 41, y: 5 },
   { kind: 'plant', x: 44, y: 7, solid: true },
+
+  { kind: 'boxes', x: 35, y: 7, solid: true },
+  { kind: 'boxes', x: 44, y: 3, solid: true },
 
   // Strategy Zone
   { kind: 'rug', x: 2, y: 13, w: 6, h: 5 },
   { kind: 'table', x: 3, y: 14, w: 4, h: 3, solid: true },
   { kind: 'chair', x: 2, y: 15 },
-  { kind: 'chair', x: 7, y: 15 },
-  { kind: 'screen', x: 8, y: 12, w: 1, h: 2 },
+  { kind: 'chair', x: 7, y: 15, occupant: 0x8c5e3c },
+  { kind: 'screen', x: 8, y: 12, w: 1, h: 2, lines: ['Market Map', 'Share by channel'] },
   { kind: 'plant', x: 1, y: 18, solid: true },
+
+  { kind: 'bookcase', x: 1, y: 12, solid: true },
+  { kind: 'lamp', x: 9, y: 18, solid: true },
 
   // HR Zone
   { kind: 'desk', x: 13, y: 13, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 13, y: 16, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 13, w: 2, h: 1, solid: true, monitor: true },
   { kind: 'desk', x: 19, y: 16, w: 2, h: 1, solid: true, monitor: true },
-  { kind: 'chair', x: 13, y: 14 },
-  { kind: 'chair', x: 19, y: 14 },
+  { kind: 'chair', x: 13, y: 14, occupant: 0x2f8f9b },
+  { kind: 'chair', x: 19, y: 14, occupant: 0x4a5568 },
   { kind: 'plant', x: 12, y: 18, solid: true },
+
+  { kind: 'cabinet', x: 20, y: 12, solid: true },
 
   // Data Room
   { kind: 'shelf', x: 24, y: 13, w: 2, h: 1, solid: true },
@@ -265,12 +333,18 @@ export const PROPS: OfficeProp[] = [
   { kind: 'server', x: 23, y: 12, solid: true },
   { kind: 'server', x: 23, y: 18, solid: true },
 
+  { kind: 'cabinet', x: 31, y: 12, solid: true },
+  { kind: 'boxes', x: 24, y: 18, solid: true },
+  { kind: 'boxes', x: 29, y: 18, solid: true },
+
   // Meeting Room A
   { kind: 'rug', x: 34, y: 13, w: 5, h: 5 },
   { kind: 'table', x: 35, y: 16, w: 3, h: 2, solid: true },
   { kind: 'chair', x: 34, y: 16 },
   { kind: 'chair', x: 38, y: 16 },
-  { kind: 'screen', x: 34, y: 12, w: 1, h: 2 },
+  { kind: 'screen', x: 34, y: 12, w: 1, h: 2, lines: ['BITE × QuickMart', 'Protein drink pitch'] },
+
+  { kind: 'plant', x: 38, y: 12, solid: true },
 
   // Meeting Room B
   { kind: 'rug', x: 40, y: 13, w: 5, h: 5 },
@@ -278,6 +352,8 @@ export const PROPS: OfficeProp[] = [
   { kind: 'chair', x: 40, y: 16 },
   { kind: 'chair', x: 44, y: 16 },
   { kind: 'screen', x: 40, y: 12, w: 1, h: 2 },
+
+  { kind: 'plant', x: 44, y: 12, solid: true },
 
   // My Desk
   { kind: 'rug', x: 3, y: 24, w: 5, h: 3 },
@@ -288,6 +364,9 @@ export const PROPS: OfficeProp[] = [
   { kind: 'plant', x: 1, y: 28, solid: true },
   { kind: 'plant', x: 12, y: 23, solid: true },
 
+  { kind: 'cabinet', x: 1, y: 23, solid: true },
+  { kind: 'lamp', x: 12, y: 28, solid: true },
+
   // Executive Room
   { kind: 'rug', x: 18, y: 24, w: 7, h: 3 },
   { kind: 'desk', x: 19, y: 25, w: 5, h: 1, solid: true, accent: 0xd1a054 },
@@ -296,12 +375,27 @@ export const PROPS: OfficeProp[] = [
   { kind: 'plant', x: 27, y: 23, solid: true },
   { kind: 'plant', x: 16, y: 28, solid: true },
 
+  { kind: 'bookcase', x: 24, y: 23, w: 2, h: 1, solid: true },
+  { kind: 'lamp', x: 16, y: 23, solid: true },
+
   // Notification Area
-  { kind: 'board', x: 33, y: 23, w: 3, h: 1, solid: true },
-  { kind: 'board', x: 40, y: 23, w: 3, h: 1, solid: true },
-  { kind: 'screen', x: 37, y: 23, w: 2, h: 1 },
+  { kind: 'board', x: 33, y: 23, w: 3, h: 1, solid: true, lines: ['Notice Board', 'Monthly all-hands Fri', 'New samples arrived', 'Sales kick-off'] },
+  { kind: 'board', x: 40, y: 23, w: 3, h: 1, solid: true, lines: ['Messages', 'Buyer follow-ups', 'Price review', 'Team lunch 12:30'] },
+  { kind: 'screen', x: 37, y: 23, w: 2, h: 1, lines: ['BITE News', 'Protein Drink launch'] },
   { kind: 'sofa', x: 33, y: 27, w: 3, h: 1, solid: true },
   { kind: 'plant', x: 44, y: 28, solid: true },
+  { kind: 'coffee', x: 43, y: 23, w: 2, h: 1, solid: true },
+  { kind: 'water', x: 44, y: 25, solid: true },
+  { kind: 'coffeetable', x: 34, y: 25, w: 2, h: 1, solid: true },
+];
+
+export const WALL_DECOR: WallDecor[] = [
+  { x: 6, y: 0, w: 3, kind: 'motto', text: ['Good Experiences', 'Shape Good People.'] },
+  { x: 16, y: 0, w: 1, kind: 'clock' },
+  { x: 29, y: 0, w: 2, kind: 'frame' },
+  { x: 37, y: 0, w: 2, kind: 'notice', text: ['GOOD', 'IDEAS', 'GOOD', 'PEOPLE'] },
+  { x: 0, y: 15, w: 2, kind: 'frame' },
+  { x: 0, y: 25, w: 2, kind: 'motto', text: ['Discover', 'what fits you.'] },
 ];
 
 export const NPCS: OfficeNpc[] = [

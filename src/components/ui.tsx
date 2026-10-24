@@ -9,7 +9,8 @@ export function Card({
   className,
   accent,
   interactive,
-}: {
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
   className?: string;
   /** Hex colour for a thin top accent bar. */
@@ -18,6 +19,7 @@ export function Card({
 }) {
   return (
     <div
+      {...rest}
       className={cn(
         'relative overflow-hidden rounded-2xl border border-line bg-surface shadow-card',
         // Never translate a card on hover: it shifts the buttons inside it out
@@ -177,12 +179,15 @@ export function Field({
   required,
   children,
   epistemic,
+  epistemicLabels,
 }: {
   label: ReactNode;
   helpText?: string | null;
   required?: boolean;
   children: ReactNode;
   epistemic?: 'fact' | 'hypothesis' | 'neutral';
+  /** The badge words, in the student's language. */
+  epistemicLabels?: { fact: string; hypothesis: string };
 }) {
   return (
     <label className="block">
@@ -193,12 +198,12 @@ export function Field({
         </span>
         {epistemic === 'fact' ? (
           <Badge tone="success" dot>
-            Evidence
+            {epistemicLabels?.fact ?? 'Evidence'}
           </Badge>
         ) : null}
         {epistemic === 'hypothesis' ? (
           <Badge tone="warn" dot>
-            Hypothesis
+            {epistemicLabels?.hypothesis ?? 'Hypothesis'}
           </Badge>
         ) : null}
       </div>

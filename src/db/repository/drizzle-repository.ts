@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, asc, desc, eq, ne } from 'drizzle-orm';
 import { requireDb, schema, type Database } from '@/db/client';
+import { SetupRequiredError } from '@/lib/errors';
 import { deepEquals } from '@/lib/stable-json';
 import type {
   AiConversation,
@@ -72,17 +73,17 @@ export class DrizzleRepository implements XPassRepository {
     return row ? this.toUser(row) : null;
   }
 
-  async createUser(input: { email: string; displayName: string }): Promise<User> {
+  async createUser(input: { email: string; displayName: string }): Promise<User | null> {
     const email = input.email.trim().toLowerCase();
+    // DO NOTHING + RETURNING yields no row when the unique email index already
+    // holds one, which is how "that address is taken" comes back without a
+    // separate SELECT that another request could slip past.
     const [row] = await this.db
       .insert(schema.users)
       .values({ email, displayName: input.displayName })
-      .onConflictDoUpdate({
-        target: schema.users.email,
-        set: { displayName: input.displayName },
-      })
+      .onConflictDoNothing({ target: schema.users.email })
       .returning();
-    return this.toUser(row);
+    return row ? this.toUser(row) : null;
   }
 
   private toUser(row: typeof schema.users.$inferSelect): User {
@@ -250,8 +251,12 @@ export class DrizzleRepository implements XPassRepository {
       .limit(1);
 
     if (!department || !project || !version) {
-      throw new Error(
-        `Scenario content is not seeded for ${input.scenarioKey} v${input.scenarioVersion}. Run \`npm run db:seed\`.`,
+      // The other half of a half-finished deployment: the migration ran, so
+      // sign-up works and everything looks healthy right up until someone
+      // tries to start a bootcamp.
+      throw new SetupRequiredError(
+        `Scenario content is not seeded for ${input.scenarioKey} v${input.scenarioVersion}. ` +
+          'Run `npm run db:seed` against this deployment\u2019s DATABASE_URL, then try again.',
       );
     }
 

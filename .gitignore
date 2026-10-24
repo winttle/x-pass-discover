@@ -12,3 +12,8 @@ next-env.d.ts
 
 # Local verification screenshots — generated, never committed.
 .screenshots/
+
+# Playwright: generated report, traces and the derived server-secret list.
+tests/e2e/.artifacts/
+playwright-report/
+test-results/

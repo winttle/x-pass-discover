@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Logo, RuntimeBadges } from '@/components/app-shell';
+import { Logo, RuntimeBadges } from '@/components/branding';
+import { AccountMenu } from '@/features/auth/account-menu';
 import { Cover } from '@/components/media';
 import { Badge, Card } from '@/components/ui';
 import { MEDIA } from '@/content/media';
@@ -34,12 +35,15 @@ export default async function LandingPage() {
     <div className="mx-auto max-w-6xl px-5 pb-20 pt-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <Logo />
-        <RuntimeBadges
-          persistenceLabel={runtime.persistenceLabel}
-          persistenceIsEphemeral={runtime.persistenceIsEphemeral}
-          aiLabel={runtime.aiLabel}
-          aiModeDowngraded={runtime.aiModeDowngraded}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <RuntimeBadges
+            persistenceLabel={runtime.persistenceLabel}
+            persistenceIsEphemeral={runtime.persistenceIsEphemeral}
+            aiLabel={runtime.aiLabel}
+            aiModeDowngraded={runtime.aiModeDowngraded}
+          />
+          <AccountMenu />
+        </div>
       </header>
 
       <section className="mt-16 grid animate-fade-up items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
@@ -65,12 +69,12 @@ export default async function LandingPage() {
           thinking when new information lands.
         </p>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link
-            href={user ? '/departments' : '/login'}
+            href={user ? '/departments' : '/signup'}
             className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-brand-600/25 transition-colors hover:bg-brand-500"
           >
-            {user ? 'Continue to BITE' : 'Enter BITE'}
+            {user ? 'Continue to BITE' : 'Create an account'}
           </Link>
           <Link
             href="/office"
@@ -78,6 +82,14 @@ export default async function LandingPage() {
           >
             Visit the 2D office
           </Link>
+          {user ? null : (
+            <Link
+              href="/login"
+              className="text-sm text-muted underline-offset-4 transition-colors hover:text-strong hover:underline"
+            >
+              Already have an account? Sign in
+            </Link>
+          )}
           </div>
         </div>
 

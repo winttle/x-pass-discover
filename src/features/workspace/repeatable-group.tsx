@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge, Button } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import type { TaskField } from '@/types/scenario';
 import { FieldInput } from './field-input';
 
@@ -22,6 +23,7 @@ export function RepeatableGroup({
   onChange: (next: Row[]) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const minRows = field.minRows ?? 1;
   const maxRows = field.maxRows ?? 20;
   const rows: Row[] = Array.isArray(value) ? (value as Row[]) : [];
@@ -48,6 +50,7 @@ export function RepeatableGroup({
       {padded.map((row, index) => (
         <div
           key={index}
+          data-row-index={index}
           className="rounded-xl border border-line bg-sunken p-3.5"
         >
           <div className="mb-3 flex items-center justify-between">
@@ -59,24 +62,31 @@ export function RepeatableGroup({
                 onClick={() => onChange(padded.filter((_, i) => i !== index))}
                 className="text-[11px] text-muted transition-colors hover:text-danger-400 disabled:opacity-40"
               >
-                Remove
+                {t('field.remove')}
               </button>
             ) : null}
           </div>
 
           <div className="space-y-3">
             {subFields.map((sub) => (
-              <label key={sub.key} className="block">
+              <label
+                key={sub.key}
+                className="block"
+                data-field-scope="row"
+                data-field-key={sub.key}
+                data-field-type={sub.type}
+                data-field-required={sub.required ? 'true' : 'false'}
+              >
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-medium text-body">
                     {sub.label}
                     {sub.required ? <span className="ml-1 text-danger-400">*</span> : null}
                   </span>
                   {sub.epistemicKind === 'fact' ? (
-                    <Badge tone="success">Evidence</Badge>
+                    <Badge tone="success">{t('field.evidence')}</Badge>
                   ) : null}
                   {sub.epistemicKind === 'hypothesis' ? (
-                    <Badge tone="warn">Hypothesis</Badge>
+                    <Badge tone="warn">{t('field.hypothesis')}</Badge>
                   ) : null}
                 </div>
                 <FieldInput
@@ -100,8 +110,9 @@ export function RepeatableGroup({
           disabled={disabled}
           onClick={() => onChange([...padded, {}])}
           className="w-full"
+          data-testid="add-row"
         >
-          + Add another
+          {t('field.addRow')}
         </Button>
       ) : null}
     </div>
