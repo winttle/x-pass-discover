@@ -179,12 +179,15 @@ export function Field({
   required,
   children,
   epistemic,
+  epistemicLabels,
 }: {
   label: ReactNode;
   helpText?: string | null;
   required?: boolean;
   children: ReactNode;
   epistemic?: 'fact' | 'hypothesis' | 'neutral';
+  /** The badge words, in the student's language. */
+  epistemicLabels?: { fact: string; hypothesis: string };
 }) {
   return (
     <label className="block">
@@ -195,12 +198,12 @@ export function Field({
         </span>
         {epistemic === 'fact' ? (
           <Badge tone="success" dot>
-            Evidence
+            {epistemicLabels?.fact ?? 'Evidence'}
           </Badge>
         ) : null}
         {epistemic === 'hypothesis' ? (
           <Badge tone="warn" dot>
-            Hypothesis
+            {epistemicLabels?.hypothesis ?? 'Hypothesis'}
           </Badge>
         ) : null}
       </div>

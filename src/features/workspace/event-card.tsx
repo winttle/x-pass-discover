@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Badge, Card } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import { logClientEvent } from '@/lib/client-api';
 import type { ScenarioEventPayload } from '@/types/scenario';
 
@@ -18,6 +19,7 @@ export function EventCard({
   stepKey: string;
   payload: ScenarioEventPayload;
 }) {
+  const t = useT();
   useEffect(() => {
     void logClientEvent(sessionId, {
       eventType: 'unexpected_event_viewed',
@@ -30,7 +32,7 @@ export function EventCard({
     <Card className="border-warn-400/40 bg-warn-400/5">
       <div className="px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="warn">Incoming message</Badge>
+          <Badge tone="warn">{t('event.incoming')}</Badge>
           <span className="text-[11px] text-muted">{payload.from}</span>
         </div>
         <h3 className="mt-3 text-sm font-semibold text-strong">{payload.headline}</h3>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@/i18n/client';
 import type { ResourceDefinition } from '@/types/resource';
 import type { TaskField } from '@/types/scenario';
 import type { EvidenceOption } from './field-input';
@@ -15,7 +16,10 @@ export function useEvidenceOptions(
   fields: TaskField[],
   resources: ResourceDefinition[],
 ): EvidenceOption[] {
+  const t = useT();
   const [options, setOptions] = useState<EvidenceOption[]>([]);
+  const dataRoomGroup = t('evidence.dataRoom');
+  const buyerSaidGroup = t('evidence.buyerSaid');
 
   const evidenceFields = fields.filter((f) => f.type === 'resource_evidence');
   const signature = JSON.stringify(
@@ -39,7 +43,7 @@ export function useEvidenceOptions(
             ...resources.map((resource) => ({
               value: `resource:${resource.key}`,
               label: resource.title,
-              group: 'Data Room',
+              group: dataRoomGroup,
             })),
           );
           continue;
@@ -67,7 +71,7 @@ export function useEvidenceOptions(
                 value: `message:${m.id}`,
                 label:
                   m.content.length > 90 ? `${m.content.slice(0, 90)}…` : m.content,
-                group: 'What the buyer said',
+                group: buyerSaidGroup,
               })),
           );
         } catch {
@@ -82,7 +86,7 @@ export function useEvidenceOptions(
     return () => {
       cancelled = true;
     };
-  }, [sessionId, signature, resources]);
+  }, [sessionId, signature, resources, dataRoomGroup, buyerSaidGroup]);
 
   return options;
 }

@@ -1,8 +1,9 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
-import { getPersona } from '@/content/personas.server';
+import { getPersona, localizePersona } from '@/content/personas.server';
 import { findTask, getStep } from '@/content/registry';
 import { BITE_PROTEIN_DRINK } from '@/content/company';
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config';
 import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import { evaluateGuardrails, hasViolations } from '@/services/scenario/guardrails';
@@ -126,6 +127,7 @@ export async function openConversation(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const persona = requirePersona(session, personaKey);
@@ -141,7 +143,9 @@ export async function openConversation(
     await repo.appendMessage({
       conversationId: conversation.id,
       role: 'persona',
-      content: persona.openingMessage,
+      // Stored in the language the conversation was opened in: it is part of
+      // the transcript, and the persona carries on in the student's language.
+      content: localizePersona(session.scenarioKey, persona, locale).openingMessage,
       metadata: { opening: true },
     });
     await logEvent({
@@ -154,7 +158,7 @@ export async function openConversation(
     });
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
 }
 
 export async function sendStudentMessage(
@@ -162,6 +166,7 @@ export async function sendStudentMessage(
   personaKey: string,
   stepKey: string,
   message: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const persona = requirePersona(session, personaKey);
@@ -251,7 +256,7 @@ export async function sendStudentMessage(
     }
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
 }
 
 /**
@@ -280,6 +285,7 @@ export async function endConversation(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
   const conversation = await repo.getOrCreateConversation({
@@ -325,16 +331,21 @@ export async function endConversation(
     await syncProgress(session, scenario, state);
   }
 
-  return buildConversationView(session, personaKey, stepKey);
+  return buildConversationView(session, personaKey, stepKey, locale);
 }
 
 export async function buildConversationView(
   session: ProjectSession,
   personaKey: string,
   stepKey: string,
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<ConversationView> {
   const repo = getRepository();
-  const persona = requirePersona(session, personaKey);
+  const persona = localizePersona(
+    session.scenarioKey,
+    requirePersona(session, personaKey),
+    locale,
+  );
   const conversation = await repo.getOrCreateConversation({
     sessionId: session.id,
     personaKey,

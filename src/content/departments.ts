@@ -1,4 +1,7 @@
+import type { Locale } from '@/i18n/config';
 import type { DepartmentDefinition } from '@/types/scenario';
+import { DEPARTMENT_TRANSLATIONS } from './departments.i18n';
+import { localizeDepartment } from './localize';
 
 /**
  * The five BITE departments.
@@ -102,4 +105,17 @@ export function getDepartment(slug: string): DepartmentDefinition | null {
 
 export function getPlayableDepartments(): DepartmentDefinition[] {
   return DEPARTMENTS.filter((d) => d.status === 'playable');
+}
+
+/** The departments as the student reads them, in their language. */
+export function listLocalizedDepartments(locale: Locale): DepartmentDefinition[] {
+  return DEPARTMENTS.map((d) => localizeDepartment(d, DEPARTMENT_TRANSLATIONS, locale));
+}
+
+export function getLocalizedDepartment(
+  slug: string,
+  locale: Locale,
+): DepartmentDefinition | null {
+  const department = getDepartment(slug);
+  return department ? localizeDepartment(department, DEPARTMENT_TRANSLATIONS, locale) : null;
 }

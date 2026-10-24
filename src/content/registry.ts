@@ -1,7 +1,17 @@
+import type { Locale } from '@/i18n/config';
 import type { ResourceDefinition } from '@/types/resource';
 import type { ScenarioVersionDefinition } from '@/types/scenario';
+import {
+  localizeResources,
+  localizeScenario,
+  type ResourceText,
+  type ScenarioText,
+  type Translations,
+} from './localize';
 import { SALES_SCENARIO } from './sales/scenario';
+import { SALES_SCENARIO_TRANSLATIONS } from './sales/scenario.i18n';
 import { SALES_RESOURCES } from './sales/resources';
+import { SALES_RESOURCE_TRANSLATIONS } from './sales/resources.i18n';
 
 /**
  * Public scenario content registry (client-safe).
@@ -17,6 +27,24 @@ const SCENARIOS: ScenarioVersionDefinition[] = [SALES_SCENARIO];
 
 const RESOURCES_BY_SCENARIO: Record<string, ResourceDefinition[]> = {
   'sales-quickmart': SALES_RESOURCES,
+};
+
+/**
+ * Translations by scenario key. A scenario with none is shown in English.
+ * Translations apply to what the student reads, never to what the engine
+ * evaluates — see `localize.ts`.
+ */
+export const TRANSLATIONS_BY_SCENARIO: Record<
+  string,
+  {
+    scenario?: Translations<ScenarioText>;
+    resources?: Translations<Record<string, ResourceText>>;
+  }
+> = {
+  'sales-quickmart': {
+    scenario: SALES_SCENARIO_TRANSLATIONS,
+    resources: SALES_RESOURCE_TRANSLATIONS,
+  },
 };
 
 export function listScenarios(): ScenarioVersionDefinition[] {
@@ -47,6 +75,29 @@ export function getPublishedScenario(
 export function listResources(scenarioKey: string): ResourceDefinition[] {
   return [...(RESOURCES_BY_SCENARIO[scenarioKey] ?? [])].sort(
     (a, b) => a.sortOrder - b.sortOrder,
+  );
+}
+
+/** A scenario as the student reads it, in their language. */
+export function localizedScenario(
+  scenario: ScenarioVersionDefinition,
+  locale: Locale,
+): ScenarioVersionDefinition {
+  return localizeScenario(
+    scenario,
+    TRANSLATIONS_BY_SCENARIO[scenario.scenarioKey]?.scenario,
+    locale,
+  );
+}
+
+export function listLocalizedResources(
+  scenarioKey: string,
+  locale: Locale,
+): ResourceDefinition[] {
+  return localizeResources(
+    listResources(scenarioKey),
+    TRANSLATIONS_BY_SCENARIO[scenarioKey]?.resources,
+    locale,
   );
 }
 

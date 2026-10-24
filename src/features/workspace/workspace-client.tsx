@@ -6,6 +6,7 @@ import { RuntimeBadges } from '@/components/branding';
 import { Badge, Card, CardHeader } from '@/components/ui';
 import { Cover } from '@/components/media';
 import { ResourcePanel } from '@/features/resources/resource-panel';
+import { useT } from '@/i18n/client';
 import { startStep } from '@/lib/client-api';
 import type { SessionView } from '@/types/session-view';
 import { EventCard } from './event-card';
@@ -28,7 +29,15 @@ const STEP_STATUS_TONE = {
  * never holds business state.
  */
 export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
+  const t = useT();
   const [view, setView] = useState<SessionView>(initialView);
+  // A fresh server render (switching language refreshes the page) replaces the
+  // local copy: same session and progress, re-worded.
+  const [renderedView, setRenderedView] = useState(initialView);
+  if (initialView !== renderedView) {
+    setRenderedView(initialView);
+    setView(initialView);
+  }
   const [activeStepKey, setActiveStepKey] = useState<string>(
     () =>
       initialView.session.currentStepKey ??
@@ -55,7 +64,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
   const isComplete = view.session.status === 'completed';
 
   if (!activeStep) {
-    return <p className="text-sm text-muted">This scenario has no steps.</p>;
+    return <p className="text-sm text-muted">{t('workspace.noSteps')}</p>;
   }
 
   return (
@@ -83,19 +92,19 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
 
           <dl className="mt-4 space-y-2 border-t border-line pt-3 text-[11px]">
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-muted">Role</dt>
+              <dt className="text-muted">{t('workspace.role')}</dt>
               <dd className="truncate text-right text-body" title={view.scenario.studentRole}>
                 {view.scenario.studentRole}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-muted">Deadline</dt>
+              <dt className="text-muted">{t('workspace.deadline')}</dt>
               <dd>
                 <DeadlineCountdown deadlineAt={view.session.deadlineAt} />
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt className="text-muted">Scenario</dt>
+              <dt className="text-muted">{t('workspace.scenario')}</dt>
               <dd className="font-mono text-body">v{view.scenario.version}</dd>
             </div>
           </dl>
@@ -122,13 +131,13 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
               href={`/office?session=${view.session.id}`}
               className="flex items-center gap-1.5 text-muted transition-colors hover:text-strong"
             >
-              <span aria-hidden>🏢</span> Enter the 2D office
+              <span aria-hidden>🏢</span> {t('workspace.enterOffice')}
             </Link>
             <Link
               href={`/admin/events?session=${view.session.id}`}
               className="flex items-center gap-1.5 text-muted transition-colors hover:text-strong"
             >
-              <span aria-hidden>📊</span> Inspect behavior events
+              <span aria-hidden>📊</span> {t('workspace.inspectEvents')}
             </Link>
           </div>
         </Card>
@@ -141,17 +150,17 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <Badge tone="success" dot>
-                  Bootcamp complete
+                  {t('workspace.complete')}
                 </Badge>
                 <p className="mt-2 text-sm text-strong">
-                  You submitted the {view.scenario.finalOutputTitle}.
+                  {t('workspace.submitted', { title: view.scenario.finalOutputTitle })}
                 </p>
               </div>
               <Link
                 href="/report"
                 className="rounded-xl border border-accent-400/40 px-3.5 py-2 text-xs font-medium text-accent-400 transition-colors hover:bg-accent-400/10"
               >
-                View career report →
+                {t('workspace.viewReport')}
               </Link>
             </div>
           </Card>
@@ -163,7 +172,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
             subtitle={activeStep.summary ?? undefined}
             right={
               <Badge tone={STEP_STATUS_TONE[activeStep.status]} dot>
-                {activeStep.status.replace('_', ' ')}
+                {t(`stepStatus.${activeStep.status}`)}
               </Badge>
             }
           />
@@ -180,7 +189,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
               🔒
             </div>
             <p className="text-sm text-muted">
-              {activeStep.lockedReason ?? 'This step is not available yet.'}
+              {activeStep.lockedReason ?? t('workspace.locked')}
             </p>
           </Card>
         ) : (

@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { Badge, Button, Card } from '@/components/ui';
 import { Cover } from '@/components/media';
 import { useToast } from '@/components/toast';
+import { useT } from '@/i18n/client';
+import type { MessageKey } from '@/i18n/messages/en';
 import type { DepartmentDefinition } from '@/types/scenario';
 
 type SessionSummary = { id: string; departmentSlug: string; status: string };
@@ -29,6 +31,7 @@ export function DepartmentChooser({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const [selected, setSelected] = useState<string[]>(initialSelection);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -41,8 +44,8 @@ export function DepartmentChooser({
       if (prev.length >= 3) {
         toast.push({
           tone: 'warn',
-          title: 'Three is the limit',
-          description: 'Deselect one before adding another.',
+          title: t('chooser.limitTitle'),
+          description: t('chooser.limitBody'),
         });
         return prev;
       }
@@ -59,13 +62,13 @@ export function DepartmentChooser({
         body: JSON.stringify({ departmentSlugs: selected }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'Could not save selection');
-      toast.push({ tone: 'success', title: 'Selection saved' });
+      if (!response.ok) throw new Error(data.error ?? t('chooser.saveFailed'));
+      toast.push({ tone: 'success', title: t('chooser.saved') });
       router.refresh();
     } catch (cause) {
       toast.push({
         tone: 'danger',
-        title: 'Could not save selection',
+        title: t('chooser.saveFailed'),
         description: cause instanceof Error ? cause.message : undefined,
       });
     } finally {
@@ -87,12 +90,12 @@ export function DepartmentChooser({
         body: JSON.stringify({ departmentSlug: slug }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'Could not start the bootcamp');
+      if (!response.ok) throw new Error(data.error ?? t('chooser.startFailed'));
       router.push(`/workspace/${data.session.id}`);
     } catch (cause) {
       toast.push({
         tone: 'danger',
-        title: 'Could not start the bootcamp',
+        title: t('chooser.startFailed'),
         description: cause instanceof Error ? cause.message : undefined,
       });
       setBusy(null);
@@ -114,8 +117,9 @@ export function DepartmentChooser({
             ))}
           </div>
           <p className="text-[11px] text-muted">
-            <span className="font-semibold text-strong">{selected.length}</span> of 3
-            selected · Sales is playable in this build; the others run on the same engine.
+            {t('chooser.selected.before')}
+            <span className="font-semibold text-strong">{selected.length}</span>
+            {t('chooser.selected.after')} · {t('chooser.buildNote')}
           </p>
         </div>
         <Button
@@ -125,7 +129,7 @@ export function DepartmentChooser({
           loading={busy === 'selection'}
           disabled={selected.length === 0}
         >
-          Save selection
+          {t('chooser.save')}
         </Button>
       </div>
 
@@ -159,10 +163,10 @@ export function DepartmentChooser({
                     <span className="absolute right-3 top-3">
                       {playable ? (
                         <Badge tone="success" dot>
-                          Playable
+                          {t('chooser.playable')}
                         </Badge>
                       ) : (
-                        <Badge tone="muted">Coming soon</Badge>
+                        <Badge tone="muted">{t('chooser.comingSoon')}</Badge>
                       )}
                     </span>
                   </>
@@ -219,11 +223,13 @@ export function DepartmentChooser({
 
                 <dl className="mt-auto space-y-1.5 pt-4 text-[11px]">
                   {[
-                    ['Core question', department.coreQuestion],
-                    ['Final output', department.finalOutput],
+                    [t('chooser.coreQuestion'), department.coreQuestion],
+                    [t('chooser.finalOutput'), department.finalOutput],
                     [
-                      'Starting point',
-                      department.productKey ? 'Product exists' : 'No product yet',
+                      t('chooser.startingPoint'),
+                      department.productKey
+                        ? t('chooser.productExists')
+                        : t('chooser.noProduct'),
                     ],
                   ].map(([label, value]) => (
                     <div key={label} className="flex justify-between gap-3">
@@ -242,17 +248,17 @@ export function DepartmentChooser({
                       loading={busy === department.slug}
                       className="flex-1"
                     >
-                      {session ? 'Resume bootcamp' : 'Start bootcamp'}
+                      {session ? t('chooser.resume') : t('chooser.start')}
                     </Button>
                     {session ? (
                       <Badge tone={session.status === 'completed' ? 'success' : 'brand'} dot>
-                        {session.status.replace('_', ' ')}
+                        {t(`sessionStatus.${session.status}` as MessageKey)}
                       </Badge>
                     ) : null}
                   </div>
                 ) : (
                   <span className="text-[11px] text-subtle">
-                    Scenario content not authored yet — the engine already supports it
+                    {t('chooser.notAuthored')}
                   </span>
                 )}
               </div>
@@ -266,7 +272,7 @@ export function DepartmentChooser({
           href="/office"
           className="text-xs text-muted underline-offset-4 transition-colors hover:text-strong hover:underline"
         >
-          Or walk into the 2D office first →
+          {t('chooser.officeLink')}
         </Link>
       </div>
     </div>

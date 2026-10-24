@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Badge, Button, Card, CardHeader } from '@/components/ui';
 import { ChatPanel } from '@/features/ai/chat-panel';
+import { useT } from '@/i18n/client';
 import { saveTask } from '@/lib/client-api';
 import type { PublicPersona } from '@/types/ai';
 import type { ResourceDefinition } from '@/types/resource';
@@ -14,12 +15,6 @@ const STATUS_TONE = {
   not_started: 'muted',
   draft: 'warn',
   complete: 'success',
-} as const;
-
-const STATUS_LABEL = {
-  not_started: 'Not started',
-  draft: 'In progress',
-  complete: 'Complete',
 } as const;
 
 export function TaskCard({
@@ -39,6 +34,7 @@ export function TaskCard({
   personas: PublicPersona[];
   onSessionUpdate: (view: SessionView) => void;
 }) {
+  const t = useT();
   return (
     <div
       className="space-y-4"
@@ -53,8 +49,8 @@ export function TaskCard({
           subtitle={task.instructions ?? undefined}
           right={
             <div className="flex items-center gap-1.5">
-              {!task.required ? <Badge tone="muted">Optional</Badge> : null}
-              <Badge tone={STATUS_TONE[task.status]}>{STATUS_LABEL[task.status]}</Badge>
+              {!task.required ? <Badge tone="muted">{t('task.optional')}</Badge> : null}
+              <Badge tone={STATUS_TONE[task.status]}>{t(`task.status.${task.status}`)}</Badge>
             </div>
           }
         />
@@ -90,12 +86,13 @@ function TaskBody({
   personas: PublicPersona[];
   onSessionUpdate: (view: SessionView) => void;
 }) {
+  const t = useT();
   if (task.kind === 'ai_conversation') {
     const persona = personas.find((p) => p.key === task.personaKey);
     if (!persona) {
       return (
         <p className="text-xs text-danger-400">
-          Persona “{task.personaKey}” is not registered for this scenario.
+          {t('task.personaMissing', { key: task.personaKey ?? '' })}
         </p>
       );
     }
@@ -127,7 +124,12 @@ function TaskBody({
       task={task}
       resources={resources}
       onSessionUpdate={onSessionUpdate}
-      submitLabel={task.kind === 'final_submission' ? 'Submit final proposal' : 'Submit'}
+      submitLabel={
+        task.kind === 'final_submission' ? t('task.submitFinal') : t('task.submit')
+      }
+      resubmitLabel={
+        task.kind === 'final_submission' ? t('task.resubmitFinal') : t('task.resubmit')
+      }
     />
   );
 }
@@ -141,6 +143,7 @@ function AcknowledgeTask({
   task: TaskView;
   onSessionUpdate: (view: SessionView) => void;
 }) {
+  const t = useT();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const done = task.value?.acknowledged === true;
@@ -157,7 +160,7 @@ function AcknowledgeTask({
       );
       onSessionUpdate(result.view);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not save');
+      setError(cause instanceof Error ? cause.message : t('task.saveFailed'));
     } finally {
       setPending(false);
     }
@@ -166,9 +169,7 @@ function AcknowledgeTask({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <p className="text-xs text-muted">
-        {done
-          ? 'Marked complete. You can still re-read the material at any time.'
-          : 'Mark this complete when you have read the material above.'}
+        {done ? t('ack.done') : t('ack.todo')}
       </p>
       {error ? <p className="text-xs text-danger-400">{error}</p> : null}
       <Button
@@ -176,7 +177,7 @@ function AcknowledgeTask({
         disabled={pending || done}
         data-testid="acknowledge"
       >
-        {done ? '✓ Completed' : pending ? 'Saving…' : 'Mark complete'}
+        {done ? t('ack.completed') : pending ? t('ack.saving') : t('ack.mark')}
       </Button>
     </div>
   );

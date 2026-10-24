@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { getLocale, getT } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import {
   SessionAccessError,
@@ -18,18 +19,20 @@ export default async function WorkspacePage({
 
   let view;
   try {
-    view = await loadSessionView(sessionId, user.id);
+    view = await loadSessionView(sessionId, user.id, await getLocale());
   } catch (error) {
     if (error instanceof SessionAccessError) redirect('/departments');
     throw error;
   }
+
+  const t = await getT();
 
   return (
     <AppShell
       title={view.department.projectTitle}
       subtitle={`${view.department.name} · ${view.scenario.mission}`}
       backHref="/departments"
-      backLabel="Departments"
+      backLabel={t('workspace.backDepartments')}
     >
       <WorkspaceClient initialView={view} />
     </AppShell>

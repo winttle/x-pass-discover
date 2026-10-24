@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getLocale } from '@/i18n/server';
 import { parseBody, withUser } from '@/lib/api';
 import { ScenarioRuleError } from '@/lib/errors';
 import {
@@ -34,10 +35,16 @@ export async function POST(
     const body = await parseBody(request, schema);
     const session = await requireOwnedSession(sessionId, user.id);
     assertPersonaAllowedInStep(session, body.personaKey, body.stepKey);
+    const locale = await getLocale();
 
     if (body.action === 'open') {
       return {
-        conversation: await openConversation(session, body.personaKey, body.stepKey),
+        conversation: await openConversation(
+          session,
+          body.personaKey,
+          body.stepKey,
+          locale,
+        ),
       };
     }
 
@@ -48,6 +55,7 @@ export async function POST(
         body.personaKey,
         body.stepKey,
         body.message,
+        locale,
       );
       return { conversation };
     }
@@ -56,11 +64,12 @@ export async function POST(
       session,
       body.personaKey,
       body.stepKey,
+      locale,
     );
     return {
       conversation,
       // Ending a meeting can unlock the next step, so hand back fresh state.
-      view: await loadSessionView(sessionId, user.id),
+      view: await loadSessionView(sessionId, user.id, locale),
     };
   });
 }
@@ -80,6 +89,13 @@ export async function GET(
     }
     const session = await requireOwnedSession(sessionId, user.id);
     assertPersonaAllowedInStep(session, personaKey, stepKey);
-    return { conversation: await buildConversationView(session, personaKey, stepKey) };
+    return {
+      conversation: await buildConversationView(
+        session,
+        personaKey,
+        stepKey,
+        await getLocale(),
+      ),
+    };
   });
 }

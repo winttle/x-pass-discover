@@ -1,6 +1,7 @@
 import 'server-only';
 import { getRepository } from '@/db/repository';
 import { findTask } from '@/content/registry';
+import type { Locale } from '@/i18n/config';
 import { ScenarioRuleError } from '@/lib/errors';
 import { logEvent } from '@/services/events';
 import type { AnswerValue, ProjectSession } from '@/types/runtime';
@@ -85,6 +86,8 @@ export async function saveTaskAnswer(input: {
   taskKey: string;
   value: unknown;
   status: 'draft' | 'submitted';
+  /** The language of the view handed back. */
+  locale?: Locale;
 }): Promise<SaveTaskResult> {
   const repo = getRepository();
   const { session, taskKey, status } = input;
@@ -201,7 +204,7 @@ export async function saveTaskAnswer(input: {
   const updatedSession = await syncProgress(session, scenario, stateAfter);
 
   return {
-    view: buildSessionView(updatedSession, scenario, stateAfter),
+    view: buildSessionView(updatedSession, scenario, stateAfter, input.locale),
     warnings,
   };
 }

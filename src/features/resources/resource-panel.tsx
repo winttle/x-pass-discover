@@ -5,22 +5,12 @@ import Image from 'next/image';
 import { Badge, Card, CardHeader, EmptyState } from '@/components/ui';
 import { FileIcon } from '@/components/media';
 import { Markdown } from '@/components/markdown';
+import { useT } from '@/i18n/client';
 import { logResourceOpen } from '@/lib/client-api';
 import type { ResourceDefinition } from '@/types/resource';
 
-const TYPE_LABELS: Record<string, string> = {
-  training: 'Training',
-  company_profile: 'Company',
-  product_sheet: 'Product',
-  account_profile: 'Account',
-  data_table: 'Data',
-  memo: 'Memo',
-  policy: 'Policy',
-  file: 'File',
-  image: 'Image',
-};
-
 function ResourceBodyView({ resource }: { resource: ResourceDefinition }) {
+  const t = useT();
   const body = resource.body;
 
   const illustration = resource.image ? (
@@ -94,7 +84,7 @@ function ResourceBodyView({ resource }: { resource: ResourceDefinition }) {
       rel="noreferrer"
       className="text-sm text-brand-400 underline-offset-4 hover:underline"
     >
-      Open file ({body.mimeType})
+      {t('resources.openFile', { type: body.mimeType })}
     </a>
   );
 }
@@ -109,7 +99,7 @@ export function ResourcePanel({
   resources,
   highlightKeys,
   stepKey,
-  title = 'Data Room',
+  title,
 }: {
   sessionId: string;
   resources: ResourceDefinition[];
@@ -117,6 +107,7 @@ export function ResourcePanel({
   stepKey: string | null;
   title?: string;
 }) {
+  const t = useT();
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   const highlighted = new Set(highlightKeys ?? []);
@@ -135,12 +126,12 @@ export function ResourcePanel({
   return (
     <Card>
       <CardHeader
-        title={title}
-        subtitle={`${resources.length} resources · open anything, any time`}
+        title={title ?? t('resources.title')}
+        subtitle={t('resources.count', { count: resources.length })}
       />
       {ordered.length === 0 ? (
         <div className="p-5">
-          <EmptyState>No resources for this scenario yet.</EmptyState>
+          <EmptyState>{t('resources.empty')}</EmptyState>
         </div>
       ) : (
         <ul className="divide-y divide-line">
@@ -160,16 +151,14 @@ export function ResourcePanel({
                         {resource.title}
                       </span>
                       {highlighted.has(resource.key) ? (
-                        <Badge tone="brand">for this step</Badge>
+                        <Badge tone="brand">{t('resources.forStep')}</Badge>
                       ) : null}
                     </span>
                     <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
                       {resource.description}
                     </span>
                     <span className="mt-1 block text-[10px] font-medium uppercase tracking-wider text-subtle">
-                      {resource.fileMeta?.detail ??
-                        TYPE_LABELS[resource.resourceType] ??
-                        resource.resourceType}
+                      {resource.fileMeta?.detail ?? t(`resources.type.${resource.resourceType}`)}
                     </span>
                   </span>
                   <span className="mt-1 shrink-0 text-subtle">{isOpen ? '−' : '+'}</span>
