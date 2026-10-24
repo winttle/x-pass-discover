@@ -19,6 +19,8 @@ export const ko: Messages = {
   'dept.strategy': '경영 전략',
   'dept.human-resources': '인사',
 
+  'auth.sessionExpired': '로그인이 만료되었습니다.',
+  'auth.signInAgain': '다시 로그인 →',
   'auth.email': '이메일',
   'auth.displayName': '표시 이름',
   'auth.emailPlaceholder': 'you@example.com',

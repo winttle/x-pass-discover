@@ -19,6 +19,8 @@ export const ja: Messages = {
   'dept.strategy': '経営戦略',
   'dept.human-resources': '人事',
 
+  'auth.sessionExpired': 'ログインの有効期限が切れました。',
+  'auth.signInAgain': 'もう一度ログインする →',
   'auth.email': 'メールアドレス',
   'auth.displayName': '表示名',
   'auth.emailPlaceholder': 'you@example.com',

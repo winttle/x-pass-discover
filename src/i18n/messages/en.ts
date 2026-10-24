@@ -23,6 +23,8 @@ export const en = {
   'dept.strategy': 'Strategy',
   'dept.human-resources': 'Human Resources',
 
+  'auth.sessionExpired': 'Your sign-in has expired.',
+  'auth.signInAgain': 'Sign in again →',
   'auth.email': 'Email',
   'auth.displayName': 'Display name',
   'auth.emailPlaceholder': 'you@example.com',
