@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RuntimeBadges } from '@/components/branding';
-import { Badge, Card, CardHeader } from '@/components/ui';
+import { Badge, Button, Card, CardHeader } from '@/components/ui';
 import { Cover } from '@/components/media';
 import { ResourcePanel } from '@/features/resources/resource-panel';
 import { useT } from '@/i18n/client';
 import { startStep } from '@/lib/client-api';
-import type { SessionView } from '@/types/session-view';
+import type { SessionView, StepView } from '@/types/session-view';
 import { EventCard } from './event-card';
 import { ReferencePanel } from './reference-panel';
 import { DeadlineCountdown, ProgressRing, StepRail } from './step-rail';
@@ -57,11 +57,36 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
     void startStep(view.session.id, activeStep.key);
   }, [view.session.id, activeStep?.key, activeStep?.unlocked]);
 
-  const handleSessionUpdate = useCallback((next: SessionView) => {
-    setView(next);
+  // When a save finishes the step the student is on, bring the "next step"
+  // card into view so they are not left staring at a 再提出 button.
+  const nextStepRef = useRef<HTMLDivElement>(null);
+  const [scrollToNext, setScrollToNext] = useState(false);
+  const handleSessionUpdate = useCallback(
+    (next: SessionView) => {
+      const before = view.steps.find((s) => s.key === activeStepKey);
+      const after = next.steps.find((s) => s.key === activeStepKey);
+      if (before?.status !== 'completed' && after?.status === 'completed') {
+        setScrollToNext(true);
+      }
+      setView(next);
+    },
+    [view.steps, activeStepKey],
+  );
+
+  useEffect(() => {
+    if (!scrollToNext) return;
+    setScrollToNext(false);
+    nextStepRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [scrollToNext]);
+
+  const goToStep = useCallback((stepKey: string) => {
+    setActiveStepKey(stepKey);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const isComplete = view.session.status === 'completed';
+  const activeIndex = view.steps.findIndex((s) => s.key === activeStep?.key);
+  const nextStep = activeIndex >= 0 ? view.steps[activeIndex + 1] : undefined;
 
   if (!activeStep) {
     return <p className="text-sm text-muted">{t('workspace.noSteps')}</p>;
@@ -115,7 +140,7 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
           <StepRail
             steps={view.steps}
             activeStepKey={activeStep.key}
-            onSelect={setActiveStepKey}
+            onSelect={goToStep}
           />
         </Card>
 
@@ -214,6 +239,12 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
                 onSessionUpdate={handleSessionUpdate}
               />
             ))}
+
+            {activeStep.status === 'completed' && nextStep ? (
+              <div ref={nextStepRef}>
+                <NextStepCard step={nextStep} onGo={() => goToStep(nextStep.key)} />
+              </div>
+            ) : null}
           </>
         )}
       </section>
@@ -231,5 +262,33 @@ export function WorkspaceClient({ initialView }: { initialView: SessionView }) {
         />
       </aside>
     </div>
+  );
+}
+
+function NextStepCard({ step, onGo }: { step: StepView; onGo: () => void }) {
+  const t = useT();
+  return (
+    <Card
+      className="animate-pop border-accent-400/40 bg-accent-500/5 px-5 py-4"
+      data-testid="next-step"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <Badge tone="success" dot>
+            {t('workspace.stepDone')}
+          </Badge>
+          <p className="mt-2 text-sm text-strong">
+            {step.unlocked
+              ? t('workspace.nextStepPrompt', { title: step.title })
+              : t('workspace.nextStepLocked', {
+                  reason: step.lockedReason ?? t('workspace.locked'),
+                })}
+          </p>
+        </div>
+        <Button onClick={onGo} disabled={!step.unlocked} data-testid="go-next-step">
+          {t('workspace.nextStep')}
+        </Button>
+      </div>
+    </Card>
   );
 }

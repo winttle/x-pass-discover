@@ -44,6 +44,7 @@ export function SurveyScreen({
   const [index, setIndex] = useState(() => firstOpenIndex(initialAnswers));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signedOut, setSignedOut] = useState(false);
 
   const total = PRE_SURVEY_QUESTIONS.length;
   const question = PRE_SURVEY_QUESTIONS[index];
@@ -67,6 +68,14 @@ export function SurveyScreen({
         body: JSON.stringify({ answers }),
       });
       const data = await response.json();
+      // The sign-in cookie no longer resolves to an account (it expired, or the
+      // server's key or store changed): say so and offer the way back in.
+      if (response.status === 401) {
+        setSignedOut(true);
+        setError(t('auth.sessionExpired'));
+        setPending(false);
+        return;
+      }
       if (!response.ok) throw new Error(data.error ?? t('survey.saveFailed'));
       router.push('/departments');
     } catch (cause) {
@@ -213,6 +222,14 @@ export function SurveyScreen({
             {error ? (
               <p className="mt-4 rounded-lg border border-danger-400/30 bg-danger-400/10 px-3 py-2 text-xs text-danger-600">
                 {error}
+                {signedOut ? (
+                  <>
+                    {' '}
+                    <Link href="/login" className="font-semibold underline underline-offset-2">
+                      {t('auth.signInAgain')}
+                    </Link>
+                  </>
+                ) : null}
               </p>
             ) : null}
 
